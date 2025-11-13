@@ -1,0 +1,1 @@
+# Scout Camp Management App
