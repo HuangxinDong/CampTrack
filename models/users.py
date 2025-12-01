@@ -8,8 +8,25 @@ class User:
         self.role = role
         self.enabled = enabled
 
+    def to_dict(self):
+        """Base to_dict method, can be overridden by subclasses"""
+        return {
+            "username": self.username,
+            "password": self.password,
+            "role": self.role,
+            "enabled": self.enabled
+        }
+
+    def __repr__(self):
+        return f"<{self.role}: {self.username}>"
+
 class Admin(User):
-    pass
+    """
+    Admin model class. Inherits from User.
+    Represents an administrator with full system access.
+    """
+    def __init__(self, username, password, role="Admin", enabled=True):
+        super().__init__(username, password, role, enabled)
 
 class Leader(User):
     def __init__(self, username, password, role, enabled, daily_payment_rate):
