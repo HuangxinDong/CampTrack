@@ -33,6 +33,11 @@ class Leader(User):
         super().__init__(username, password, role, enabled)
         self.daily_payment_rate = daily_payment_rate
 
+    def to_dict(self):
+        data = super().to_dict()
+        data['daily_payment_rate'] = self.daily_payment_rate
+        return data
+
 class Coordinator(User):
     pass
 
@@ -60,13 +65,14 @@ def parse_users(json_str):
         return False, []
     
     for key, attributes in raw_data.items():
-        if key in CLASS_MAP:
-            target_class = CLASS_MAP[key]
+        role = attributes.get("role")
+        if role in CLASS_MAP:
+            target_class = CLASS_MAP[role]
             try:
                 new_object = target_class(**attributes)
                 user_objects.append(new_object)
             except TypeError as e:
                 logging.error(f"Error: data mismatch for {key}: {e}")
         else:
-            logging.warning(f"Warning: unable to deserialize user type '{key}'.")
+            logging.warning(f"Warning: unable to deserialize user type '{role}' for key '{key}'.")
     return True, user_objects
