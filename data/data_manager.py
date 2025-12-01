@@ -3,9 +3,29 @@
 from models import parse_users
 from .data import Data
 import logging
+import json
+
+def save_data(data):
+    """
+    Save data to JSON files.
+    """
+    # Save users
+    if data.users:
+        users_dict = {}
+        for user in data.users:
+            users_dict[user.username] = user.to_dict()
+        
+        try:
+            with open("data/users.json", "w") as file:
+                json.dump(users_dict, file, indent=4)
+        except Exception as e:
+            logging.error(f"Error saving users: {e}")
 
 def load_data():
-    # load users
+    """
+    load data from JSON files.
+    """
+    # Load users
     try:
         with open("data/users.json", "r") as file:
             json_content = file.read()
