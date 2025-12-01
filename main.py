@@ -1,2 +1,20 @@
-# Programme entry point
-import sys
+# Program entry point
+from session import create_session
+from data import load_data
+from program import run_program
+
+def main():
+    data = load_data()
+    if data is None:
+        return # data didn't load correctly
+
+    session = create_session(data.users)
+    if session is None:
+        return # session must have failed
+    
+    run_program(session, data)
+
+    return # session has ended
+    
+if __name__ == "__main__":
+    main()
