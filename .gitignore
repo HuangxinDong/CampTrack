@@ -5,3 +5,83 @@
 # Ignore all pycache files
 __pycache__/
 *.pyc
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+
+# Byte-compiled / optimized / DLL files
+*.pyo
+*.pyd
+*.dll
+*.so
+*.dylib
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# JupyterNB
+.ipynb_checkpoints
+
+# ====== Project-specific ======
+# SQLite database
+data/*.db
+*.db
+
+# Temporary or generated output
+output/
+tmp/
+logs/
+*.log
+
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+# System backups
+*.bak
+*.tmp
+*.old
+*.orig
