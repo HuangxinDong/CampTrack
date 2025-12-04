@@ -1,5 +1,5 @@
 {
-    "Admin": {"username": "admin1", "password": "", "role": "admin", "enabled": "true"},
-    "Leader": {"username": "leader1", "password": "", "role": "leader", "enabled": "true", "daily_payment_rate": 100},
-    "Coordinator": {"username": "coordinator1", "password": "", "role": "coordinator", "enabled": "true"}
+    "Admin": {"username": "admin1", "password": "", "role": "Admin", "enabled": "true"},
+    "Leader": {"username": "leader1", "password": "", "role": "Leader", "enabled": "true", "daily_payment_rate": 100},
+    "Coordinator": {"username": "coordinator1", "password": "", "role": "Coordinator", "enabled": "true"}
 }
