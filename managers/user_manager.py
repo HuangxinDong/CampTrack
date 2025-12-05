@@ -1,4 +1,4 @@
-from models.users import User, Leader, Coordinator, Admin
+from models.users.users import Leader, Coordinator, Admin
 from data.data_manager import save_data
 
 class UserManager:

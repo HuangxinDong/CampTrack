@@ -1,16 +1,14 @@
 # Session Manager
 
 from .session import Session
-from models import User
+from models.users import User
 
 def create_session(users: list[User]):
-    # 1. Login user against users data
     user = login(users)
     if user is None:
         return None
 
     print(f"Welcome {user.username}")
-    # 2. Create the session object
     session = Session(user)
 
     return session
