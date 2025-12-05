@@ -1,9 +1,46 @@
-# data_manager
-
-from models import parse_users
+from models.users.admin import Admin
+from models.users.coordinator import Coordinator
+from models.users.leader import Leader
 from .data import Data
 import logging
 import json
+
+CLASS_MAP = {
+    "Admin": Admin,
+    "Leader": Leader,
+    "Coordinator": Coordinator
+}
+
+def parse_users(json_str):
+    user_objects = []
+
+    if not json_str:
+        logging.warning("Users file is empty")
+        return False, []
+
+    try:
+        raw_data = json.loads(json_str)
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to decode JSON: {e}")
+        return False, []
+
+    if raw_data is None or not isinstance(raw_data, dict):
+        logging.error("JSON root is not a dictionary")
+        return False, []
+
+    for key, attributes in raw_data.items():
+        role = attributes.get("role")
+        target_class = CLASS_MAP.get(role)
+        if target_class:
+            try:
+                obj = target_class(**attributes)
+                user_objects.append(obj)
+            except TypeError as e:
+                logging.error(f"Data mismatch for {key}: {e}")
+        else:
+            logging.warning(f"Unknown role '{role}' for user '{key}'")
+
+    return True, user_objects
 
 def save_data(data):
     """

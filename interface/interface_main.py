@@ -7,28 +7,27 @@ class MainUI:
 # For Each Command, pass in session and data if these are needed
 # This ensures that all data is accessible without the need for global scope
 
+
 def process_user_command(session, data):
-    user_input = input("Please enter a valid command\n> ")
-    if not user_input.startswith("/"):
-        print("Unrecognised command. Please type /help for a list of valid commands.")
+    session.user.display_commands()
+
+    user_input = input("Please enter a number or q to quit\n> ")
+    
+    if user_input == 'q':
+        return False
+    
+    try:
+        user_input_as_int = int(user_input)
+    except ValueError:
+        print("Please enter a valid number.")
         return True
-    user_input = user_input[1:]
-    user_input = user_input.split(" ")
-    match user_input[0]:
-        case "exit":
-            return False
-        case "help":
-            print("This would call the help commands")
-            return True
-        case "admin":
-            print("This would call the admin commands")
-            return True
-        case "leader":
-            print("This would call the leader commands")
-            return True
-        case "coordinator" | "coord":
-            print("This would call the coordinator commands")
-            return True
-        case _:
-            print("Unrecognised command. Please type /help for a list of valid commands.")
-            return True
+
+    # Validate range (positive and exists in list)
+    if user_input_as_int < 1 or user_input_as_int > len(session.user.commands):
+        print("Please enter a number from the list.")
+        return True
+
+    # b for back to homepage
+
+    session.user.process_command(user_input_as_int)
+    return True
