@@ -23,4 +23,23 @@ class Coordinator(User):
         self.camp_manager.add(camp)
     
     def edit_camp(self):
+        self.commands = [
+            {'name': 'Top Up Food Stock', 'command': self.top_up_food_stock},
+            {'name': 'Set Daily Payment Limit', 'command': self.set_daily_payment_limit},
+        ]
+    
+    def top_up_food_stock(self):
+        camp_name = input("Enter the camp name to top up food stock for: ")
+        camps = self.camp_manager.read_all()
+        for camp in camps:
+            if camp.name == camp_name:
+                additional_food = int(input("Enter the amount of food to add: "))
+                camp.topup_food(additional_food)
+                self.camp_manager.update(camp)
+                print(f"Food stock for camp '{camp_name}' has been topped up by {additional_food}.")
+                return
+
+
+    def set_daily_payment_limit(self):
         pass
+
