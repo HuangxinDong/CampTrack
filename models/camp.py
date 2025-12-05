@@ -42,7 +42,7 @@ class Camp:
 
     def topup_food(self, amount):
         for date in self.food_stock_information:
-            self.food_stock_information[date] += amount
+            self.food_stock_information[date] = int(self.food_stock_information[date]) + amount
 
     # Caluclate the total food requirements for the camp
     def total_food_required(self, food_per_camp_per_day):
