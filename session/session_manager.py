@@ -1,19 +1,16 @@
-# Session Manager
-
 from .session import Session
-from models.users import User
 
-def create_session(users: list[User]):
+def create_session(users: list[dict]):
     user = login(users)
     if user is None:
         return None
 
-    print(f"Welcome {user.username}")
+    print(f"Welcome {user['username']}")
     session = Session(user)
 
     return session
 
-def login(users: list[User]):
+def login(users: list[dict]):
     valid_input = False
     while not valid_input:
         username_input = input("Please enter your username: ")
@@ -24,7 +21,7 @@ def login(users: list[User]):
         found_user = None
 
         for user in users:
-            if user.username == username_input:
+            if user["username"] == username_input:
                 found_user = user
                 break
 
@@ -32,7 +29,7 @@ def login(users: list[User]):
             print("Username not recognised. Please enter a valid username, or type /exit to close the program.")
         else:
             password_input = input("Please enter your password: ")
-            if found_user.password == password_input:
+            if found_user["password"] == password_input:
                 valid_input = True
                 return found_user
             else:

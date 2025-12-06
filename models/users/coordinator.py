@@ -1,8 +1,10 @@
 from data.camp_manager import CampManager
-from data.user_manager import UserManager
 from models.camp import Camp
+from models.users.class_map import register
 from models.users.users import User
+from data.user_manager import UserManager
 
+@register("Coordinator")
 class Coordinator(User):
     def __init__(self, username, password, role="Coordinator", enabled=True):
         super().__init__(username, password, role, enabled)

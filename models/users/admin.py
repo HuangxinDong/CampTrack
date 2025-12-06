@@ -1,5 +1,8 @@
+
+from models.users.class_map import register
 from models.users.users import User
 
+@register("Admin")
 class Admin(User):
     """
     Admin model class. Inherits from User.
@@ -10,14 +13,20 @@ class Admin(User):
         self.commands = [
             { 'name': 'Create User', 'command': self.handle_create_user },
             { 'name': 'Delete User', 'command': self.handle_delete_user },
-            { 'name': 'Command 3', 'command': self.command_3 },
         ]
+        from data.user_manager import UserManager
+        self.user_manager = UserManager()
 
     def handle_create_user(self):
-        print('Create user')
+        username = input("Enter username: ")
+        password = input("Enter password: ")
+        role = input("Enter role (Leader/Coordinator): ")
+        
+        success, message = self.user_manager.create_user(username, password, role)
+        print(message)
 
     def handle_delete_user(self):
-        print('Delete User')
+        username = input("Enter username to delete: ")
+        success, message = self.user_manager.delete_user(username)
+        print(message)
 
-    def command_3(self):
-        print('Command 3 User')

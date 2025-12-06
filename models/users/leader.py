@@ -1,5 +1,7 @@
+from models.users.class_map import register
 from models.users.users import User
 
+@register("Leader")
 class Leader(User):
     def __init__(self, username, password, role, enabled, daily_payment_rate):
         super().__init__(username, password, role, enabled)
