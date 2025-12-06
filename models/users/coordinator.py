@@ -1,4 +1,5 @@
 from data.camp_manager import CampManager
+from data.user_manager import UserManager
 from models.camp import Camp
 from models.users.users import User
 
@@ -11,6 +12,7 @@ class Coordinator(User):
         ]
         self.commands = self.parent_commands
         self.camp_manager = CampManager()
+        self.user_manager = UserManager()
 
     def create_camp(self):
         name = input('Enter camp name: ')

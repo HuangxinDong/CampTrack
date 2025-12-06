@@ -1,5 +1,5 @@
 # Program entry point
-from data.data_manager import UserManager
+from data.user_manager import UserManager
 from session import create_session
 from program import run_program
 
