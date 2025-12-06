@@ -3,17 +3,22 @@ from data.user_manager import UserManager
 from session import create_session
 from program import run_program
 
+# Required for the registers
+import models.users.admin
+import models.users.coordinator
+import models.users.leader
+
 def main():
     user_manager = UserManager()
-    data = user_manager.load_data()
-    if data is None:
+    users = user_manager.read_all()
+    if not users:
         return # data didn't load correctly
 
-    session = create_session(data.users)
+    session = create_session(users)
     if session is None:
         return # session must have failed
     
-    run_program(session, data)
+    run_program(session, users)
 
     return # session has ended
     

@@ -1,21 +1,21 @@
-{
-    "Admin": {
+[
+    {
         "username": "admin1",
         "password": "",
         "role": "Admin",
-        "enabled": "true"
+        "enabled": true
     },
-    "Leader": {
+    {
         "username": "leader1",
         "password": "",
         "role": "Leader",
-        "enabled": "true",
+        "enabled": true,
         "daily_payment_rate": 100
     },
-    "Coordinator": {
+    {
         "username": "coordinator1",
         "password": "",
         "role": "Coordinator",
-        "enabled": "true"
+        "enabled": true
     }
-}
+]

@@ -2,93 +2,93 @@ import os
 import json
 import logging
 
-from models.users.admin import Admin
-from models.users.coordinator import Coordinator
-from models.users.leader import Leader
-from .data import Data
-
-CLASS_MAP = {
-    "Admin": Admin,
-    "Leader": Leader,
-    "Coordinator": Coordinator
-}
-
 class UserManager:
+    """All functions related to users."""
+
     def __init__(self, filepath="data/users.json"):
         self.filepath = filepath
         self._ensure_file()
+        self.users = self.read_all()
 
     def _ensure_file(self):
         if not os.path.exists(self.filepath):
             os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
             with open(self.filepath, "w") as f:
-                f.write("{}")
+                f.write("[]")
 
     def _parse_users(self, json_str):
-        user_objects = []
-
-        if not json_str:
-            logging.warning("Users file is empty")
-            return []
-
         try:
             raw_data = json.loads(json_str)
         except json.JSONDecodeError as e:
             logging.error(f"Failed to decode JSON: {e}")
             return []
 
-        if raw_data is None or not isinstance(raw_data, dict):
-            logging.error("JSON root is not a dictionary")
+        if not isinstance(raw_data, list):
+            logging.error("JSON root is not a list")
             return []
 
-        for key, attributes in raw_data.items():
-            role = attributes.get("role")
-            target_class = CLASS_MAP.get(role)
-            if target_class:
-                try:
-                    obj = target_class(**attributes)
-                    user_objects.append(obj)
-                except TypeError as e:
-                    logging.error(f"Data mismatch for {key}: {e}")
-            else:
-                logging.warning(f"Unknown role '{role}' for user '{key}'")
-
-        return user_objects
+        return raw_data
 
     def read_all(self):
         try:
-            with open(self.filepath, "r") as file:
-                json_content = file.read()
+            with open(self.filepath, "r") as f:
+                content = f.read()
         except FileNotFoundError:
-            logging.critical(f"Error: Could not find {self.filepath}")
+            logging.critical(f"File not found: {self.filepath}")
             return []
 
-        return self._parse_users(json_content)
+        return self._parse_users(content)
 
-    def save_data(self, data):
-        if data.users:
-            users_dict = {}
-            for user in data.users:
-                users_dict[user.username] = user.to_dict()
-            
-            try:
-                with open(self.filepath, "w") as file:
-                    json.dump(users_dict, file, indent=4)
-            except Exception as e:
-                logging.error(f"Error saving users: {e}")
-
-    def load_data(self):
+    def save_data(self):
+        users_list = self.users
         try:
-            with open(self.filepath, "r") as file:
-                json_content = file.read()
-            users = self._parse_users(json_content)
+            with open(self.filepath, "w") as f:
+                json.dump(users_list, f, indent=4)
+        except Exception as e:
+            logging.error(f"Error saving users: {e}")
 
-            if users is None:
-                logging.error("Error: Users file exist but parsed into None.")
-                return None
-            
-        except FileNotFoundError:
-            logging.critical(f"Error: Could not find {self.filepath}")
-            return None
+    def find_user(self, username):
+        for u in self.users:
+            if u.get("username") == username:
+                return u
+        return None
 
-        return Data(users)
+    def create_user(self, username, password, role, **kwargs):
+        if self.find_user(username):
+            return False, "Username already exists."
+
+        user = {
+            "username": username,
+            "password": password,
+            "role": role,
+            "enabled": True
+        }
+        user.update(kwargs)
+
+        self.users.append(user)
+        self.save_data()
+        return True, f"User {username} created successfully."
+
+    def delete_user(self, username):
+        user = self.find_user(username)
+        if user:
+            self.users.remove(user)
+            self.save_data()
+            return True, f"User {username} deleted."
+        return False, "User not found."
+
+    def toggle_user_status(self, username, enabled):
+        user = self.find_user(username)
+        if user:
+            user["enabled"] = enabled
+            self.save_data()
+            return True, f"User {username} status set to {'enabled' if enabled else 'disabled'}."
+        return False, "User not found."
+
+    def update_password(self, username, new_password):
+        user = self.find_user(username)
+        if user:
+            user["password"] = new_password
+            self.save_data()
+            return True, f"Password updated for {username}."
+        return False, "User not found."
