@@ -5,10 +5,11 @@ from models.users.users import User
 class Coordinator(User):
     def __init__(self, username, password, role="Coordinator", enabled=True):
         super().__init__(username, password, role, enabled)
-        self.commands = [
+        self.parent_commands = [
             {'name': 'Create Camp', 'command': self.create_camp},
             {'name': 'Edit Camp', 'command': self.edit_camp},
         ]
+        self.commands = self.parent_commands
         self.camp_manager = CampManager()
 
     def create_camp(self):
@@ -39,9 +40,12 @@ class Coordinator(User):
         selected_camp.topup_food(additional_food)
         self.camp_manager.update(selected_camp)
         print(f"Food stock for camp '{camp_name}' has been topped up by {additional_food}.")
+        self.commands = self.parent_commands
         return
 
 
     def set_daily_payment_limit(self):
+        scout_leader = input("Enter the name of the scout leader: ")
+        
         pass
 

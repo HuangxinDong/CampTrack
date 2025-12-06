@@ -1,1 +1,18 @@
-[]
+[
+    {
+        "camp_id": "0cd4a9af-d2e7-45f1-85d3-95537a5013b1",
+        "name": "test",
+        "location": "test",
+        "camp_type": "test",
+        "start_date": "2025-01-01",
+        "end_date": "2025-01-03",
+        "intial_food_stock_per_day": "50",
+        "food_stock_information": {
+            "2025-01-01": 50,
+            "2025-01-02": 50,
+            "2025-01-03": 50
+        },
+        "camp_leader": null,
+        "campers": []
+    }
+]

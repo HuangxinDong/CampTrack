@@ -1,10 +1,11 @@
 # Program entry point
+from data.data_manager import UserManager
 from session import create_session
-from data import load_data
 from program import run_program
 
 def main():
-    data = load_data()
+    user_manager = UserManager()
+    data = user_manager.load_data()
     if data is None:
         return # data didn't load correctly
 
