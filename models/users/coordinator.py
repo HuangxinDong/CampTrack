@@ -31,13 +31,15 @@ class Coordinator(User):
     def top_up_food_stock(self):
         camp_name = input("Enter the camp name to top up food stock for: ")
         camps = self.camp_manager.read_all()
-        for camp in camps:
-            if camp.name == camp_name:
-                additional_food = int(input("Enter the amount of food to add: "))
-                camp.topup_food(additional_food)
-                self.camp_manager.update(camp)
-                print(f"Food stock for camp '{camp_name}' has been topped up by {additional_food}.")
-                return
+        selected_camp = next((camp for camp in camps if camp.name == camp_name), None)
+        if not selected_camp:
+            print('Camp not found')
+            return
+        additional_food = int(input("Enter the amount of food to add: "))
+        selected_camp.topup_food(additional_food)
+        self.camp_manager.update(selected_camp)
+        print(f"Food stock for camp '{camp_name}' has been topped up by {additional_food}.")
+        return
 
 
     def set_daily_payment_limit(self):
