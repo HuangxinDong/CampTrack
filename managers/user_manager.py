@@ -1,5 +1,5 @@
 from models.users.users import Leader, Coordinator, Admin
-from data.data_manager import save_data
+from data.user_manager import save_data
 
 class UserManager:
     """
