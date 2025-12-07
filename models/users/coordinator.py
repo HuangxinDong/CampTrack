@@ -11,6 +11,7 @@ class Coordinator(User):
         self.parent_commands = [
             {'name': 'Create Camp', 'command': self.create_camp},
             {'name': 'Edit Camp', 'command': self.edit_camp},
+            {'name': 'Set Daily Payment Limit', 'command': self.set_daily_payment_limit},
         ]
         self.commands = self.parent_commands
         self.camp_manager = CampManager()
@@ -30,7 +31,6 @@ class Coordinator(User):
     def edit_camp(self):
         self.commands = [
             {'name': 'Top Up Food Stock', 'command': self.top_up_food_stock},
-            {'name': 'Set Daily Payment Limit', 'command': self.set_daily_payment_limit},
         ]
     
     def top_up_food_stock(self):
@@ -49,7 +49,23 @@ class Coordinator(User):
 
 
     def set_daily_payment_limit(self):
-        scout_leader = input("Enter the name of the scout leader: ")
+        scout_leader_name = input("Enter the name of the scout leader: ")
+
+        scout_leader = self.user_manager.find_user(scout_leader_name)
+        if scout_leader is None:
+            print('Cannot find user')
+            return
+        if scout_leader['role'] != 'Leader':
+            print('User is not a leader')
+            return
         
-        pass
+        daily_payment_rate = input("Enter the new daily payment rate: ")
+
+        try:
+            daily_payment_rate_as_int = int(daily_payment_rate)
+        except ValueError:
+            print("Not a valid number")
+            return
+
+        self.user_manager.update_daily_payment_rate(scout_leader['username'], daily_payment_rate_as_int)
 

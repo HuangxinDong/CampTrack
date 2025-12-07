@@ -71,24 +71,35 @@ class UserManager:
 
     def delete_user(self, username):
         user = self.find_user(username)
-        if user:
-            self.users.remove(user)
-            self.save_data()
-            return True, f"User {username} deleted."
-        return False, "User not found."
+        if user is None:
+            return False, "User not found."
+        self.users.remove(user)
+        self.save_data()
+        return True, f"User {username} deleted."
 
     def toggle_user_status(self, username, enabled):
         user = self.find_user(username)
-        if user:
-            user["enabled"] = enabled
-            self.save_data()
-            return True, f"User {username} status set to {'enabled' if enabled else 'disabled'}."
-        return False, "User not found."
+        if user is None:
+            return False, "User not found."
+        user["enabled"] = enabled
+        self.save_data()
+        return True, f"User {username} status set to {'enabled' if enabled else 'disabled'}."
 
     def update_password(self, username, new_password):
         user = self.find_user(username)
-        if user:
-            user["password"] = new_password
-            self.save_data()
-            return True, f"Password updated for {username}."
-        return False, "User not found."
+        if user is None:
+            return False, "User not found."
+        user["password"] = new_password
+        self.save_data()
+        return True, f"Password updated for {username}."
+        
+
+    def update_daily_payment_rate(self, username, new_daily_payment_rate):
+        user = self.find_user(username)
+        if user is None:
+            return False, "User not found."
+        if user['role'] != 'Leader':
+            return False, "User is not a leader"
+        user["daily_payment_rate"] = new_daily_payment_rate
+        self.save_data()
+        return True, f"Payment rate updated for {username}."
