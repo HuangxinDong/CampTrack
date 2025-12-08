@@ -1,3 +1,4 @@
+from datetime import datetime
 from data.camp_manager import CampManager
 from models.camp import Camp
 from models.users.class_map import register
@@ -21,9 +22,30 @@ class Coordinator(User):
         name = input('Enter camp name: ')
         location = input('Enter camp location: ')
         camp_type = input('Enter camp type: ')
-        start_date = input('Enter camp start date (yyyy-mm-dd): ')
-        end_date = input('Enter camp end date (yyyy-mm-dd): ')
-        food = input('Enter camp food stock: ')
+
+        while True:
+            start_date_str = input('Enter camp start date (yyyy-mm-dd): ')
+            end_date_str = input('Enter camp end date (yyyy-mm-dd): ')
+            try:
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+                if end_date < start_date:
+                    print("Error: End date must be after start date.")
+                    continue
+                break
+            except ValueError:
+                print("Error: Invalid date format. Please use yyyy-mm-dd.")
+
+        while True:
+            food_str = input('Enter camp food stock: ')
+            try:
+                food = int(food_str)
+                if food < 0:
+                    print("Error: Food stock must be a non-negative number.")
+                    continue
+                break
+            except ValueError:
+                print("Error: Please enter a valid integer for food stock.")
 
         camp = Camp(name, location, camp_type, start_date, end_date, food)
         self.camp_manager.add(camp)
