@@ -4,6 +4,7 @@ from models.camp import Camp
 from models.users.class_map import register
 from models.users.users import User
 from data.user_manager import UserManager
+from program.helpers import get_positive_int
 
 @register("Coordinator")
 class Coordinator(User):
@@ -36,17 +37,8 @@ class Coordinator(User):
             except ValueError:
                 print("Error: Invalid date format. Please use yyyy-mm-dd.")
 
-        while True:
-            food_str = input('Enter camp food stock: ')
-            try:
-                food = int(food_str)
-                if food < 0:
-                    print("Error: Food stock must be a non-negative number.")
-                    continue
-                break
-            except ValueError:
-                print("Error: Please enter a valid integer for food stock.")
-
+        food = get_positive_int('Enter camp food stock: ')
+        
         camp = Camp(name, location, camp_type, start_date, end_date, food)
         self.camp_manager.add(camp)
     
