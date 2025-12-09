@@ -8,8 +8,8 @@ class MainUI:
 # This ensures that all data is accessible without the need for global scope
 
 
-def process_user_command(session, data):
-    session.user.display_commands()
+def process_user_command(user):
+    user.display_commands()
 
     user_input = input("Please enter a number or q to quit\n> ")
     
@@ -23,11 +23,11 @@ def process_user_command(session, data):
         return True
 
     # Validate range (positive and exists in list)
-    if user_input_as_int < 1 or user_input_as_int > len(session.user.commands):
+    if user_input_as_int < 1 or user_input_as_int > len(user.commands):
         print("Please enter a number from the list.")
         return True
 
     # b for back to homepage
 
-    session.user.process_command(user_input_as_int)
+    user.process_command(user_input_as_int)
     return True
