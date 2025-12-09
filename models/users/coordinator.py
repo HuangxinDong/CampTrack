@@ -1,9 +1,9 @@
 from datetime import datetime
-from data.camp_manager import CampManager
+from persistence.dao.camp_manager import CampManager
 from models.camp import Camp
 from models.users.class_map import register
 from models.users.users import User
-from data.user_manager import UserManager
+from persistence.dao.user_manager import UserManager
 from program.helpers import get_positive_int
 
 @register("Coordinator")

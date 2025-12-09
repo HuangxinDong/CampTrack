@@ -4,7 +4,7 @@ import logging
 import os
 
 class CampManager:
-    def __init__(self, filepath="data/camps.json"):
+    def __init__(self, filepath="persistence/data/camps.json"):
         self.filepath = filepath
         self._ensure_file()
 

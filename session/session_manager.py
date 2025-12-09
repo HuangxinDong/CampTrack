@@ -1,5 +1,6 @@
 from .session import Session
 
+# Not a proper class
 def create_session(users: list[dict]):
     user = login(users)
     if user is None:
