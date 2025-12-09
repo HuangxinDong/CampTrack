@@ -1,5 +1,5 @@
 # Program entry point
-from data.user_manager import UserManager
+from persistence.dao.user_manager import UserManager
 from session import create_session
 from program import run_program
 

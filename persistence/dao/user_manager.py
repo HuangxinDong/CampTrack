@@ -5,7 +5,7 @@ import logging
 class UserManager:
     """All functions related to users."""
 
-    def __init__(self, filepath="data/users.json"):
+    def __init__(self, filepath="../data/users.json"):
         self.filepath = filepath
         self._ensure_file()
         self.users = self.read_all()
@@ -103,3 +103,4 @@ class UserManager:
         user["daily_payment_rate"] = new_daily_payment_rate
         self.save_data()
         return True, f"Payment rate updated for {username}."
+    

@@ -9,8 +9,8 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from data.camp_manager import CampManager
-from data.user_manager import UserManager
+from persistence.dao.camp_manager import CampManager
+from persistence.dao.user_manager import UserManager
 
 class StatisticsAndTrends:
     def __init__(self):

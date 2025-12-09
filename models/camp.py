@@ -16,7 +16,7 @@ class Camp:
         self.camp_leader = None
         self.campers = []  # will be an array of "campers class"
         self.initial_food_stock_per_day = initial_food_stock_per_day
-        self.food_per_camper_per_day = 1  # default value, can be changes by coordinator
+        self.food_per_camper_per_day = 1  # default value, can be changes by leader
         self.precamp_stock = 0
         self.topups = []  # array of numbers
         self.food_usage = {}  # key is date, value is amount

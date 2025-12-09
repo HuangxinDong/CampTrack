@@ -1,6 +1,7 @@
 
 from models.users.class_map import register
 from models.users.users import User
+from persistence.dao.user_manager import UserManager
 
 @register("Admin")
 class Admin(User):
@@ -14,7 +15,6 @@ class Admin(User):
             { 'name': 'Create User', 'command': self.handle_create_user },
             { 'name': 'Delete User', 'command': self.handle_delete_user },
         ]
-        from data.user_manager import UserManager
         self.user_manager = UserManager()
 
     def handle_create_user(self):
