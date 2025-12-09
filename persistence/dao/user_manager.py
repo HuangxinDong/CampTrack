@@ -5,7 +5,7 @@ import logging
 class UserManager:
     """All functions related to users."""
 
-    def __init__(self, filepath="../data/users.json"):
+    def __init__(self, filepath="persistence/data/users.json"):
         self.filepath = filepath
         self._ensure_file()
         self.users = self.read_all()
