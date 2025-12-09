@@ -1,6 +1,5 @@
 # Program entry point
-from persistence.dao.user_manager import UserManager
-from session import create_session
+from session.session import Session
 from program import run_program
 
 # Required for the registers
@@ -9,16 +8,12 @@ import models.users.coordinator
 import models.users.leader
 
 def main():
-    user_manager = UserManager()
-    users = user_manager.read_all()
-    if not users:
-        return # data didn't load correctly
-
-    session = create_session(users)
-    if session is None:
-        return # session must have failed
+    session = Session()
+    user = session.login()
+    if not user:
+        return
     
-    run_program(session, users)
+    run_program(user)
 
     return # session has ended
     
