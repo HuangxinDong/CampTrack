@@ -3,7 +3,7 @@ import json
 import logging
 
 class UserManager:
-    """All functions related to users."""
+    """All functions related to users data."""
 
     def __init__(self, filepath="persistence/data/users.json"):
         self.filepath = filepath

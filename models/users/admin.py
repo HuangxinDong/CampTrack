@@ -11,7 +11,7 @@ class Admin(User):
     """
     def __init__(self, username, password, role="Admin", enabled=True):
         super().__init__(username, password, role, enabled)
-        self.commands = [
+        self.commands += [
             { 'name': 'Create User', 'command': self.handle_create_user },
             { 'name': 'Delete User', 'command': self.handle_delete_user },
         ]
