@@ -10,27 +10,21 @@ from handlers.admin_handler import AdminHandler
 from handlers.coordinator_handler import CoordinatorHandler
 from handlers.leader_handler import LeaderHandler
 
-# Required for the registers
-import models.users.admin
-import models.users.coordinator
-import models.users.leader
+from models.users import register_user_types
+from handlers.base_handler import BaseHandler
 
+register_user_types()
+
+HANDLERS = {
+    "Admin": AdminHandler,
+    "Coordinator": CoordinatorHandler,
+    "Leader": LeaderHandler,
+}
 
 def create_handler(user, user_manager, camp_manager, message_manager):
     """Create the appropriate handler based on user role."""
-    role = user.role
-    
-    if role == "Admin":
-        return AdminHandler(user, user_manager, message_manager, camp_manager)
-    elif role == "Coordinator":
-        return CoordinatorHandler(user, user_manager, message_manager, camp_manager)
-    elif role == "Leader":
-        return LeaderHandler(user, user_manager, message_manager, camp_manager)
-    else:
-        # Fallback to base handler for unknown roles
-        from handlers.base_handler import BaseHandler
-        return BaseHandler(user, user_manager, message_manager)
-
+    handler_class = HANDLERS.get(user.role, BaseHandler)
+    return handler_class(user, user_manager, message_manager, camp_manager)
 
 def main():
     # Create managers ONCE (dependency injection)

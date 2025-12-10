@@ -28,7 +28,6 @@ class User:
         self.message_manager = MessageManager()
 
 
-
     def messages(self):
         self.commands = [
             {"name": "Read messages", "command": self.read_messages},

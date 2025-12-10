@@ -1,5 +1,6 @@
 import uuid
 from models.message import Message
+from cli.input_utils import get_input, cancellable
 
 
 class BaseHandler:
@@ -10,34 +11,58 @@ class BaseHandler:
         self.user_manager = user_manager
         self.message_manager = message_manager
 
+        self.parent_commands = [
+        {"name": "Go To My Messages", "command": self.messages}
+        ]
+        self.commands = self.parent_commands.copy()
+
     def get_my_messages(self):
         """Returns list of messages for current user."""
         messages = self.message_manager.read_all()
         return [m for m in messages if m['to_user'] == self.user.username]
+    
+    def messages(self):
+        self.commands = [
+            {"name": "Read messages", "command": self.read_messages},
+            {"name": "Send message", "command": self.send_message},
+        ]
 
-    def send_message(self, recipient_username, content):
-        """
-        Send a message to another user.
-        Returns (success: bool, message: str)
-        """
+
+    def read_messages(self):
+        messages = self.message_manager.read_all()
+        my_messages = [m for m in messages if m['to_user'] == self.user.username]
+        
+        if not my_messages:
+            print("You have no messages.")
+            return
+        
+        for msg in my_messages:
+            print(f"From: {msg['from_user']} | {msg['content']}")
+
+    
+    @cancellable
+    def send_message(self, recipient_username=None):
+        # If no recipient provided, ask for one
+        if recipient_username is None:
+            recipient_username = get_input('Enter the username for recipient: ')
+
         # Validate: can't message yourself
         if recipient_username == self.user.username:
-            return False, "You cannot send a message to yourself."
+            print('You cannot send a message to yourself.')
+            return
 
         # Validate: recipient must exist
         recipient = self.user_manager.find_user(recipient_username)
         if not recipient:
-            return False, "This user does not exist."
+            print('This user does not exist, please try again.')
+            return
 
-        message = Message(
-            str(uuid.uuid4()),
-            self.user.username,
-            recipient['username'],
-            content
-        )
+        message_content = get_input('Enter your message: ')
+
+        message = Message(str(uuid.uuid4()), self.user.username, recipient['username'], message_content)
 
         try:
             self.message_manager.add(message.to_dict())
-            return True, "Message sent successfully."
-        except Exception:
-            return False, "Failed to send message. Please try again later."
+            print("Message sent successfully.")
+        except Exception as e:
+            print("Failed to send message. Please try again later.")

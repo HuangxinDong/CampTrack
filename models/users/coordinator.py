@@ -3,6 +3,7 @@ from datetime import datetime
 from models.camp import Camp
 from models.users.class_map import register
 from models.users.users import User
+from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int 
 
 @register("Coordinator")
