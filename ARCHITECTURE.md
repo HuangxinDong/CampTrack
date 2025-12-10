@@ -10,6 +10,11 @@
        │
        ▼
 ┌─────────────┐
+│     CLI     │  ← UI layer (main_loop, display, input_utils, session)
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
 │   Models    │  ← Data classes only (User, Camp, Message)
 └──────┬──────┘
        │
