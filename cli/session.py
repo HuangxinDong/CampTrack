@@ -33,6 +33,10 @@ class Session:
                 print(error_message)
                 continue
             
+            if not found_user.get("enabled", True):
+                print("Account disabled. Please contact admin.")
+                continue
+            
             print(f"Welcome {found_user['username']}")
 
             user_class = user_from_dict(found_user)
