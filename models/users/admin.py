@@ -1,4 +1,3 @@
-
 from models.users.class_map import register
 from models.users.users import User
 from persistence.dao.user_manager import UserManager
@@ -11,6 +10,7 @@ class Admin(User):
     """
     def __init__(self, username, password, role="Admin", enabled=True):
         super().__init__(username, password, role, enabled)
+       
         self.user_manager = UserManager()
 
     def create_user(self, username, password, role, **kwargs):

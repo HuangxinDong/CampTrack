@@ -1,7 +1,7 @@
 import json
 
 class DailyReportManager:
-    def __init__(self, path="data/daily_reports.json"):
+    def __init__(self, path="persistence/data/daily_reports.json"):
         self.path = path
 
     def read_all(self):
