@@ -1,4 +1,3 @@
-from persistence.dao.camp_manager import CampManager
 from models.users.class_map import register
 from models.users.users import User
 from program.helpers import get_positive_int
@@ -12,7 +11,6 @@ class Leader(User):
             {'name': 'Edit Camp', 'command': self.create_camp},
         ]
         self.commands = self.parent_commands
-        self.camp_manager = CampManager()
 
     def edit_camp(self):
         self.commands = [
