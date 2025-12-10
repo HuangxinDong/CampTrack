@@ -55,4 +55,4 @@ class ConversationDisplay(DisplayHelper):
 
 
 # Default instance for easy import
-conversation_display = ConversationDisplay(
+conversation_display = ConversationDisplay()
