@@ -1,6 +1,8 @@
 import uuid
 from models.message import Message
 from cli.input_utils import get_input, cancellable
+from handlers.message_handler import get_conversation_summaries
+from cli.display import conversation_display
 
 
 class BaseHandler:
@@ -30,16 +32,27 @@ class BaseHandler:
         ]
 
 
+    @cancellable
     def read_messages(self):
         messages = self.message_manager.read_all()
-        my_messages = [m for m in messages if m['to_user'] == self.user.username]
+        summaries = get_conversation_summaries(messages, self.user.username)
         
-        if not my_messages:
-            print("You have no messages.")
+        if not summaries:
+            print("No conversations.")
             return
         
-        for msg in my_messages:
-            print(f"From: {msg['from_user']} | {msg['content']}")
+        conversation_display.display_list(summaries)
+        choice = get_input("")
+        
+        if choice == "0":
+            return
+        
+        if not choice.isdigit() or int(choice) < 1 or int(choice) > len(summaries):
+            print("Invalid selection.")
+            return
+        
+        selected_partner = summaries[int(choice) - 1]['partner']
+        self.view_conversation(selected_partner)
 
     
     @cancellable
