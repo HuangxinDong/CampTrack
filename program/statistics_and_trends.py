@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, date
 
 CURRENT_DIR = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
@@ -63,9 +63,19 @@ class StatisticsAndTrends:
         return daily_rate * days if days > 0 else 0
 
     def get_camp_days(self, camp):
+        start = camp.start_date
+        end = camp.end_date
         try:
-            start = datetime.strptime(camp.start_date, "%Y-%m-%d")
-            end = datetime.strptime(camp.end_date, "%Y-%m-%d")
+            if isinstance(start, date):
+                start_dt = datetime.combine(start, datetime.min.time())
+            else:
+                start_dt = datetime.strptime(start, "%Y-%m-%d")
+
+            if isinstance(end, date):
+                end_dt = datetime.combine(end, datetime.min.time())
+            else:
+                end_dt = datetime.strptime(end, "%Y-%m-%d")
+
         except Exception as e:
             print(f"[WARN] Failed to parse camp dates: {e}")
             return 0

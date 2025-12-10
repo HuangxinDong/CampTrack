@@ -1,7 +1,6 @@
 
 from models.users.class_map import register
 from models.users.users import User
-from persistence.dao.user_manager import UserManager
 
 @register("Admin")
 class Admin(User):

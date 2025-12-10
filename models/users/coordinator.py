@@ -1,9 +1,8 @@
 from datetime import datetime
-from persistence.dao.camp_manager import CampManager
+
 from models.camp import Camp
 from models.users.class_map import register
 from models.users.users import User
-from persistence.dao.user_manager import UserManager
 from program.helpers import get_positive_int
 
 @register("Coordinator")
@@ -12,12 +11,10 @@ class Coordinator(User):
         super().__init__(username, password, role, enabled)
         self.parent_commands += [
             {'name': 'Create Camp', 'command': self.create_camp},
-            {'name': 'Edit Camp', 'command': self.edit_camp},
+            {'name': 'Edit Camp', 'command': self.edit_camp_resources},
             {'name': 'Set Daily Payment Limit', 'command': self.set_daily_payment_limit},
         ]
         self.commands = self.parent_commands
-        self.camp_manager = CampManager()
-        self.user_manager = UserManager()
 
     def create_camp(self):
         name = input('Enter camp name: ')
@@ -42,7 +39,7 @@ class Coordinator(User):
         camp = Camp(name, location, camp_type, start_date, end_date, food)
         self.camp_manager.add(camp)
     
-    def edit_camp(self):
+    def edit_camp_resources(self):
         self.commands = [
             {'name': 'Top Up Food Stock', 'command': self.top_up_food_stock},
         ]

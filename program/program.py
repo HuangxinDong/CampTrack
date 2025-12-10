@@ -5,5 +5,5 @@ import interface
 def run_program(user):
     run_program = True
     while run_program:
-        run_program = interface.process_user_command(user)
+        run_program = interface.main_ui.process_command(user)
     return
