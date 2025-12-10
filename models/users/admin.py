@@ -1,6 +1,7 @@
 
 from models.users.class_map import register
 from models.users.users import User
+from persistence.dao.user_manager import UserManager
 
 @register("Admin")
 class Admin(User):
@@ -32,6 +33,12 @@ class Admin(User):
         Returns (success, message).
         """
         return self.user_manager.toggle_user_status(username, enabled)
+
+    def update_user_password(self, username, new_password):
+        return self.user_manager.update_password(username, new_password)
+
+    def update_user_rate(self, username, new_rate):
+        return self.user_manager.update_daily_payment_rate(username, new_rate)
 
 
 
