@@ -2,20 +2,55 @@
 from cli.session import Session
 from cli.main_loop import run_program
 
+from persistence.dao.user_manager import UserManager
+from persistence.dao.camp_manager import CampManager
+from persistence.dao.message_manager import MessageManager
+
+from handlers.admin_handler import AdminHandler
+from handlers.coordinator_handler import CoordinatorHandler
+from handlers.leader_handler import LeaderHandler
+
 # Required for the registers
 import models.users.admin
 import models.users.coordinator
 import models.users.leader
 
+
+def create_handler(user, user_manager, camp_manager, message_manager):
+    """Create the appropriate handler based on user role."""
+    role = user.role
+    
+    if role == "Admin":
+        return AdminHandler(user, user_manager, message_manager, camp_manager)
+    elif role == "Coordinator":
+        return CoordinatorHandler(user, user_manager, message_manager, camp_manager)
+    elif role == "Leader":
+        return LeaderHandler(user, user_manager, message_manager, camp_manager)
+    else:
+        # Fallback to base handler for unknown roles
+        from handlers.base_handler import BaseHandler
+        return BaseHandler(user, user_manager, message_manager)
+
+
 def main():
+    # Create managers ONCE (dependency injection)
+    user_manager = UserManager()
+    camp_manager = CampManager()
+    message_manager = MessageManager()
+
+    # Login
     session = Session()
     user = session.login()
-    if not user:
+    
+    if user is None:
         return
-    
-    run_program(user)
 
-    return # session has ended
-    
+    # Create handler for this user's role
+    handler = create_handler(user, user_manager, camp_manager, message_manager)
+
+    # Run main loop with both user and handler
+    run_program(user, handler)
+
+
 if __name__ == "__main__":
     main()
