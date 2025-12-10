@@ -32,11 +32,11 @@ class StatisticsAndTrends:
             getattr(camp, "food_per_camper", 0)
         )
 
-        if not num_campers or not food_per_camper:
+        if num_campers == 0 or food_per_camper == 0:
             return 0
 
         days = self.get_camp_days(camp)
-        return num_campers * food_per_camper * days if days > 0 else 0
+        return num_campers * food_per_camper * days
 
     def get_incident_count(self, camp_id):
         reports = self.daily_report_manager.read_all()
@@ -45,9 +45,11 @@ class StatisticsAndTrends:
         for r in reports:
             if r.get("camp_id") != camp_id:
                 continue
-            text = (r.get("content") or r.get("report") or "").lower()
-            if any(word in text for word in ["incident", "injury", "accident"]):
+
+            text = r.get("text", "").lower()  
+            if any(w in text for w in ["incident", "injury", "accident"]):
                 count += 1
+
         return count
 
     def get_earnings(self, leader_username, camp):
@@ -55,30 +57,19 @@ class StatisticsAndTrends:
         if not user:
             return 0
 
-        daily_rate = user.get("daily_payment_rate", 0)
-        if not daily_rate:
-            return 0
-
+        daily_rate = getattr(user, "daily_payment_rate", 0)  # ← 修正点
         days = self.get_camp_days(camp)
-        return daily_rate * days if days > 0 else 0
+
+        return daily_rate * days
 
     def get_camp_days(self, camp):
         start = camp.start_date
         end = camp.end_date
-        try:
-            if isinstance(start, date):
-                start_dt = datetime.combine(start, datetime.min.time())
-            else:
-                start_dt = datetime.strptime(start, "%Y-%m-%d")
 
-            if isinstance(end, date):
-                end_dt = datetime.combine(end, datetime.min.time())
-            else:
-                end_dt = datetime.strptime(end, "%Y-%m-%d")
-
-        except Exception as e:
-            print(f"[WARN] Failed to parse camp dates: {e}")
-            return 0
+        if isinstance(start, str):
+            start = datetime.strptime(start, "%Y-%m-%d").date()
+        if isinstance(end, str):
+            end = datetime.strptime(end, "%Y-%m-%d").date()
 
         delta = (end - start).days
         return delta + 1 if delta >= 0 else 0

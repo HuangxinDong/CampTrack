@@ -1,4 +1,16 @@
 [
-    {"camp_id": "camp1", "content": "Everything fine"},
-    {"camp_id": "camp1", "content": "Minor incident happened"}
+    {
+        "report_id": "uuid",
+        "camp_id": "camp1",
+        "leader_username": "leader1",
+        "date": "2026-01-02",
+        "text": "Today we hiked. One minor incident."
+    },
+    {
+        "report_id": "62bf47b6-6730-48df-81cd-8bf30a2c434c",
+        "camp_id": "48ee70b4-679f-4379-9ab0-dd9295c38016",
+        "leader_username": "leader1",
+        "date": "2025-12-10",
+        "text": "hike"
+    }
 ]

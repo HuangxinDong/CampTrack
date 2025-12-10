@@ -59,4 +59,13 @@ class CampManager:
         except Exception as e:
             logging.error(f"Error writing camps.json: {e}")
             raise  
+    
+    #this is added by Yufei to import csv for leaders
+    def get_camp_by_id(self, camp_id):
+        camps = self.read_all()
+        for camp in camps:
+            if camp.camp_id == camp_id:
+                return camp
+        return None
+
 
