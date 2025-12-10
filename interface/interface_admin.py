@@ -1,18 +1,33 @@
-from managers.user_manager import UserManager
-
-class AdminUI:
-    def __init__(self, data):
-        self.user_manager = UserManager(data)
-
-    def handle_create_user(self):
+class AdminInterface:
+    @staticmethod
+    def get_user_details():
+        print("\n--- Create New User ---")
         username = input("Enter username: ")
         password = input("Enter password: ")
         role = input("Enter role (Leader/Coordinator): ")
-        
-        success, message = self.user_manager.create_user(username, password, role)
-        print(message)
+        kwargs = {}
+        if role.lower() == "leader":
+            try:
+                rate = float(input("Enter daily payment rate: "))
+                kwargs['daily_payment_rate'] = rate
+            except ValueError:
+                print("Invalid rate, defaulting to 0.0")
+                kwargs['daily_payment_rate'] = 0.0
+        return username, password, role, kwargs
 
-    def handle_delete_user(self):
-        username = input("Enter username to delete: ")
-        success, message = self.user_manager.delete_user(username)
-        print(message)
+    @staticmethod
+    def get_username_to_delete():
+        print("\n--- Delete User ---")
+        return input("Enter username to delete: ")
+
+    @staticmethod
+    def get_status_toggle_details():
+        print("\n--- Toggle User Status ---")
+        username = input("Enter username: ")
+        enable_input = input("Enable user? (y/n): ")
+        enabled = enable_input.lower() == 'y'
+        return username, enabled
+
+    @staticmethod
+    def show_message(message):
+        print(f"[System]: {message}")

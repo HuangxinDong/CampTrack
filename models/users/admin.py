@@ -2,6 +2,7 @@
 from models.users.class_map import register
 from models.users.users import User
 from persistence.dao.user_manager import UserManager
+from interface.interface_admin import AdminInterface
 
 @register("Admin")
 class Admin(User):
@@ -11,22 +12,26 @@ class Admin(User):
     """
     def __init__(self, username, password, role="Admin", enabled=True):
         super().__init__(username, password, role, enabled)
-        self.commands = [
-            { 'name': 'Create User', 'command': self.handle_create_user },
-            { 'name': 'Delete User', 'command': self.handle_delete_user },
-        ]
         self.user_manager = UserManager()
+        self.commands = [
+            { 'name': 'Create User', 'command': self.create_user },
+            { 'name': 'Delete User', 'command': self.delete_user },
+            { 'name': 'Toggle User Status', 'command': self.toggle_status },
+        ]
 
-    def handle_create_user(self):
-        username = input("Enter username: ")
-        password = input("Enter password: ")
-        role = input("Enter role (Leader/Coordinator): ")
-        
-        success, message = self.user_manager.create_user(username, password, role)
-        print(message)
+    def create_user(self):
+        username, password, role, kwargs = AdminInterface.get_user_details()
+        success, message = self.user_manager.create_user(username, password, role, **kwargs)
+        AdminInterface.show_message(message)
 
-    def handle_delete_user(self):
-        username = input("Enter username to delete: ")
+    def delete_user(self):
+        username = AdminInterface.get_username_to_delete()
         success, message = self.user_manager.delete_user(username)
-        print(message)
+        AdminInterface.show_message(message)
+
+    def toggle_status(self):
+        username, enabled = AdminInterface.get_status_toggle_details()
+        success, message = self.user_manager.toggle_user_status(username, enabled)
+        AdminInterface.show_message(message)
+
 
