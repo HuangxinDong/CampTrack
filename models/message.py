@@ -3,8 +3,11 @@ from datetime import datetime
 
 class Message:
     def __init__(
-        self, message_id, from_user, to_user, content, sent_at = datetime.now(), mark_as_read=False
+        self, message_id, from_user, to_user, content, sent_at = None, mark_as_read=False
     ):
+        if sent_at is None:
+            sent_at = datetime.now()
+            
         self.message_id = message_id    
         self.from_user = from_user
         self.to_user = to_user
