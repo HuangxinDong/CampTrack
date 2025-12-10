@@ -92,6 +92,7 @@ class Camp:
             "start_date": self.start_date.strftime("%Y-%m-%d"),
             "end_date": self.end_date.strftime("%Y-%m-%d"),
             "initial_food_stock_per_day": self.initial_food_stock_per_day,
+            "food_per_camper_per_day": self.food_per_camper_per_day,
             "camp_leader": self.camp_leader,
             "campers": [camper.to_dict() for camper in self.campers],
         }
@@ -111,5 +112,6 @@ class Camp:
 
         camp.camp_id = data["camp_id"]
         camp.camp_leader = data["camp_leader"]
+        camp.food_per_camper_per_day = data.get("food_per_camper_per_day", 1)
 
         return camp
