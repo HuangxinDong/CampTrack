@@ -1,6 +1,6 @@
 """Main user interface for command processing."""
 
-from utils.input_helpers import get_input, QuitException, BackException
+from cli.input_utils import get_input, QuitException, BackException
 
 
 class MainUI:

@@ -6,8 +6,8 @@ from persistence.dao.user_manager import UserManager
 from persistence.dao.camp_manager import CampManager
 from persistence.dao.message_manager import MessageManager
 from models.message import Message
-from utils.conversation_helpers import get_conversation_summaries
-from utils.input_helpers import get_input, cancellable
+from handlers.message_handler import get_conversation_summaries
+from cli.input_utils import get_input, cancellable
 
 
 class User:
