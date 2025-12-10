@@ -7,7 +7,8 @@
         "start_date": "2026-01-01",
         "end_date": "2026-01-03",
         "initial_food_stock_per_day": 50,
-        "camp_leader": null,
+        "food_per_camper_per_day": 4,
+        "camp_leader": "leader1",
         "campers": []
     }
 ]
