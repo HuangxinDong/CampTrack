@@ -22,6 +22,27 @@ class AdminInterface:
         enabled = enable_input.lower() == 'y'
         return username, enabled
 
+    def get_update_user_selection(self):
+        print("\n--- Update User Info ---")
+        print("1. Update Password")
+        print("2. Update Daily Rate (Leader only)")
+        choice = input("Select option: ")
+        return choice
+
+    def get_update_password_input(self):
+        username = input("Enter username: ")
+        new_password = input("Enter new password: ")
+        return username, new_password
+
+    def get_update_rate_input(self):
+        username = input("Enter username: ")
+        try:
+            new_rate = float(input("Enter new daily rate: "))
+            return username, new_rate
+        except ValueError:
+            print("Invalid rate.")
+            return None, None
+
     @staticmethod
     def show_message(message):
         print(f"[System]: {message}")
