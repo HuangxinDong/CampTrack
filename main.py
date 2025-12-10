@@ -1,5 +1,5 @@
 # Program entry point
-from session.session import Session
+from cli.session import Session
 from cli.main_loop import run_program
 
 # Required for the registers
