@@ -1,6 +1,7 @@
 
 from models.users.class_map import register
 from models.users.users import User
+from persistence.dao.user_manager import UserManager
 
 @register("Admin")
 class Admin(User):
@@ -10,21 +11,41 @@ class Admin(User):
     """
     def __init__(self, username, password, role="Admin", enabled=True):
         super().__init__(username, password, role, enabled)
-        self.commands += [
-            { 'name': 'Create User', 'command': self.handle_create_user },
-            { 'name': 'Delete User', 'command': self.handle_delete_user },
-        ]
+        self.user_manager = UserManager()
 
-    def handle_create_user(self):
-        username = input("Enter username: ")
-        password = input("Enter password: ")
-        role = input("Enter role (Leader/Coordinator): ")
-        
-        success, message = self.user_manager.create_user(username, password, role)
-        print(message)
+    def create_user(self, username, password, role, **kwargs):
+        """
+        Pure business logic to create a user.
+        Returns (success, message).
+        """
+        return self.user_manager.create_user(username, password, role, **kwargs)
 
-    def handle_delete_user(self):
-        username = input("Enter username to delete: ")
-        success, message = self.user_manager.delete_user(username)
-        print(message)
+    def get_user(self, username):
+        """
+        Retrieve user details.
+        """
+        return self.user_manager.find_user(username)
+
+    def delete_user(self, username):
+        """
+        Pure business logic to delete a user.
+        Returns (success, message).
+        """
+        return self.user_manager.delete_user(username)
+
+    def toggle_status(self, username, enabled):
+        """
+        Pure business logic to toggle user status.
+        Returns (success, message).
+        """
+        return self.user_manager.toggle_user_status(username, enabled)
+
+    def update_user_password(self, username, new_password):
+        return self.user_manager.update_password(username, new_password)
+
+    def update_user_rate(self, username, new_rate):
+        return self.user_manager.update_daily_payment_rate(username, new_rate)
+
+
+
 
