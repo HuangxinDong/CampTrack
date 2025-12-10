@@ -13,6 +13,9 @@ class AdminHandler(BaseHandler):
             {"name": "Delete User", "command": self.handle_delete_user},
         ]
 
+        self.main_commands = self.commands.copy()
+
+
     @cancellable 
     def handle_create_user(self):
         username = get_input("Enter username: ")

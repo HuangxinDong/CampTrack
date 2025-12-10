@@ -21,6 +21,9 @@ class CoordinatorHandler(BaseHandler):
             }
         ]
 
+        self.main_commands = self.commands.copy()
+
+
     @cancellable
     def create_camp(self):
         name = get_input('Enter camp name: ')
@@ -63,7 +66,7 @@ class CoordinatorHandler(BaseHandler):
         selected_camp.topup_food(additional_food)
         self.camp_manager.update(selected_camp)
         print(f"Food stock for camp '{camp_name}' has been topped up by {additional_food}.")
-        self.commands = self.parent_commands
+        self.commands = self.main_commands
 
     @cancellable
     def set_daily_payment_limit(self):

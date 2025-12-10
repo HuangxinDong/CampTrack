@@ -15,6 +15,8 @@ class BaseHandler:
         {"name": "Go To My Messages", "command": self.messages}
         ]
         self.commands = self.parent_commands.copy()
+        self.main_commands = self.commands.copy()
+
 
     def get_my_messages(self):
         """Returns list of messages for current user."""

@@ -12,7 +12,7 @@ def display_menu(handler):
 
 def get_menu_choice():
     """Get handler's menu selection. Raises QuitException or BackException."""
-    return get_input("Please enter a number\n> ")
+    return get_input("Please enter a number or press q to quit or b for back to homepage.\n> ")
 
 
 def run_program(user, handler):
@@ -28,7 +28,7 @@ def run_program(user, handler):
             print("Goodbye!")
             break
         except BackException:
-            handler.commands = handler.parent_commands
+            handler.commands = handler.main_commands
             continue
         
         try:

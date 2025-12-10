@@ -20,6 +20,9 @@ class LeaderHandler(BaseHandler):
             {"name": "Edit Camp", "command": self.edit_camp},
         ]
 
+        self.main_commands = self.commands.copy()
+
+
     @staticmethod
     def dates_conflict(start1, end1, start2, end2):
         return (start1 <= end2) and (end1 >= start2)
@@ -130,4 +133,4 @@ class LeaderHandler(BaseHandler):
 
         print(f"Food requirement updated for camp '{selected_camp.name}'.")
 
-        self.commands = self.parent_commands
+        self.commands = self.main_commands
