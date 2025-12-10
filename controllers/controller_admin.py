@@ -10,7 +10,7 @@ class AdminController:
         menu = [
             { 'name': 'Create User', 'command': self.run_create_user },
             { 'name': 'Delete User', 'command': self.run_delete_user },
-            { 'name': 'Toggle User Status', 'command': self.run_toggle_status },
+            { 'name': 'Enable/Disable User Account', 'command': self.run_toggle_status },
             { 'name': 'Update User Info', 'command': self.run_update_user },
         ]
         # Add shared commands from the model base class
@@ -29,8 +29,21 @@ class AdminController:
         self.view.show_message(message)
 
     def run_toggle_status(self):
-        username, enabled = self.view.get_toggle_status_input()
-        success, message = self.model.toggle_status(username, enabled)
+        username = self.view.get_username_input("Enable/Disable User Account")
+        user = self.model.get_user(username)
+        
+        if not user:
+            self.view.show_message("User not found.")
+            return
+
+        current_status = user.get('enabled', True)
+        new_status = self.view.get_enable_selection(username, current_status)
+        
+        if new_status == current_status:
+            self.view.show_message("No changes made.")
+            return
+
+        success, message = self.model.toggle_status(username, new_status)
         self.view.show_message(message)
 
     def run_update_user(self):

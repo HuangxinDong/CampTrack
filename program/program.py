@@ -1,8 +1,6 @@
 # program.py
 # Responsible for main program loop
 import interface
-
-import interface
 from models.users.admin import Admin
 from controllers.controller_admin import AdminController
 

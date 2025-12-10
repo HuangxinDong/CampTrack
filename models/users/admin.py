@@ -20,6 +20,12 @@ class Admin(User):
         """
         return self.user_manager.create_user(username, password, role, **kwargs)
 
+    def get_user(self, username):
+        """
+        Retrieve user details.
+        """
+        return self.user_manager.find_user(username)
+
     def delete_user(self, username):
         """
         Pure business logic to delete a user.

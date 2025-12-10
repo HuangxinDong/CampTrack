@@ -15,12 +15,21 @@ class AdminInterface:
         username = input("Enter username to delete: ")
         return username
 
-    def get_toggle_status_input(self):
-        print("--- Toggle User Status ---\n")
+    def get_username_input(self, title):
+        print(f"\n--- {title} ---")
         username = input("Enter username: ")
-        enable_input = input("Enable user? (y/n): ")
-        enabled = enable_input.lower() == 'y'
-        return username, enabled
+        return username
+
+    def get_enable_selection(self, username, current_status):
+        status_str = "Enabled" if current_status else "Disabled"
+        print(f"Current status for {username}: {status_str}")
+        
+        if current_status:
+            confirm = input("Disable user? (y/n): ")
+            return False if confirm.lower() == 'y' else True
+        else:
+            confirm = input("Enable user? (y/n): ")
+            return True if confirm.lower() == 'y' else False
 
     def get_update_user_selection(self):
         print("\n--- Update User Info ---")
