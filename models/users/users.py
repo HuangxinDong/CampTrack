@@ -2,6 +2,7 @@ from persistence.dao.user_manager import UserManager
 from persistence.dao.camp_manager import CampManager
 from persistence.dao.message_manager import MessageManager
 from models.message import Message
+from utils.conversation_helpers import get_conversations_from_messages
 class User:
     def __init__(self, username, password, role=None, enabled=True):
         self.username = username
@@ -26,7 +27,16 @@ class User:
         ]
 
     def read_messages(self):
-        pass
+        messages = self.message_manager.read_all()
+
+        conversations = get_conversations_from_messages(messages, self.username)
+
+        if not conversations:
+            print("You have no messages.")
+            return
+
+        print(conversations)
+
     
     def send_message(self):
         recipient_username = input('Enter the username for recipient: ')

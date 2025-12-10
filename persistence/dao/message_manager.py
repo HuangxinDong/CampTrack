@@ -42,17 +42,18 @@ class MessageManager:
         Read messages from json, find the message to update and insert message into data 
         """
         messages = self.read_all()
-        for i, message in enumerate(messages):
-            if message.message_id == updatedMessage.message_id:
-                messages[i] = updatedMessage
-                break
-            else:
-                messages.append(updatedMessage)
 
-        data = [m.to_dict() for m in messages]
+        message_was_found = False
+        for i, message in enumerate(messages):
+            if message["message_id"] == updatedMessage["message_id"]:
+                messages[i] = updatedMessage
+                message_was_found = True
+                break
+        if not message_was_found:
+            messages.append(updatedMessage)
         try:
             with open(self.filepath, "w") as f:
-                json.dump(data, f, indent=4)
+                json.dump(messages, f, indent=4)
         except Exception as e:
             logging.error(f"Error writing messages.json: {e}")
             raise  
