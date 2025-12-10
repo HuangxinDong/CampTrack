@@ -1,8 +1,15 @@
+import uuid
+from functools import partial 
+
+
 from persistence.dao.user_manager import UserManager
 from persistence.dao.camp_manager import CampManager
 from persistence.dao.message_manager import MessageManager
 from models.message import Message
-from utils.conversation_helpers import get_conversations_from_messages
+from utils.conversation_helpers import get_conversation_summaries
+from utils.input_helpers import get_input, cancellable
+
+
 class User:
     def __init__(self, username, password, role=None, enabled=True):
         self.username = username
@@ -20,41 +27,54 @@ class User:
         self.camp_manager = CampManager()
         self.message_manager = MessageManager()
 
+
+
     def messages(self):
         self.commands = [
             {"name": "Read messages", "command": self.read_messages},
             {"name": "Send message", "command": self.send_message},
         ]
 
+
+
     def read_messages(self):
         messages = self.message_manager.read_all()
-
-        conversations = get_conversations_from_messages(messages, self.username)
-
-        if not conversations:
+        my_messages = [m for m in messages if m['to_user'] == self.username]
+        
+        if not my_messages:
             print("You have no messages.")
             return
-
-        print(conversations)
+        
+        for msg in my_messages:
+            print(f"From: {msg['from_user']} | {msg['content']}")
 
     
-    def send_message(self):
-        recipient_username = input('Enter the username for recipient: ')
-        recipient = self.user_manager.find_user(recipient_username)
+    @cancellable
+    def send_message(self, recipient_username=None):
+        # If no recipient provided, ask for one
+        if recipient_username is None:
+            recipient_username = get_input('Enter the username for recipient: ')
 
+        # Validate: can't message yourself
         if recipient_username == self.username:
-            print('You cannot send a message to yourself')
+            print('You cannot send a message to yourself.')
             return
 
+        # Validate: recipient must exist
+        recipient = self.user_manager.find_user(recipient_username)
         if not recipient:
-            print('This user does not exist, please try again')
+            print('This user does not exist, please try again.')
             return
 
-        message_content = input('Enter your message: ')
+        message_content = get_input('Enter your message: ')
 
-        message = Message('temp_id', self.username, recipient['username'], message_content)
+        message = Message(str(uuid.uuid4()), self.username, recipient['username'], message_content)
 
-        self.message_manager.add(message.to_dict())
+        try:
+            self.message_manager.add(message.to_dict())
+            print("Message sent successfully.")
+        except Exception as e:
+            print("Failed to send message. Please try again later.")
 
 
 
@@ -68,12 +88,18 @@ class User:
             "enabled": self.enabled,
         }
 
+
+
     def __repr__(self):
         return f"<{self.role}: {self.username}>"
+
+
 
     def display_commands(self):
         for i, command in enumerate(self.commands):
             print(str(i + 1) + ". " + command["name"])
+
+
 
     def process_command(self, commandNumber):
         # Assume commandNumber is a number from interface_main
