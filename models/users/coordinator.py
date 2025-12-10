@@ -10,7 +10,7 @@ from program.helpers import get_positive_int
 class Coordinator(User):
     def __init__(self, username, password, role="Coordinator", enabled=True):
         super().__init__(username, password, role, enabled)
-        self.parent_commands = [
+        self.parent_commands += [
             {'name': 'Create Camp', 'command': self.create_camp},
             {'name': 'Edit Camp', 'command': self.edit_camp},
             {'name': 'Set Daily Payment Limit', 'command': self.set_daily_payment_limit},

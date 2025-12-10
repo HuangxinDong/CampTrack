@@ -8,7 +8,7 @@ class Leader(User):
     def __init__(self, username, password, role, enabled, daily_payment_rate):
         super().__init__(username, password, role, enabled)
         self.daily_payment_rate = daily_payment_rate
-        self.parent_commands = [
+        self.parent_commands  += [
             {'name': 'Edit Camp', 'command': self.create_camp},
         ]
         self.commands = self.parent_commands
