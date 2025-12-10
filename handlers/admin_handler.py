@@ -20,9 +20,8 @@ class AdminHandler(BaseHandler):
     def handle_create_user(self):
         username = get_input("Enter username: ")
         password = get_input("Enter password: ")
-        role = get_input("Enter role (Leader/Coordinator): ")
         
-        success, message = self.user_manager.create_user(username, password, role)
+        success, message = self.user_manager.create_user(username, password)
         print(message)
 
 
