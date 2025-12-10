@@ -5,6 +5,11 @@ class User:
         self.role = role
         self.enabled = enabled
 
+        # Base commands available to ALL user types
+        self.commands = [
+        {'name': 'Your Shared Action', 'command': self.test_method},
+    ]
+
     def to_dict(self):
         """Base to_dict method, can be overridden by subclasses"""
         return {
@@ -28,3 +33,7 @@ class User:
         command = self.commands[commandNumber-1]['command']
 
         command()
+
+    # delete before production - simple test debug func 
+    def test_method(self):
+        print("shared methods working!")
