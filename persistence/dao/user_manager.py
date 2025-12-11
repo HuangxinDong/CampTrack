@@ -53,15 +53,19 @@ class UserManager:
                 return u
         return None
 
-    def create_user(self, username, password, **kwargs):
+    def create_user(self, username, password, role, **kwargs):
+        if not username or not username.strip():
+            return False, "Username cannot be empty."
+        if not role or not role.strip():
+            return False, "Role cannot be empty."
+
         if self.find_user(username):
             return False, "Username already exists."
 
         user = {
             "username": username,
             "password": password,
-            # You are only allowed to create leaders
-            "role": 'Leader',
+            "role": role,
             "enabled": True
         }
         user.update(kwargs)
@@ -104,4 +108,31 @@ class UserManager:
         user["daily_payment_rate"] = new_daily_payment_rate
         self.save_data()
         return True, f"Payment rate updated for {username}."
-    
+
+    def update_username(self, old_username, new_username):
+        if self.find_user(new_username):
+            return False, "Username already exists."
+        
+        user = self.find_user(old_username)
+        if user is None:
+            return False, "User not found."
+            
+        user["username"] = new_username
+        self.save_data()
+        return True, f"Username updated to {new_username}."
+
+    def update_role(self, username, new_role):
+        user = self.find_user(username)
+        if user is None:
+            return False, "User not found."
+            
+        if new_role not in ["Leader", "Coordinator", "Admin"]:
+             return False, "Invalid role."
+
+        user["role"] = new_role
+        # If switching to Leader, ensure daily_payment_rate exists
+        if new_role == "Leader" and "daily_payment_rate" not in user:
+            user["daily_payment_rate"] = 0.0
+            
+        self.save_data()
+        return True, f"Role updated to {new_role} for {username}."

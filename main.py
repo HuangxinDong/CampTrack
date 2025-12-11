@@ -7,6 +7,7 @@ from persistence.dao.camp_manager import CampManager
 from persistence.dao.message_manager import MessageManager
 from persistence.dao.announcement_manager import AnnouncementManager
 from persistence.dao.system_notification_manager import SystemNotificationManager
+from persistence.dao.audit_log_manager import AuditLogManager
 
 from handlers.admin_handler import AdminHandler
 from handlers.coordinator_handler import CoordinatorHandler
@@ -36,6 +37,7 @@ def main():
     message_manager = MessageManager()
     announcement_manager = AnnouncementManager()
     system_notification_manager = SystemNotificationManager()
+    audit_log_manager = AuditLogManager()
 
     # Startup Banner
     from cli.startup_display import startup_display
@@ -48,8 +50,15 @@ def main():
     if user is None:
         return
 
-    # Create context
-    context = AppContext(user_manager, camp_manager, message_manager, announcement_manager, system_notification_manager)
+    # Create Context
+    context = AppContext(
+        user_manager, 
+        camp_manager, 
+        message_manager, 
+        announcement_manager, 
+        system_notification_manager,
+        audit_log_manager
+    )
 
     # Create handler for this user's role
     handler = create_handler(user, context)

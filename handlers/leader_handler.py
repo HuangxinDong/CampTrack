@@ -73,6 +73,7 @@ class LeaderHandler(BaseHandler):
         self.context.camp_manager.update(camp)
 
         console_manager.print_success(f"You are now supervising {camp.name}.")
+        self.context.audit_log_manager.log_event(self.user.username, "Supervise Camp", f"Started supervising {camp.name}")
 
     def _conflict_with_existing(self, new, existing):
         ns = datetime.strptime(str(new.start_date), "%Y-%m-%d").date()
@@ -101,6 +102,7 @@ class LeaderHandler(BaseHandler):
         new_food = get_positive_int("Enter food per camper per day: ")
         camp.food_per_camper_per_day = new_food
         self.context.camp_manager.update(camp)
+        self.context.audit_log_manager.log_event(self.user.username, "Edit Camp", f"Updated food settings for {camp.name}")
 
         console_manager.print_success(f"Updated food requirement for {camp.name}.")
 

@@ -95,6 +95,7 @@ class CoordinatorHandler(BaseHandler):
         self.context.camp_manager.add(camp)
         # Use new display class for success message
         coordinator_display.display_camp_creation_success(camp)
+        self.context.audit_log_manager.log_event(self.user.username, "Create Camp", f"Created camp {camp.name}")
 
     def edit_camp_resources(self):
         """Switch to camp editing submenu."""
@@ -141,6 +142,7 @@ class CoordinatorHandler(BaseHandler):
             console_manager.print_success(
                 f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}."
             )
+            self.context.audit_log_manager.log_event(self.user.username, "Top Up Food", f"Added {additional_food} to {selected_camp.name}")
             get_input("(Press Enter to continue)")
         except ValueError as e:
             from cli.console_manager import console_manager
@@ -188,6 +190,7 @@ class CoordinatorHandler(BaseHandler):
         self.context.camp_manager.update(selected_camp)
 
         console_manager.print_success(f"Location for '{selected_camp.name}' updated to '{new_location}'.")
+        self.context.audit_log_manager.log_event(self.user.username, "Edit Camp Location", f"Changed {selected_camp.name} location to {new_location}")
         self.commands = self.main_commands
 
     @cancellable
@@ -333,6 +336,7 @@ class CoordinatorHandler(BaseHandler):
         self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
 
         coordinator_display.display_payment_update_success(scout_leader_name, old_rate, daily_payment_rate)
+        self.context.audit_log_manager.log_event(self.user.username, "Set Payment Limit", f"Set {scout_leader_name} rate to {daily_payment_rate}")
 
     def restore_main_commands(self):
         self.commands = self.main_commands
