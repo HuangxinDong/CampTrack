@@ -53,7 +53,7 @@ class InputHandler:
         if value.lower() == self.back_char:
             raise BackException()
         
-        return value
+        return value.strip()
 
 
 def cancellable(func):

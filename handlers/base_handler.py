@@ -177,7 +177,7 @@ class BaseHandler:
         
         if not self.context.announcement_manager:
               console_manager.print_error("Announcement service unavailable.")
-              get_input("(Press Enter to go back)")
+              get_input("(Press Enter to continue)")
               return
 
         announcements = self.context.announcement_manager.read_all()

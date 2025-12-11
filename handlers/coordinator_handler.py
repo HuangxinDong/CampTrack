@@ -88,7 +88,7 @@ class CoordinatorHandler(BaseHandler):
             camp_type=camp_type,
             start_date=start_date,
             end_date=end_date,
-            current_food_stock=food,
+            initial_food_stock=food,
         )
         self.context.camp_manager.add(camp)
         # Use new display class for success message

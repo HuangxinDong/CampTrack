@@ -124,7 +124,7 @@ class ConversationDisplay(DisplayHelper):
                     console.print(Align.left(panel))
         
         console_manager.print_message("\n")
-        console_manager.print_message("[italic dim](Press Enter to go back, or 'r' to reply)[/italic dim]")
+        console_manager.print_message("[italic dim](Press Enter to refresh, 'r' to reply, or 'b' to back)[/italic dim]")
 
 
 # Default instance for easy import
