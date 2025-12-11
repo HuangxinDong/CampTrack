@@ -43,14 +43,19 @@ class CampManager:
             logging.error(f"Error writing camps.json: {e}")
             raise
 
-    def update(self, updatedCamp : Camp):
+
+    def update(self, updatedCamp: Camp):
         camps = self.read_all()
+        updated = False
+
         for i, camp in enumerate(camps):
             if camp.camp_id == updatedCamp.camp_id:
-                camps[i] = updatedCamp  # replace the old camp
+                camps[i] = updatedCamp
+                updated = True
                 break
-            else:
-                camps.append(updatedCamp)
+
+        if not updated:
+            camps.append(updatedCamp)
 
         data = [c.to_dict() for c in camps]
         try:

@@ -1,14 +1,17 @@
 [
     {
-        "camp_id": "48ee70b4-679f-4379-9ab0-dd9295c38016",
+        "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff4527",
         "name": "test",
         "location": "test",
         "camp_type": "test",
         "start_date": "2026-01-01",
         "end_date": "2026-01-03",
+        "camp_leader": "leader1",
+        "campers": [],
         "initial_food_stock_per_day": 50,
         "food_per_camper_per_day": 1,
-        "camp_leader": "leader1",
-        "campers": []
+        "precamp_stock": 42,
+        "topups": [],
+        "food_usage": {}
     }
 ]

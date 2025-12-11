@@ -53,14 +53,15 @@ class UserManager:
                 return u
         return None
 
-    def create_user(self, username, password, role, **kwargs):
+    def create_user(self, username, password, **kwargs):
         if self.find_user(username):
             return False, "Username already exists."
 
         user = {
             "username": username,
             "password": password,
-            "role": role,
+            # You are only allowed to create leaders
+            "role": 'Leader',
             "enabled": True
         }
         user.update(kwargs)

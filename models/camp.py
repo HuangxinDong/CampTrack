@@ -1,25 +1,39 @@
 import uuid
-from datetime import datetime, timedelta, date
+from datetime import datetime, date
+
+from models.camper import Camper
 
 
 class Camp:
     def __init__(
-        self, name: str, location: str, camp_type: str, start_date: date, end_date: date, initial_food_stock_per_day: int
+        self,
+        camp_id: str,
+        name: str,
+        location: str,
+        camp_type: str,
+        start_date: date,
+        end_date: date,
+        camp_leader: str = None,
+        initial_food_stock_per_day: int = None,
+        campers: list[str] = [],
+        food_per_camper_per_day = 1,
+        precamp_stock = 0,
+        topups= [],
+        food_usage={}
     ):
-        self.camp_id = str(uuid.uuid4())
-        # generate the uniqueId for a camp
+        self.camp_id = camp_id if camp_id else str(uuid.uuid4())
         self.name = name
         self.location = location
         self.camp_type = camp_type
         self.start_date = start_date
         self.end_date = end_date
-        self.camp_leader = None
-        self.campers = []  # will be an array of "campers class"
+        self.camp_leader = camp_leader
+        self.campers = campers
         self.initial_food_stock_per_day = initial_food_stock_per_day
-        self.food_per_camper_per_day = 1  # default value, can be changes by leader
-        self.precamp_stock = 0
-        self.topups = []  # array of numbers
-        self.food_usage = {}  # key is date, value is amount
+        self.food_per_camper_per_day = food_per_camper_per_day
+        self.precamp_stock = precamp_stock
+        self.topups = topups
+        self.food_usage = food_usage
 
     def topup_food(self, amount):
         if self.has_camp_started():
@@ -30,7 +44,7 @@ class Camp:
     def has_camp_started(self):
         now = datetime.now().date()
         return self.start_date <= now
-    
+
     def has_camp_finished(self):
         now = datetime.now().date()
         return now > self.end_date
@@ -65,7 +79,6 @@ class Camp:
         remaining_stock = total_stock - used_so_far
         return remaining_stock < remaining_required
 
-
     def add_camper(self, camper):
         self.campers.append(camper)
 
@@ -91,10 +104,13 @@ class Camp:
             "camp_type": self.camp_type,
             "start_date": self.start_date.strftime("%Y-%m-%d"),
             "end_date": self.end_date.strftime("%Y-%m-%d"),
-            "initial_food_stock_per_day": self.initial_food_stock_per_day,
-            "food_per_camper_per_day": self.food_per_camper_per_day,
             "camp_leader": self.camp_leader,
             "campers": [camper.to_dict() for camper in self.campers],
+            "initial_food_stock_per_day": self.initial_food_stock_per_day,
+            "food_per_camper_per_day": self.food_per_camper_per_day,
+            "precamp_stock": self.precamp_stock,
+            "topups": self.topups,
+            "food_usage": self.food_usage,
         }
 
     @classmethod
@@ -102,16 +118,19 @@ class Camp:
         start_date = datetime.strptime(data["start_date"], "%Y-%m-%d").date()
         end_date = datetime.strptime(data["end_date"], "%Y-%m-%d").date()
         camp = cls(
+            camp_id=data["camp_id"],
             name=data["name"],
             location=data["location"],
             camp_type=data["camp_type"],
             start_date=start_date,
             end_date=end_date,
+            camp_leader=data["camp_leader"],
+            campers=[Camper.from_dict(camper) for camper in data["campers"]],
             initial_food_stock_per_day=data["initial_food_stock_per_day"],
+            food_per_camper_per_day=data["food_per_camper_per_day"],
+            precamp_stock=data["precamp_stock"],
+            topups=data["topups"],
+            food_usage=data["food_usage"],
         )
-
-        camp.camp_id = data["camp_id"]
-        camp.camp_leader = data["camp_leader"]
-        camp.food_per_camper_per_day = data.get("food_per_camper_per_day", 1)
 
         return camp
