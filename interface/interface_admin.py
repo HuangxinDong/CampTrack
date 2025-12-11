@@ -43,14 +43,6 @@ class AdminInterface:
         new_password = input("Enter new password: ")
         return username, new_password
 
-    def get_update_rate_input(self):
-        username = input("Enter username: ")
-        try:
-            new_rate = float(input("Enter new daily rate: "))
-            return username, new_rate
-        except ValueError:
-            print("Invalid rate.")
-            return None, None
 
     @staticmethod
     def show_message(message):
