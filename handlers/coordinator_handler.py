@@ -21,7 +21,7 @@ class CoordinatorHandler(BaseHandler):
                 "name": "Set Daily Payment Limit",
                 "command": self.set_daily_payment_limit,
             },
-            {"name": "Visualizations", "command": self.visualization_menu},
+            {"name": "See Visualizations", "command": self.visualization_menu},
         ]
 
         self.main_commands = self.commands.copy()
