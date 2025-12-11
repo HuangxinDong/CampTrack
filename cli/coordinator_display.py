@@ -22,10 +22,9 @@ class CoordinatorDisplay:
         table.add_column("End Date")
 
         for i, camp in enumerate(camps, 1):
-            # Styling current food stock: red if low (< 50), green otherwise.
             current_stock = camp.current_food_stock
-            current_color = "red" if current_stock < 50 else "green"
-
+            current_color = "red" if camp.is_food_shortage() else "green"
+            
             table.add_row(
                 str(i),
                 camp.name,

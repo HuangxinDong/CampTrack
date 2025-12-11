@@ -11,14 +11,11 @@ from cli.homepage_display import homepage_display
 def display_menu(handler):
     """Display available commands for the handler using HomepageDisplay."""
     # Check for notifications (e.g., Unread Messages)
-    note = None
-    if hasattr(handler, 'get_unread_message_alert'):
-        # The handler returns a formatted string with newlines, we probably want to strip them for the panel
-        raw_note = handler.get_unread_message_alert()
-        if raw_note:
-            note = raw_note.strip()
+    notifications=None
+    if hasattr(handler, 'get_notifications'):
+        notifications = handler.get_notifications()
 
-    homepage_display.display_home_menu(handler.commands, notification=note)
+    homepage_display.display_home_menu(handler.commands, notifications=notifications)
 
 
 def get_menu_choice(prompt):

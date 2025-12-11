@@ -26,6 +26,29 @@ class CoordinatorHandler(BaseHandler):
 
         self.main_commands = self.commands.copy()
 
+    def get_notifications(self):
+        notifications = []
+
+        unread_alert = self.get_unread_message_alert()
+        if unread_alert:
+            notifications.append(unread_alert)
+
+        food_shortage_messages = self.get_camps_with_food_shortages()
+        notifications.extend(food_shortage_messages)
+
+        return notifications
+
+    def get_camps_with_food_shortages(self):
+        camps = self.context.camp_manager.read_all()
+
+        shortage_messages = [
+            f"{camp.name} has a food shortage"
+            for camp in camps
+            if camp.is_food_shortage()
+        ]
+
+        return shortage_messages
+
     @cancellable
     def create_camp(self):
         camps = self.context.camp_manager.read_all()
@@ -44,7 +67,7 @@ class CoordinatorHandler(BaseHandler):
             try:
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
                 end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-                
+
                 if start_date < datetime.now().date():
                     print("Error: Start date cannot be in the past.")
                     continue
@@ -90,9 +113,8 @@ class CoordinatorHandler(BaseHandler):
         # Use new display class for camp list
         coordinator_display.display_camp_list(camps)
 
-
         while True:
-            invalid_selection_error_message = 'Please select a number from the list'
+            invalid_selection_error_message = "Please select a number from the list"
             selection = get_input("\nEnter camp number to topup food:")
             if not selection.isdigit():
                 print(invalid_selection_error_message)
@@ -103,9 +125,7 @@ class CoordinatorHandler(BaseHandler):
                 continue
             break
 
-
-
-        selected_camp = camps[selected_number -1]
+        selected_camp = camps[selected_number - 1]
         if not selected_camp:
             print("Camp not found")
             return
@@ -113,12 +133,16 @@ class CoordinatorHandler(BaseHandler):
         try:
             selected_camp.add_food(additional_food)
             self.context.camp_manager.update(selected_camp)
-            
+
             from cli.console_manager import console_manager
-            console_manager.print_success(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
+
+            console_manager.print_success(
+                f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}."
+            )
             get_input("(Press Enter to continue)")
         except ValueError as e:
             from cli.console_manager import console_manager
+
             console_manager.print_error(f"Error: {e}")
 
         self.commands = self.main_commands
@@ -296,14 +320,16 @@ class CoordinatorHandler(BaseHandler):
             print("User is not a leader")
             return
 
-        old_rate = scout_leader.get("daily_restock_limit", 0) # Assumed key, checking user model would be safer, but relying on context logic often used. 
+        old_rate = scout_leader.get(
+            "daily_restock_limit", 0
+        )  # Assumed key, checking user model would be safer, but relying on context logic often used.
         # Actually daily_payment_rate for Leader... checking user_manager usage.
         # user_manager.update_daily_payment_rate updates 'daily_payment_rate'
         old_rate = scout_leader.get("daily_payment_rate", "N/A")
 
         daily_payment_rate = get_positive_int("Enter the new daily payment rate: ")
         self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
-        
+
         coordinator_display.display_payment_update_success(scout_leader_name, old_rate, daily_payment_rate)
 
     def restore_main_commands(self):
@@ -311,10 +337,16 @@ class CoordinatorHandler(BaseHandler):
 
     def visualization_menu(self):
         self.commands = [
-             {'name': 'Show Food Stock Chart', 'command': lambda:
-             visualisations.plot_food_stock(self.context.camp_manager)},
-             {'name': 'Show Campers per Camp Chart', 'command': lambda:
-               visualisations.plot_campers_per_camp(self.context.camp_manager)}, 
-             {'name': 'Show Location Distribution', 'command': lambda:
-              visualisations.plot_camp_location_distribution(self.context.camp_manager)},]
-            
+            {
+                "name": "Show Food Stock Chart",
+                "command": lambda: visualisations.plot_food_stock(self.context.camp_manager),
+            },
+            {
+                "name": "Show Campers per Camp Chart",
+                "command": lambda: visualisations.plot_campers_per_camp(self.context.camp_manager),
+            },
+            {
+                "name": "Show Location Distribution",
+                "command": lambda: visualisations.plot_camp_location_distribution(self.context.camp_manager),
+            },
+        ]

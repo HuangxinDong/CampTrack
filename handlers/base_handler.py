@@ -29,12 +29,15 @@ class BaseHandler:
         # Optimization: Cache summaries to avoid redundant reads between menus
         self.current_summaries = []
 
+    def get_notifications(self):
+        notifications = [self.get_unread_message_alert()]
+        return notifications
 
     def get_unread_message_alert(self):
         """Returns notification string if unread messages exist."""
         count = self.context.message_manager.get_unread_message_count(self.user.username)
         if count > 0:
-            return f"\n*** You have {count} unread messages ***\n"
+            return f"You have {count} unread messages\n"
         return None
 
     def get_my_messages(self):

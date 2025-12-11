@@ -5,7 +5,7 @@ class HomepageDisplay:
     Handles display of the main homepage menu using Rich.
     """
     
-    def display_home_menu(self, commands: list[dict], notification: str = None) -> None:
+    def display_home_menu(self, commands: list[dict], notifications: list[str] = None) -> None:
         """
         Display the main menu with optional notifications.
         
@@ -14,8 +14,10 @@ class HomepageDisplay:
             notification: Optional alert string (e.g. unread messages)
         """
         # 1. Show notification if present
-        if notification:
-            console_manager.print_panel(notification, style="bold red")
+        if notifications:
+            for notification in notifications:
+                if notification:
+                    console_manager.print_panel(f'*** {notification.strip()} ***', style="bold red")
 
         # 2. Format commands for display
         # We want a nice list like:

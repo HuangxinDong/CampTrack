@@ -1,95 +1,94 @@
 [
-    {
-        "camp_id": "4e44c1cf-d9d1-423b-8690-6b31a5925aa5",
-        "name": "tester",
-        "location": "test",
-        "camp_type": "test",
-        "start_date": "2026-01-01",
-        "end_date": "2026-01-03",
-        "camp_leader": "leader1",
-        "campers": [
-            {
-                "camper_id": "6d518aca-d2e2-4276-bb5c-b875706834ea",
-                "name": "Alice",
-                "age": 12,
-                "contact": "1111",
-                "medical_info": "Peanut allergy"
-            },
-            {
-                "camper_id": "d3be19b6-9071-4acf-ace0-04fecc074ad6",
-                "name": "Bob",
-                "age": 10,
-                "contact": "2222",
-                "medical_info": "None"
-            },
-            {
-                "camper_id": "757fa5c7-0924-4571-907f-670283fb5999",
-                "name": "Charlie",
-                "age": 11,
-                "contact": "3333",
-                "medical_info": "Asthma"
-            }
-        ],
-        "initial_food_stock_per_day": 50,
-        "food_per_camper_per_day": 2,
-        "precamp_stock": 42,
-        "topups": [],
-        "food_usage": {}
-    },
-    {
-        "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff1132",
-        "name": "test22",
-        "location": "test22",
-        "camp_type": "test22",
-        "start_date": "2026-01-02",
-        "end_date": "2026-01-04",
-        "camp_leader": "leader2",
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 0,
-        "current_food_stock": 50,
-        "food_usage": {}
-    },
-    {
-        "camp_id": "b060e273-4096-437e-9475-06923f738b8c",
-        "name": "hello",
-        "location": "hi",
-        "camp_type": "bye",
-        "start_date": "2025-12-16",
-        "end_date": "2025-12-17",
-        "camp_leader": null,
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 0,
-        "current_food_stock": 60,
-        "food_usage": {}
-    },
-    {
-        "camp_id": "3e616f3c-8974-4d44-9bec-6254192f8526",
-        "name": "bonfire night",
-        "location": "the woods",
-        "camp_type": "sleepaway",
-        "start_date": "2025-12-16",
-        "end_date": "2025-12-17",
-        "camp_leader": "leader1",
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 0,
-        "current_food_stock": 80,
-        "food_usage": {}
-    },
-    {
-        "camp_id": "c683262e-ecfd-4ed1-8265-e0bfe7890cef",
-        "name": "whfiwrf",
-        "location": "wfwrf",
-        "camp_type": "eefwehf",
-        "start_date": "2025-12-16",
-        "end_date": "2025-12-17",
-        "camp_leader": null,
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 0,
-        "current_food_stock": 50,
-        "food_usage": {}
-    }
+  {
+    "camp_id": "4e44c1cf-d9d1-423b-8690-6b31a5925aa5",
+    "name": "tester",
+    "location": "test",
+    "camp_type": "test",
+    "start_date": "2026-01-01",
+    "end_date": "2026-01-03",
+    "camp_leader": "leader1",
+    "campers": [
+      {
+        "camper_id": "6d518aca-d2e2-4276-bb5c-b875706834ea",
+        "name": "Alice",
+        "age": 12,
+        "contact": "1111",
+        "medical_info": "Peanut allergy"
+      },
+      {
+        "camper_id": "d3be19b6-9071-4acf-ace0-04fecc074ad6",
+        "name": "Bob",
+        "age": 10,
+        "contact": "2222",
+        "medical_info": "None"
+      },
+      {
+        "camper_id": "757fa5c7-0924-4571-907f-670283fb5999",
+        "name": "Charlie",
+        "age": 11,
+        "contact": "3333",
+        "medical_info": "Asthma"
+      }
+    ],
+    "food_per_camper_per_day": 2,
+    "initial_food_stock": 50,
+    "current_food_stock": 50,
+    "food_usage": {}
+  },
+  {
+    "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff1132",
+    "name": "test22",
+    "location": "test22",
+    "camp_type": "test22",
+    "start_date": "2026-01-02",
+    "end_date": "2026-01-04",
+    "camp_leader": "leader2",
+    "campers": [],
+    "food_per_camper_per_day": 1,
+    "initial_food_stock": 50,
+    "current_food_stock": 50,
+    "food_usage": {}
+  },
+  {
+    "camp_id": "b060e273-4096-437e-9475-06923f738b8c",
+    "name": "hello",
+    "location": "hi",
+    "camp_type": "bye",
+    "start_date": "2025-12-16",
+    "end_date": "2025-12-17",
+    "camp_leader": null,
+    "campers": [],
+    "food_per_camper_per_day": 1,
+    "initial_food_stock": 60,
+    "current_food_stock": 60,
+    "food_usage": {}
+  },
+  {
+    "camp_id": "3e616f3c-8974-4d44-9bec-6254192f8526",
+    "name": "bonfire night",
+    "location": "the woods",
+    "camp_type": "sleepaway",
+    "start_date": "2025-12-16",
+    "end_date": "2025-12-17",
+    "camp_leader": "leader1",
+    "campers": [],
+    "food_per_camper_per_day": 1,
+    "initial_food_stock": 80,
+    "current_food_stock": 80,
+    "food_usage": {}
+  },
+  {
+    "camp_id": "c683262e-ecfd-4ed1-8265-e0bfe7890cef",
+    "name": "whfiwrf",
+    "location": "wfwrf",
+    "camp_type": "eefwehf",
+    "start_date": "2025-12-16",
+    "end_date": "2025-12-17",
+    "camp_leader": null,
+    "campers": [],
+    "food_per_camper_per_day": 1,
+    "initial_food_stock": 50,
+    "current_food_stock": 50,
+    "food_usage": {}
+  }
 ]
