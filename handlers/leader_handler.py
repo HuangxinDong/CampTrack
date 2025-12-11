@@ -205,7 +205,7 @@ class LeaderHandler(BaseHandler):
 
         console.print(Panel("\n".join(table_lines), style="cyan"))
 
-
+    @cancellable
     def daily_reports_menu(self):
         while True:
             console.print(Panel("""
@@ -213,7 +213,7 @@ class LeaderHandler(BaseHandler):
 1. Create New Report
 2. View Reports
 3. Delete Report
-4. Back
+b. Back
 """, style="blue"))
 
             choice = get_input("Choose an option: ")
@@ -224,7 +224,7 @@ class LeaderHandler(BaseHandler):
                 self.view_daily_reports()
             elif choice == "3":
                 self.delete_daily_report()
-            elif choice == "4":
+            elif choice == "b":
                 break
             else:
                 console_manager.print_error("Invalid choice.")
@@ -319,7 +319,7 @@ class LeaderHandler(BaseHandler):
         for r in reports:
             table.add_row(
                 r["date"],
-                r["text"][:40] + "...",
+                r["text"][:40] + "",
                 ", ".join(r.get("activities", [])),
                 ", ".join(r.get("incidents", [])),
                 ", ".join(r.get("achievements", [])),
