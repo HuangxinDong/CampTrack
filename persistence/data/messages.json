@@ -45,6 +45,6 @@
         "to_user": "coordinator1",
         "content": "hello coordinator!",
         "sent_at": "2025-12-11T01:29:51.040893",
-        "mark_as_read": false
+        "mark_as_read": true
     }
 ]

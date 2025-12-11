@@ -1,7 +1,7 @@
 import uuid
 from models.message import Message
 from cli.input_utils import get_input, cancellable
-from handlers.message_handler import get_conversation_summaries
+from cli.input_utils import get_input, cancellable
 from cli.chat_display import conversation_display
 
 
@@ -29,6 +29,13 @@ class BaseHandler:
         self.current_summaries = []
 
 
+    def get_unread_message_alert(self):
+        """Returns notification string if unread messages exist."""
+        count = self.message_manager.get_unread_message_count(self.user.username)
+        if count > 0:
+            return f"\n*** You have {count} unread messages ***\n"
+        return None
+
     def get_my_messages(self):
         """Returns list of messages for current user."""
         messages = self.message_manager.read_all()
@@ -41,9 +48,9 @@ class BaseHandler:
         View all messages for the current user.
         """
         while True:
-            messages = self.message_manager.read_all()
             # Update cache for view_chat to use
-            self.current_summaries = get_conversation_summaries(messages, self.user.username)
+            # Refactored: Use manager method directly
+            self.current_summaries = self.message_manager.get_conversation_summaries(self.user.username)
             
             if not self.current_summaries:
                 print("No conversations.")
@@ -79,8 +86,8 @@ class BaseHandler:
         # This prevents reading the file and calculating summaries twice
         if not self.current_summaries:
              # Fallback if accessed directly (though unlikely in current flow)
-             messages = self.message_manager.read_all()
-             self.current_summaries = get_conversation_summaries(messages, self.user.username)
+             # Refactored: Use manager method directly
+             self.current_summaries = self.message_manager.get_conversation_summaries(self.user.username)
 
         if not self.current_summaries:
             print("No conversations to view.")
