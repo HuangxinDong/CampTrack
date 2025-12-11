@@ -78,6 +78,35 @@ class Camp:
         now = datetime.now().date()
         return now > self.end_date
 
+    def can_edit_dates(self) -> tuple[bool, str]:
+        """
+        Check if camp dates can be edited.
+
+        Returns:
+            tuple: (can_edit: bool, reason: str)
+            - If editable: (True, "")
+            - If not: (False, "reason message")
+        """
+        if self.has_camp_started():
+            return False, "Cannot edit dates: camp has already started"
+        if self.has_camp_finished():
+            return False, "Cannot edit dates: camp has already finished"
+        return True, ""
+
+    @staticmethod
+    def dates_overlap(start1: date, end1: date, start2: date, end2: date) -> bool:
+        """
+        Check if two date ranges overlap.
+
+        Args:
+            start1, end1: First date range
+            start2, end2: Second date range
+
+        Returns:
+            bool: True if ranges overlap, False otherwise
+        """
+        return start1 <= end2 and start2 <= end1
+
     def set_food_per_camper_per_day(self, amount):
         self.food_per_camper_per_day = amount
 

@@ -83,4 +83,17 @@ class CampManager:
                 return camp
         return None
 
+    def get_camps_by_leader(self, leader_username: str) -> list:
+        """
+        Get all camps assigned to a specific leader.
+
+        Args:
+            leader_username: The username of the leader
+
+        Returns:
+            list[Camp]: Camps where camp_leader matches username
+        """
+        camps = self.read_all()
+        return [camp for camp in camps if camp.camp_leader == leader_username]
+
 

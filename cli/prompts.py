@@ -11,3 +11,48 @@ def get_positive_int(prompt: str) -> int:
             return value
         except ValueError:
             console_manager.print_error("Please enter a valid integer.")
+
+
+def get_valid_date_range(
+    start_prompt: str = "Enter start date (yyyy-mm-dd): ",
+    end_prompt: str = "Enter end date (yyyy-mm-dd): ",
+    allow_past_start: bool = False
+):
+    """
+    Get and validate a date range from user input.
+
+    Args:
+        start_prompt: Prompt for start date
+        end_prompt: Prompt for end date
+        allow_past_start: If False, start date must be today or future
+
+    Returns:
+        tuple[date, date]: (start_date, end_date)
+
+    Raises:
+        BackException: If user cancels (handled by @cancellable)
+    """
+    from datetime import datetime
+    from .input_utils import get_input
+    from .console_manager import console_manager
+
+    while True:
+        start_str = get_input(start_prompt)
+        end_str = get_input(end_prompt)
+
+        try:
+            start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+
+            if not allow_past_start and start_date < datetime.now().date():
+                console_manager.print_error("Start date cannot be in the past.")
+                continue
+
+            if end_date < start_date:
+                console_manager.print_error("End date must be on or after start date.")
+                continue
+
+            return start_date, end_date
+
+        except ValueError:
+            console_manager.print_error("Invalid date format. Please use yyyy-mm-dd.")

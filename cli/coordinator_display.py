@@ -8,7 +8,7 @@ class CoordinatorDisplay:
     Separates view concerns from CoordinatorHandler.
     """
 
-    def display_camp_list(self, camps, title="Select Camp to Top Up"):
+    def display_camp_list(self, camps, title="Select Camp"):
         """
         Renders a list of camps in a styled Table (Design Option A).
         """
@@ -16,21 +16,26 @@ class CoordinatorDisplay:
         table.add_column("#", style="dim", width=4)
         table.add_column("Camp Name", style="bold white")
         table.add_column("Location")
+        table.add_column("Initial Food", justify="right")
         table.add_column("Current Food", justify="right")
-        
+        table.add_column("Start Date")
+        table.add_column("End Date")
+
         for i, camp in enumerate(camps, 1):
-            # Styling food stock: red if low (< 50?), green otherwise.
-            # Assuming logic is handled here for display purposes or just plain coloring.
-            stock = camp.current_food_stock
-            color = "red" if stock < 50 else "green"
-            
+            # Styling current food stock: red if low (< 50), green otherwise.
+            current_stock = camp.current_food_stock
+            current_color = "red" if current_stock < 50 else "green"
+
             table.add_row(
                 str(i),
                 camp.name,
                 camp.location,
-                f"[{color}]{stock} units[/{color}]"
+                f"{camp.initial_food_stock} units",
+                f"[{current_color}]{current_stock} units[/{current_color}]",
+                str(camp.start_date),
+                str(camp.end_date),
             )
-        
+
         console_manager.console.print(table)
         console_manager.print_message("\n")
 
