@@ -58,4 +58,29 @@ class MessageManager:
             logging.error(f"Error writing messages.json: {e}")
             raise  
 
+    def mark_as_read_batch(self, message_ids: list):
+        """
+        Mark multiple messages as read in a single batch operation.
+        Efficiency: O(N) read + O(N) scan + O(1) write.
+        """
+        if not message_ids:
+            return
+
+        messages = self.read_all()
+        ids_set = set(message_ids)
+        updated = False
+
+        for message in messages:
+            if message["message_id"] in ids_set:
+                message["mark_as_read"] = True
+                updated = True
+        
+        if updated:
+            try:
+                with open(self.filepath, "w") as f:
+                    json.dump(messages, f, indent=4)
+            except Exception as e:
+                logging.error(f"Error updating messages batch: {e}")
+                raise  
+
 

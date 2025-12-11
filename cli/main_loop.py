@@ -49,4 +49,8 @@ def run_program(user, handler):
             print("Please enter a number from the list.")
             continue
         
-        handler.commands[choice - 1]["command"]()
+        try:
+            handler.commands[choice - 1]["command"]()
+        except QuitException:
+            print("Goodbye!")
+            break

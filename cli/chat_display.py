@@ -52,6 +52,29 @@ class ConversationDisplay(DisplayHelper):
         
         self.print_footer()
 
+    def display_chat_thread(self, partner: str, messages: list[dict], current_user: str) -> None:
+        """
+        Display full message thread with a specific partner.
+        
+        Args:
+            partner: Username of the other person
+            messages: List of message dicts
+            current_user: Username of the viewer
+        """
+        self.print_header(f"Chat with {partner}")
+        
+        if not messages:
+            print("  (No messages yet)")
+        else:
+            for msg in messages:
+                sender = "Me" if msg['from_user'] == current_user else partner
+                timestamp = msg.get('timestamp', '')
+                content = msg['content']
+                print(f"  [{timestamp}] {sender}: {content}")
+        
+        self.print_footer()
+        print("(Press Enter to go back)")
+
 
 # Default instance for easy import
 conversation_display = ConversationDisplay()
