@@ -43,11 +43,9 @@ class Camp:
 
         # Optionally check if camp has started? User said "Checking to see if the camp has started as well as ended"
         # for "topping up and removing food".
-        # Assuming we can top up before start? But user explicitly asked for this check.
-        # "Thirdly, when topping up and removing food, why have you not included the logic Checking to see if the camp has started as well as ended"
-        # I will strictly follow the instruction to check both.
-        if not self.has_camp_started():
-             raise ValueError("Cannot add food before camp has started")
+        # UPDATED REQ: User wants to allow top up BEFORE start.
+        # if not self.has_camp_started():
+        #      raise ValueError("Cannot add food before camp has started")
 
         self.current_food_stock += amount
 

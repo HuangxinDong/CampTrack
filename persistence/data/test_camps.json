@@ -1,0 +1,16 @@
+[
+    {
+        "camp_id": "05d2108b-fd1a-4852-a9f6-66821949662a",
+        "name": "Persist Camp",
+        "location": "Loc",
+        "camp_type": "Type",
+        "start_date": "2025-01-01",
+        "end_date": "2025-01-05",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 0,
+        "current_food_stock": 100,
+        "food_usage": {}
+    }
+]

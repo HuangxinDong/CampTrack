@@ -87,7 +87,7 @@ class CoordinatorHandler(BaseHandler):
                 print(invalid_selection_error_message)
                 continue
             selected_number = int(selection)
-            if not (1 <= selected_number < len(camps)):
+            if not (1 <= selected_number <= len(camps)):
                 print(invalid_selection_error_message)
                 continue
             break
@@ -99,12 +99,17 @@ class CoordinatorHandler(BaseHandler):
             print("Camp not found")
             return
         additional_food = get_positive_int("Enter the amount of food to add: ")
-        selected_camp.add_food(additional_food)
-        self.context.camp_manager.update(selected_camp)
-        
-        from cli.console_manager import console_manager
-        console_manager.print_success(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
-        
+        try:
+            selected_camp.add_food(additional_food)
+            self.context.camp_manager.update(selected_camp)
+            
+            from cli.console_manager import console_manager
+            console_manager.print_success(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
+            get_input("(Press Enter to continue)")
+        except ValueError as e:
+            from cli.console_manager import console_manager
+            console_manager.print_error(f"Error: {e}")
+            
         self.commands = self.main_commands
 
     @cancellable
