@@ -378,7 +378,7 @@ class CoordinatorHandler(BaseHandler):
 
         df.loc[df['Leader'] == "[Unassigned]", 'Status'] = "[bold red]Need Leader[/bold red]"
 
-
+        @staticmethod
         def get_status(row):
             statuses = []
             if row['Leader'] == "[Unassigned]":

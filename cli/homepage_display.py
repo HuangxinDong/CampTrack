@@ -1,4 +1,7 @@
 from .console_manager import console_manager
+from rich.panel import Panel
+from rich.text import Text
+from rich import box
 
 class HomepageDisplay:
     """
@@ -11,20 +14,57 @@ class HomepageDisplay:
         
         Args:
             commands: List of command dictionaries (from handler)
-            notification: Optional alert string (e.g. unread messages)
+            notifications: Optional alert strings (e.g. unread messages, system alerts)
         """
-        # 1. Show notification if present
+        # 1. Show Inbox if notifications exist
         if notifications:
-            for notification in notifications:
-                if notification:
-                    console_manager.print_panel(f'*** {notification.strip()} ***', style="bold red")
+            messages = []
+            alerts = []
+            
+            # Categorize notifications
+            for note in notifications:
+                if not note: continue
+                clean_note = note.strip()
+                if "unread message" in clean_note.lower():
+                    messages.append(clean_note)
+                else:
+                    alerts.append(clean_note)
+            
+            if messages or alerts:
+                inbox_content = Text()
+                
+                # Messages Section
+                if messages:
+                    inbox_content.append(" ✉️  Messages\n", style="bold #FF69B4")
+                    for msg in messages:
+                        inbox_content.append(f"    • {msg}\n", style="white")
+                    if alerts:
+                        inbox_content.append("\n") # Spacer
+                
+                # Alerts Section
+                if alerts:
+                    inbox_content.append(" ⚠️  Alerts\n", style="bold #FF69B4")
+                    for alert in alerts:
+                        # Highlight Camp Name if possible (heuristic: text inside quotes or typical format)
+                        # Current format often: "Camp 'Alpha' has..."
+                        import re
+                        # Bold quotes parts (Camp names)
+                        formatted_alert = re.sub(r"'([^']*)'", r"[bold white]'\1'[/bold white]", alert)
+                        inbox_content.append(f"    • ", style="white")
+                        inbox_content.append(Text.from_markup(formatted_alert))
+                        inbox_content.append("\n")
+
+                console_manager.console.print(Panel(
+                    inbox_content,
+                    title="[bold #FF69B4] INBOX [/bold #FF69B4]",
+                    border_style="#FF69B4",
+                    box=box.ROUNDED,
+                    width=60,
+                    padding=(0, 1)
+                ))
+                console_manager.console.print("") # Spacing
 
         # 2. Format commands for display
-        # We want a nice list like:
-        # 1. View messages
-        # 2. Send message
-        # ...
-        
         menu_items = []
         for i, cmd in enumerate(commands):
             menu_items.append(f"[bold medium_purple1]{i + 1}.[/bold medium_purple1] {cmd['name']}")
