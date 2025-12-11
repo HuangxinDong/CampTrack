@@ -131,7 +131,5 @@ class CoordinatorHandler(BaseHandler):
              {'name': 'Show Campers per Camp Chart', 'command': lambda:
                visualisations.plot_campers_per_camp(self.context.camp_manager)}, 
              {'name': 'Show Location Distribution', 'command': lambda:
-              visualisations.plot_camp_location_distribution(self.context.camp_manager)},
-             {'name': 'Back to Main Menu', 'command':
-              self.restore_main_commands},]
+              visualisations.plot_camp_location_distribution(self.context.camp_manager)},]
             
