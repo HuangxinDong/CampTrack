@@ -4,6 +4,8 @@ from models.camp import Camp
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
+import cli.visualisations as visualisations
+
 
 
 class CoordinatorHandler(BaseHandler):
@@ -19,6 +21,7 @@ class CoordinatorHandler(BaseHandler):
                 "name": "Set Daily Payment Limit",
                 "command": self.set_daily_payment_limit,
             },
+            {"name": "Visualizations", "command": self.visualization_menu},
         ]
 
         self.main_commands = self.commands.copy()
@@ -117,3 +120,18 @@ class CoordinatorHandler(BaseHandler):
         daily_payment_rate = get_positive_int("Enter the new daily payment rate: ")
         self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
         print(f"Daily payment rate updated for {scout_leader_name}.")
+
+    def restore_main_commands(self):
+        self.commands = self.main_commands
+
+    def visualization_menu(self):
+        self.commands = [
+             {'name': 'Show Food Stock Chart', 'command': lambda:
+             visualisations.plot_food_stock(self.context.camp_manager)},
+             {'name': 'Show Campers per Camp Chart', 'command': lambda:
+               visualisations.plot_campers_per_camp(self.context.camp_manager)}, 
+             {'name': 'Show Location Distribution', 'command': lambda:
+              visualisations.plot_camp_location_distribution(self.context.camp_manager)},
+             {'name': 'Back to Main Menu', 'command':
+              self.restore_main_commands},]
+            
