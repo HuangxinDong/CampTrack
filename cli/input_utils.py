@@ -40,7 +40,12 @@ class InputHandler:
             QuitException: If user enters quit character
             BackException: If user enters back character
         """
-        value = input(prompt)
+        if prompt:
+             # Use console_manager for styled input
+             from cli.console_manager import console_manager
+             value = console_manager.input(prompt)
+        else:
+             value = input("")
         
         if value.lower() == self.quit_char:
             raise QuitException()

@@ -12,5 +12,19 @@
         "initial_food_stock": 0,
         "current_food_stock": 50,
         "food_usage": {}
+    },
+    {
+        "camp_id": "b060e273-4096-437e-9475-06923f738b8c",
+        "name": "hello",
+        "location": "hi",
+        "camp_type": "bye",
+        "start_date": "2026-01-03",
+        "end_date": "2026-01-04",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 0,
+        "current_food_stock": 60,
+        "food_usage": {}
     }
 ]

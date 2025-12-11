@@ -54,5 +54,13 @@
         "content": "test date!",
         "sent_at": "2025-12-11T02:25:00.514225+00:00",
         "mark_as_read": true
+    },
+    {
+        "message_id": "efbfdfe5-a751-4b01-b729-6f9c13399e16",
+        "from_user": "coordinator1",
+        "to_user": "admin1",
+        "content": "hi admin!",
+        "sent_at": "2025-12-11T05:40:15.010614+00:00",
+        "mark_as_read": false
     }
 ]

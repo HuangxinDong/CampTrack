@@ -37,6 +37,10 @@ def main():
     announcement_manager = AnnouncementManager()
     system_notification_manager = SystemNotificationManager()
 
+    # Startup Banner
+    from cli.startup_display import startup_display
+    startup_display.display_welcome_banner()
+
     # Login
     session = Session()
     user = session.login()

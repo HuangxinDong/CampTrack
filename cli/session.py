@@ -7,37 +7,39 @@ class Session:
         self.user_manager = UserManager()
 
     def login(self):
+        from cli.console_manager import console_manager
+        
         users = self.user_manager.read_all()
         
         if not users:
-            print('No users found')
+            console_manager.print_error('No users found')
             return
         
         while True:
             # Dont tell the user if a username exists or not for security purposes
             error_message = 'Login failed, try again'
-            username_input = input("Please enter your username (or q to quit): ")
+            username_input = console_manager.input("Please enter your username (or q to quit): ")
             if username_input == "q":
                 return
-            password_input = input("Please enter your password (or q to quit): ")
+            password_input = console_manager.input("Please enter your password (or q to quit): ")
             if password_input == 'q':
                 return
             
             found_user = next((user for user in users if user["username"] == username_input), None)
 
             if not found_user:
-                print(error_message)
+                console_manager.print_error(error_message)
                 continue
 
             if found_user["password"] != password_input:
-                print(error_message)
+                console_manager.print_error(error_message)
                 continue
             
             if not found_user.get("enabled", True):
-                print("Account disabled. Please contact admin.")
+                console_manager.print_error("Account disabled. Please contact admin.")
                 continue
             
-            print(f"Welcome {found_user['username']}")
+            console_manager.print_success(f"Welcome {found_user['username']}")
 
             user_class = user_from_dict(found_user)
 

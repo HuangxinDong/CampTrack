@@ -4,6 +4,7 @@ from models.camp import Camp
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
+from cli.coordinator_display import coordinator_display
 
 
 class CoordinatorHandler(BaseHandler):
@@ -59,7 +60,8 @@ class CoordinatorHandler(BaseHandler):
             current_food_stock=food,
         )
         self.context.camp_manager.add(camp)
-        print(f"Camp '{name}' created successfully.")
+        # Use new display class for success message
+        coordinator_display.display_camp_creation_success(camp)
 
     def edit_camp_resources(self):
         self.commands = [
@@ -74,8 +76,8 @@ class CoordinatorHandler(BaseHandler):
             return
 
         print("Camps:")
-        for i, camp in enumerate(camps, 1):
-            print(f"{i}. {camp.name} - {camp.location}")
+        # Use new display class for camp list
+        coordinator_display.display_camp_list(camps)
 
 
         while True:
@@ -99,7 +101,10 @@ class CoordinatorHandler(BaseHandler):
         additional_food = get_positive_int("Enter the amount of food to add: ")
         selected_camp.add_food(additional_food)
         self.context.camp_manager.update(selected_camp)
-        print(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
+        
+        from cli.console_manager import console_manager
+        console_manager.print_success(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
+        
         self.commands = self.main_commands
 
     @cancellable
@@ -114,6 +119,12 @@ class CoordinatorHandler(BaseHandler):
             print("User is not a leader")
             return
 
+        old_rate = scout_leader.get("daily_restock_limit", 0) # Assumed key, checking user model would be safer, but relying on context logic often used. 
+        # Actually daily_payment_rate for Leader... checking user_manager usage.
+        # user_manager.update_daily_payment_rate updates 'daily_payment_rate'
+        old_rate = scout_leader.get("daily_payment_rate", "N/A")
+
         daily_payment_rate = get_positive_int("Enter the new daily payment rate: ")
         self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
-        print(f"Daily payment rate updated for {scout_leader_name}.")
+        
+        coordinator_display.display_payment_update_success(scout_leader_name, old_rate, daily_payment_rate)
