@@ -1,19 +1,10 @@
-import os
-import sys
 from datetime import datetime, date
-
-CURRENT_DIR = os.path.dirname(__file__)
-PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
-
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-
 from persistence.dao.camp_manager import CampManager
 from persistence.dao.user_manager import UserManager
 from persistence.dao.daily_report_manager import DailyReportManager
 
 
-class StatisticsAndTrends:
+class StatisticsHandler:
     def __init__(self):
         self.camp_manager = CampManager()
         self.user_manager = UserManager()
