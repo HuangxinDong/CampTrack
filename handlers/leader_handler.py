@@ -118,6 +118,15 @@ class LeaderHandler(BaseHandler):
 
         console_manager.print_success(f"Updated food requirement for {camp.name}.")
 
+        total_required = camp.total_food_required()
+        num_campers = len(camp.campers)
+        days = (camp.end_date - camp.start_date).days + 1
+
+        console.print(
+            f"\n[bold]Total Food Required for {camp.name}:[/bold] {total_required} units\n"
+            f"  ({num_campers} campers x {days} days x {new_food} food)"
+        )
+
 
     @cancellable
     def import_campers_from_csv(self):

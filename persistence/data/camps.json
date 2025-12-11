@@ -30,7 +30,7 @@
                 "medical_info": "Asthma"
             }
         ],
-        "food_per_camper_per_day": 12,
+        "food_per_camper_per_day": 10,
         "initial_food_stock": 0,
         "current_food_stock": 0,
         "food_usage": {},

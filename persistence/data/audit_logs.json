@@ -40,5 +40,11 @@
         "username": "admin1",
         "action": "Delete User",
         "details": "Deleted user hihi"
+    },
+    {
+        "timestamp": "2025-12-11 15:14:43",
+        "username": "leader1",
+        "action": "Edit Camp",
+        "details": "Updated food settings for test for leader funtions"
     }
 ]
