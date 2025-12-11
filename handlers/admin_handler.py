@@ -17,6 +17,7 @@ class AdminHandler(BaseHandler):
             {"name": "Create User", "command": self.handle_create_user},
             {"name": "Delete User", "command": self.handle_delete_user},
             {"name": "Post announcement", "command": self.post_announcement},
+            {"name": "Update Password", "command": self.handle_update_password},
         ]
 
         self.main_commands = self.commands.copy()
@@ -35,6 +36,13 @@ class AdminHandler(BaseHandler):
     def handle_delete_user(self):
         username = get_input("Enter username to delete: ")
         success, message = self.context.user_manager.delete_user(username)
+        print(message)
+
+    @cancellable 
+    def handle_update_password(self):
+        username = get_input("Enter username to update password: ")
+        new_password = get_input("Enter new password: ")
+        success, message = self.context.user_manager.update_password(username, new_password)
         print(message)
 
 
