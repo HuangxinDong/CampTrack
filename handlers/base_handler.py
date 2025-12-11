@@ -14,7 +14,8 @@ class BaseHandler:
         self.message_manager = message_manager
 
         self.parent_commands = [
-        {"name": "Go To My Messages", "command": self.messages}
+            {"name": "View messages", "command": self.view_messages},
+            {"name": "Send message", "command": self.send_message},
         ]
         self.commands = self.parent_commands.copy()
         self.main_commands = self.commands.copy()
@@ -24,16 +25,10 @@ class BaseHandler:
         """Returns list of messages for current user."""
         messages = self.message_manager.read_all()
         return [m for m in messages if m['to_user'] == self.user.username]
-    
-    def messages(self):
-        self.commands = [
-            {"name": "Read messages", "command": self.read_messages},
-            {"name": "Send message", "command": self.send_message},
-        ]
 
 
     @cancellable
-    def read_messages(self):
+    def view_messages(self):
         messages = self.message_manager.read_all()
         summaries = get_conversation_summaries(messages, self.user.username)
         
@@ -42,17 +37,6 @@ class BaseHandler:
             return
         
         conversation_display.display_list(summaries)
-        choice = get_input("")
-        
-        if choice == "0":
-            return
-        
-        if not choice.isdigit() or int(choice) < 1 or int(choice) > len(summaries):
-            print("Invalid selection.")
-            return
-        
-        selected_partner = summaries[int(choice) - 1]['partner']
-        self.view_conversation(selected_partner)
 
     
     @cancellable
