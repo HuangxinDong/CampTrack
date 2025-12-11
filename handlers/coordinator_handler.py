@@ -5,7 +5,7 @@ from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
 from cli.coordinator_display import coordinator_display
-
+import cli.visualisations as visualisations
 
 class CoordinatorHandler(BaseHandler):
     """Handles Coordinator-specific actions."""
@@ -20,6 +20,7 @@ class CoordinatorHandler(BaseHandler):
                 "name": "Set Daily Payment Limit",
                 "command": self.set_daily_payment_limit,
             },
+            {"name": "See Visualizations", "command": self.visualization_menu},
         ]
 
         self.main_commands = self.commands.copy()
@@ -133,3 +134,16 @@ class CoordinatorHandler(BaseHandler):
         self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
         
         coordinator_display.display_payment_update_success(scout_leader_name, old_rate, daily_payment_rate)
+
+    def restore_main_commands(self):
+        self.commands = self.main_commands
+
+    def visualization_menu(self):
+        self.commands = [
+             {'name': 'Show Food Stock Chart', 'command': lambda:
+             visualisations.plot_food_stock(self.context.camp_manager)},
+             {'name': 'Show Campers per Camp Chart', 'command': lambda:
+               visualisations.plot_campers_per_camp(self.context.camp_manager)}, 
+             {'name': 'Show Location Distribution', 'command': lambda:
+              visualisations.plot_camp_location_distribution(self.context.camp_manager)},]
+            
