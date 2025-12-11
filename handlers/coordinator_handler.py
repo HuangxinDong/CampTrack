@@ -7,6 +7,7 @@ from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
 from cli.coordinator_display import coordinator_display
 import cli.visualisations as visualisations
+from cli.console_manager import console_manager
 
 class CoordinatorHandler(BaseHandler):
     """Handles Coordinator-specific actions."""
@@ -22,6 +23,7 @@ class CoordinatorHandler(BaseHandler):
                 "command": self.set_daily_payment_limit,
             },
             {"name": "See Visualizations", "command": self.visualization_menu},
+            {"name": "View Dashboard", "command": self.view_dashboard},
         ]
 
         self.main_commands = self.commands.copy()
@@ -350,3 +352,48 @@ class CoordinatorHandler(BaseHandler):
                 "command": lambda: visualisations.plot_camp_location_distribution(self.context.camp_manager),
             },
         ]
+
+    @cancellable
+    def view_dashboard(self):
+        import pandas as pd
+
+        camps = self.context.camp_manager.read_all()
+        if not camps:
+            console_manager.print_error("No camps to display.")
+            return
+        
+        data = []
+        for c in camps:
+            data.append({
+                "Camp Name": c.name,
+                "Leader": c.camp_leader if c.camp_leader else "[Unassigned]", 
+                "Campers": len(c.campers),
+                "Food Stock": getattr(c, 'current_food_stock', 0),
+                "Status": "Good"
+
+
+            })
+
+        df = pd.DataFrame(data)
+
+        df.loc[df['Leader'] == "[Unassigned]", 'Status'] = "[bold red]Need Leader[/bold red]"
+
+
+        def get_status(row):
+            statuses = []
+            if row['Leader'] == "[Unassigned]":
+                statuses.append("[bold red]Need Leader[/bold red]")
+            if row['Food Stock'] < 10:
+                statuses.append("[bold red]Low Food[/bold red]")
+
+            return ", ".join(statuses) if statuses else "[green]Good[/green]"
+        
+        df['Status'] = df.apply(get_status, axis=1)
+
+
+        df['Campers'] = df['Campers'].astype(str)
+        df['Food Stock'] = df['Food Stock'].astype(str)
+
+        console_manager.print_table("CAMP DASHBOARD", df.columns.tolist(), df.values.tolist())
+
+        print(f"\nTotal Camps: {len(df)}")
