@@ -14,6 +14,7 @@ from handlers.leader_handler import LeaderHandler
 
 from models.users import register_user_types
 from handlers.base_handler import BaseHandler
+from app_context import AppContext
 
 register_user_types()
 
@@ -23,10 +24,10 @@ HANDLERS = {
     "Leader": LeaderHandler,
 }
 
-def create_handler(user, user_manager, camp_manager, message_manager, announcement_manager, system_notification_manager):
+def create_handler(user, context):
     """Create the appropriate handler based on user role."""
     handler_class = HANDLERS.get(user.role, BaseHandler)
-    return handler_class(user, user_manager, message_manager, camp_manager, announcement_manager, system_notification_manager)
+    return handler_class(user, context)
 
 def main():
     # Create managers ONCE (dependency injection)
@@ -43,8 +44,11 @@ def main():
     if user is None:
         return
 
+    # Create context
+    context = AppContext(user_manager, camp_manager, message_manager, announcement_manager, system_notification_manager)
+
     # Create handler for this user's role
-    handler = create_handler(user, user_manager, camp_manager, message_manager, announcement_manager)
+    handler = create_handler(user, context)
 
     # Run main loop with both user and handler
     run_program(user, handler)

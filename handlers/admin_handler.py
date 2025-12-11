@@ -2,14 +2,16 @@ import uuid
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from models.announcement import Announcement
+from persistence.dao.system_notification_manager import SystemNotificationManager
+
 
 
 class AdminHandler(BaseHandler):
     """Handles Admin-specific actions."""
-    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager):
-        # Pass all managers to BaseHandler
-        super().__init__(user, user_manager, message_manager, camp_manager, announcement_manager)
-        self.camp_manager = camp_manager
+    def __init__(self, user, context):
+        # Pass context to BaseHandler
+        super().__init__(user, context)
+
 
         self.commands = self.parent_commands + [
             {"name": "Create User", "command": self.handle_create_user},

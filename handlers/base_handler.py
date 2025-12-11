@@ -8,12 +8,9 @@ from cli.chat_display import conversation_display
 class BaseHandler:
     """Handles actions available to ALL user types."""
     
-    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager=None):
+    def __init__(self, user, context):
         self.user = user
-        self.user_manager = user_manager
-        self.message_manager = message_manager
-        self.camp_manager = camp_manager
-        self.announcement_manager = announcement_manager
+        self.context = context
 
         self.parent_commands = [
             {"name": "View messages", "command": self.view_messages},
@@ -30,6 +27,28 @@ class BaseHandler:
         
         # Optimization: Cache summaries to avoid redundant reads between menus
         self.current_summaries = []
+
+    @property
+    def user_manager(self):
+        return self.context.user_manager
+
+    @property
+    def message_manager(self):
+        return self.context.message_manager
+
+    @property
+    def camp_manager(self):
+        return self.context.camp_manager
+
+    @property
+    def announcement_manager(self):
+        return self.context.announcement_manager
+    
+    @property
+    def system_notification_manager(self):
+        return self.context.system_notification_manager
+
+
 
 
     def get_unread_message_alert(self):
