@@ -36,5 +36,39 @@
         "date": "2025-12-11",
         "text": "Incident: Yes\nSummary: good\nInjuries: no\nNotes: no",
         "incident": true
+    },
+    {
+        "id": "f5be8884-99bf-4465-b7cf-cdbfad0b51e7",
+        "camp_id": "48ee70b4-679f-4379-9ab0-dd9295c38016",
+        "leader_username": "leader1",
+        "date": "2025-12-11",
+        "text": "hike and happy! achievement!!",
+        "daily_participation": 3,
+        "injury": "y",
+        "injured_count": 2,
+        "incident_details": "fell off",
+        "incidents": [],
+        "activities": [
+            "hike"
+        ],
+        "achievements": [
+            "achievement"
+        ]
+    },
+    {
+        "id": "31ec476a-d53e-45fe-9b93-a22757fb92f1",
+        "camp_id": "48ee70b4-679f-4379-9ab0-dd9295c38016",
+        "leader_username": "leader1",
+        "date": "2025-12-11",
+        "text": "nothing specific. swim",
+        "daily_participation": 3,
+        "injury": "n",
+        "injured_count": 0,
+        "incident_details": "",
+        "incidents": [],
+        "activities": [
+            "swim"
+        ],
+        "achievements": []
     }
 ]

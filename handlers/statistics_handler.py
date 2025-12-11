@@ -10,8 +10,32 @@ class StatisticsHandler:
         self.user_manager = UserManager()
         self.daily_report_manager = DailyReportManager()
 
-    def get_participation(self, camp):
+
+    def get_total_participants(self, camp):
         return len(getattr(camp, "campers", []))
+
+    def get_daily_participation_list(self, camp_id):
+        reports = self.daily_report_manager.read_all()
+
+        return [
+            r.get("daily_participation", 0)
+            for r in reports
+            if r.get("camp_id") == camp_id
+        ]
+
+    def get_average_participation_rate(self, camp):
+        total = self.get_total_participants(camp)
+        if total == 0:
+            return 0
+
+        daily_list = self.get_daily_participation_list(camp.camp_id)
+        if not daily_list:
+            return 0
+
+        avg_daily = sum(daily_list) / len(daily_list)
+        return round(avg_daily / total, 2)  
+
+
 
     def get_food_usage(self, camp):
         campers = getattr(camp, "campers", [])
@@ -29,26 +53,24 @@ class StatisticsHandler:
         days = self.get_camp_days(camp)
         return num_campers * food_per_camper * days
 
-    def get_injury_count(self, camp_id):
+
+    def get_incident_summary(self, camp_id):
         reports = self.daily_report_manager.read_all()
 
-        total_injuries = 0
+        count = 0
+        keywords = []
+
         for r in reports:
-            if r.get("camp_id") != camp_id:
+            if r["camp_id"] != camp_id:
                 continue
 
-            if r.get("injury") == "y":
-                total_injuries += int(r.get("injured_count", 0))
+            injured = r.get("injured_count", 0)
+            count += injured
 
-        return total_injuries
-    
-    def get_injury_days(self, camp_id):
-        reports = self.daily_report_manager.read_all()
+            if injured > 0:
+                keywords.append(r.get("incident_details", ""))
+            return count, keywords
 
-        return sum(
-            1 for r in reports
-            if r.get("camp_id") == camp_id and r.get("injury") == "y"
-        )
 
     def get_earnings(self, leader_username, camp):
         user = self.user_manager.find_user(leader_username)
@@ -57,7 +79,6 @@ class StatisticsHandler:
 
         daily_rate = getattr(user, "daily_payment_rate", 100) 
         days = self.get_camp_days(camp)
-
         return daily_rate * days
 
     def get_camp_days(self, camp):

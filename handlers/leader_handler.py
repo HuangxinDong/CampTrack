@@ -21,9 +21,21 @@ console = Console()
 
 ACTIVITIES_FILE = os.path.join("persistence", "data", "activities.json")
 
-
 class LeaderHandler(BaseHandler):
 
+    @staticmethod
+    def extract_summary(text):
+        text_low = text.lower()
+
+        activity_keywords = ["hike", "swim", "archery", "canoe", "craft", "walk", "game", "climb"]
+        achievement_keywords = ["completed", "award", "achievement", "improved", "great job"]
+        activities = [k for k in activity_keywords if k in text_low]
+        achievements = [k for k in achievement_keywords if k in text_low]
+
+        return {
+            "activities": activities,
+            "achievements": achievements,
+        }
     def __init__(self, user, context):
         super().__init__(user, context)
 
@@ -207,9 +219,11 @@ class LeaderHandler(BaseHandler):
                 break
             else:
                 console_manager.print_error("Invalid choice.")
+    
 
     @cancellable
     def create_daily_report(self):
+
         camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
@@ -221,7 +235,11 @@ class LeaderHandler(BaseHandler):
         if not camp:
             return
 
-        text = get_input("Enter report text: ")
+        text = get_input("Enter report text(please include any achievements or key activities): ")
+        daily_participation = get_positive_int("How many campers participated today? ")
+
+        summary = LeaderHandler.extract_summary(text)
+
         injury_flag = get_input("Any injuries today? (y/n): ")
 
         injured_count = 0
@@ -244,13 +262,18 @@ class LeaderHandler(BaseHandler):
             "leader_username": self.user.username,
             "date": datetime.now().date().isoformat(),
             "text": text,
+            "daily_participation": daily_participation,
             "injury": injury_flag,
             "injured_count": injured_count,
-            "incident_details": details
+            "incident_details": details,
+            "incidents": [],
+            "activities": summary["activities"],
+            "achievements": summary["achievements"],
         }
 
         self.daily_report_manager.add_report(report)
         console_manager.print_success("Report saved.")
+
 
     def view_daily_reports(self):
         camps = self.context.camp_manager.read_all()
@@ -275,11 +298,25 @@ class LeaderHandler(BaseHandler):
 
         reports.sort(key=lambda r: r["date"], reverse=True)
 
-        display = [f"[bold]{camp.name} Reports[/bold]", "─" * 40]
-        for r in reports:
-            display.append(f"{r['date']} — {r['text'][:40]}...")
+        from rich.table import Table
 
-        console.print(Panel("\n".join(display), style="cyan"))
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("Date", width=12)
+        table.add_column("Summary", width=40)
+        table.add_column("Activities")
+        table.add_column("Incidents")
+        table.add_column("Achievements")
+
+        for r in reports:
+            table.add_row(
+                r["date"],
+                r["text"][:40] + "...",
+                ", ".join(r.get("activities", [])),
+                ", ".join(r.get("incidents", [])),
+                ", ".join(r.get("achievements", [])),
+            )
+
+        console.print(table)
 
     def delete_daily_report(self):
         camps = self.context.camp_manager.read_all()
@@ -334,33 +371,46 @@ class LeaderHandler(BaseHandler):
 
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Camp")
-        table.add_column("Participants", justify="center")
+        table.add_column("Campers", justify="center")
+        table.add_column("Avg Participation Rate", justify="center")
         table.add_column("Food Used", justify="center")
         table.add_column("Incidents", justify="center")
-        table.add_column("Incident Days", justify="center")
+        table.add_column("Activities", justify="center")
+        table.add_column("Achievements", justify="center")
         table.add_column("Earnings", justify="center")
 
         total_earnings = 0
+        all_reports = self.daily_report_manager.read_all()  
 
         for camp in my_camps:
-            participation = self.statistics.get_participation(camp)
-            food_usage = self.statistics.get_food_usage(camp)
-            injuries = self.statistics.get_injury_count(camp.camp_id)
-            injury_days = self.statistics.get_injury_days(camp.camp_id)
-            earnings = self.statistics.get_earnings(self.user.username, camp)
+            total_participants = self.statistics.get_total_participants(camp)
+            avg_rate = self.statistics.get_average_participation_rate(camp)  
+            avg_rate_str = f"{avg_rate * 100:.1f}%" if avg_rate > 0 else "0%"
 
+            food_usage = self.statistics.get_food_usage(camp)
+
+            camp_reports = [r for r in all_reports if r["camp_id"] == camp.camp_id]
+
+            incident_count = sum(len(r.get("incidents", [])) for r in camp_reports)
+            activity_count = sum(len(r.get("activities", [])) for r in camp_reports)
+            achievement_count = sum(len(r.get("achievements", [])) for r in camp_reports)
+
+            earnings = self.statistics.get_earnings(self.user.username, camp)
             total_earnings += earnings
 
             table.add_row(
                 camp.name,
-                str(participation),
+                str(total_participants),
+                avg_rate_str,
                 str(food_usage),
-                str(injuries),
-                str(injury_days),
-                str(earnings),
+                str(incident_count),
+                str(activity_count),
+                str(achievement_count),
+                f"£{earnings}",
             )
 
         console.print(table)
+
 
         console.print(
             Panel(
@@ -369,6 +419,8 @@ class LeaderHandler(BaseHandler):
             )
         )
         input("Press Enter to continue...")
+
+
 
     def _select_camp(self, camps):
         console.print(Panel("Select Camp", style="cyan"))
