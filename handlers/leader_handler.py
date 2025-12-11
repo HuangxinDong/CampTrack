@@ -14,6 +14,7 @@ from handlers.statistics_handler import StatisticsHandler
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -32,7 +33,7 @@ class LeaderHandler(BaseHandler):
             {"name": "Assign Campers from CSV", "command": self.import_campers_from_csv},
             {"name": "View Campers", "command": self.view_campers},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
-            {"name": "View My Statistics", "command": self.show_statistics},
+            {"name": "View My Statistics", "command": self.show_statistics}
         ]
 
         self.main_commands = self.commands.copy()
@@ -315,17 +316,53 @@ class LeaderHandler(BaseHandler):
 
 
     def show_statistics(self):
-        from cli.visualisations import (
-            plot_food_stock,
-            plot_campers_per_camp,
-            plot_camp_location_distribution
+        camps = self.context.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            console.print("You are not supervising any camps.", style="yellow")
+            input("Press Enter to continue...")
+            return
+
+        console.print(Panel("Statistics for Your Camps", style="cyan"))
+
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Camp")
+        table.add_column("Participants", justify="center")
+        table.add_column("Food Used", justify="center")
+        table.add_column("Incidents", justify="center")
+        table.add_column("Incident Days", justify="center")
+        table.add_column("Earnings", justify="center")
+
+        total_earnings = 0
+
+        for camp in my_camps:
+            participation = self.statistics.get_participation(camp)
+            food_usage = self.statistics.get_food_usage(camp)
+            injuries = self.statistics.get_injury_count(camp.camp_id)
+            injury_days = self.statistics.get_injury_days(camp.camp_id)
+            earnings = self.statistics.get_earnings(self.user.username, camp)
+
+            total_earnings += earnings
+
+            table.add_row(
+                camp.name,
+                str(participation),
+                str(food_usage),
+                str(injuries),
+                str(injury_days),
+                str(earnings),
+            )
+
+        console.print(table)
+
+        console.print(
+            Panel(
+                f"[bold green]Total Earnings Across All Camps: £{total_earnings}[/bold green]",
+                style="green"
+            )
         )
-
-        console.print(Panel("Generating visual statistics...", style="cyan"))
-
-        plot_food_stock(self.context.camp_manager)
-        plot_campers_per_camp(self.context.camp_manager)
-        plot_camp_location_distribution(self.context.camp_manager)
+        input("Press Enter to continue...")
 
     def _select_camp(self, camps):
         console.print(Panel("Select Camp", style="cyan"))
