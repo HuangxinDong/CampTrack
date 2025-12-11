@@ -14,12 +14,14 @@ class Camp:
         start_date: date,
         end_date: date,
         camp_leader: str = None,
-        initial_food_stock_per_day: int = None,
+        camp_leader: str = None,
         campers: list[str] = [],
         food_per_camper_per_day = 1,
         precamp_stock = 0,
         topups= [],
-        food_usage={}
+        food_usage={},
+        # For backward compatibility
+        initial_food_stock_per_day: int = None, 
     ):
         self.camp_id = camp_id if camp_id else str(uuid.uuid4())
         self.name = name
@@ -29,9 +31,15 @@ class Camp:
         self.end_date = end_date
         self.camp_leader = camp_leader
         self.campers = campers
-        self.initial_food_stock_per_day = initial_food_stock_per_day
         self.food_per_camper_per_day = food_per_camper_per_day
-        self.precamp_stock = precamp_stock
+        
+        # Consolidate stock logic: if initial_food_stock_per_day was passed (old code/json), 
+        # use it as precamp_stock if precamp_stock is 0.
+        if initial_food_stock_per_day is not None and precamp_stock == 0:
+             self.precamp_stock = initial_food_stock_per_day
+        else:
+            self.precamp_stock = precamp_stock
+            
         self.topups = topups
         self.food_usage = food_usage
 
@@ -97,6 +105,7 @@ class Camp:
         self.food_usage[day.strftime("%Y-%m-%d")] = amount
 
     def to_dict(self):
+    def to_dict(self):
         return {
             "camp_id": self.camp_id,
             "name": self.name,
@@ -106,7 +115,6 @@ class Camp:
             "end_date": self.end_date.strftime("%Y-%m-%d"),
             "camp_leader": self.camp_leader,
             "campers": [camper.to_dict() for camper in self.campers],
-            "initial_food_stock_per_day": self.initial_food_stock_per_day,
             "food_per_camper_per_day": self.food_per_camper_per_day,
             "precamp_stock": self.precamp_stock,
             "topups": self.topups,
@@ -126,9 +134,11 @@ class Camp:
             end_date=end_date,
             camp_leader=data["camp_leader"],
             campers=[Camper.from_dict(camper) for camper in data["campers"]],
-            initial_food_stock_per_day=data["initial_food_stock_per_day"],
+            # If reading old data, this key might exist. If new data, it won't.
+            # Passing it to logic handled in __init__
+            initial_food_stock_per_day=data.get("initial_food_stock_per_day"),
             food_per_camper_per_day=data["food_per_camper_per_day"],
-            precamp_stock=data["precamp_stock"],
+            precamp_stock=data.get("precamp_stock", 0),
             topups=data["topups"],
             food_usage=data["food_usage"],
         )

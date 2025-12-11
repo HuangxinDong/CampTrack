@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from models.camp import Camp
 
 class SystemNotification:
     def __init__(self, sys_notification_id, to_user, type, content, created_at=None):
@@ -37,3 +38,11 @@ class SystemNotification:
             content=data['content'],
             created_at=datetime.fromisoformat(data['created_at'])
         )
+
+
+
+"""
+TODO:
+- when food stock goes below threshold, send notification to coordinator 
+- 
+"""

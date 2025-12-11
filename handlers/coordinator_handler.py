@@ -51,7 +51,7 @@ class CoordinatorHandler(BaseHandler):
             camp_type=camp_type,
             start_date=start_date,
             end_date=end_date,
-            initial_food_stock_per_day=food,
+            precamp_stock=food,
         )
         self.camp_manager.add(camp)
         print(f"Camp '{name}' created successfully.")
