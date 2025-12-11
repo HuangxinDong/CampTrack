@@ -20,6 +20,11 @@ class BaseHandler:
         self.commands = self.parent_commands.copy()
         self.main_commands = self.commands.copy()
 
+        self.message_view_commands = [
+            {"name": "Placeholder 1", "command": self._placeholder_1},
+            {"name": "Placeholder 2", "command": self._placeholder_2},
+        ]
+
 
     def get_my_messages(self):
         """Returns list of messages for current user."""
@@ -39,20 +44,42 @@ class BaseHandler:
             
             conversation_display.display_list(summaries)
             
-            print("1. Placeholder 1")
-            print("2. Placeholder 2")
+            # Dynamic Menu Display
+            for i, cmd in enumerate(self.message_view_commands):
+                print(f"{i + 1}. {cmd['name']}")
             print("Enter number, 'b' to go back, or 'q' to quit: ")
             
             choice = get_input("")
             
             if choice == 'b':
                 break
-            elif choice == '1':
-                print("Placeholder 1 executed")
-            elif choice == '2':
-                print("Placeholder 2 executed")
-            else:
+            elif choice.lower() == 'q':
+                # Re-raising or letting get_input handle it if it wasn't caught
+                # But typically main loop handles 'q'. Here we just break to return to main loop?
+                # Actually, standard pattern in this app is usually returning or raising exceptions.
+                # get_input usually raises QuitException if we enforce it. 
+                # For safety, let's treat 'q' same as 'b' for this sub-loop or 
+                # let it bubble up if get_input handles it.
+                # However, since get_input returns 'q' if not handled, we should respect it.
+                import sys
+                print("Goodbye!")
+                sys.exit(0) 
+
+            # Try to match index
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(self.message_view_commands):
+                    self.message_view_commands[idx]['command']()
+                else:
+                    print("Invalid selection.")
+            except ValueError:
                 print("Invalid selection.")
+
+    def _placeholder_1(self):
+        print("Placeholder 1 executed")
+
+    def _placeholder_2(self):
+        print("Placeholder 2 executed")
 
     
     @cancellable
