@@ -8,14 +8,17 @@ from cli.chat_display import conversation_display
 class BaseHandler:
     """Handles actions available to ALL user types."""
     
-    def __init__(self, user, user_manager, message_manager):
+    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager=None):
         self.user = user
         self.user_manager = user_manager
         self.message_manager = message_manager
+        self.camp_manager = camp_manager
+        self.announcement_manager = announcement_manager
 
         self.parent_commands = [
             {"name": "View messages", "command": self.view_messages},
             {"name": "Send message", "command": self.send_message},
+            {"name": "View announcements", "command": self.view_announcements},
         ]
         self.commands = self.parent_commands.copy()
         self.main_commands = self.commands.copy()
@@ -164,6 +167,34 @@ class BaseHandler:
                 raise e
                 
             print(f"Error viewing chat: {e}")
+
+    @cancellable
+    def view_announcements(self):
+        """View all announcements."""
+        print("\n" + "═"*40)
+        print("  CAMP ANNOUNCEMENTS")
+        print("═"*40)
+        
+        if not self.announcement_manager:
+              print("Announcement service unavailable.")
+              get_input("(Press Enter to go back)")
+              return
+
+        announcements = self.announcement_manager.read_all()
+        
+        if not announcements:
+             print("No announcements yet.")
+        else:
+             # Sort latest first (assuming they are stored chronologically or we sort here)
+             announcements.sort(key=lambda x: x['created_at'], reverse=True)
+             
+             for a in announcements:
+                  print(f"\n  [{a['created_at']}] {a['author']}:")
+                  print(f"  {a['content']}")
+                  print("  " + "-"*36)
+        
+        print("═"*40)
+        get_input("(Press Enter to go back)")
 
 
 
