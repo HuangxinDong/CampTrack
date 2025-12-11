@@ -395,15 +395,11 @@ b. Back
             total_participants = self.statistics.get_total_participants(camp)
             avg_rate = self.statistics.get_average_participation_rate(camp)  
             avg_rate_str = f"{avg_rate * 100:.1f}%" if avg_rate > 0 else "0%"
-
             food_usage = self.statistics.get_food_usage(camp)
-
             camp_reports = [r for r in all_reports if r["camp_id"] == camp.camp_id]
-
-            incident_count = sum(len(r.get("incidents", [])) for r in camp_reports)
+            incident_count = sum(int(r.get("injured_count", 0)) for r in camp_reports)
             activity_count = sum(len(r.get("activities", [])) for r in camp_reports)
             achievement_count = sum(len(r.get("achievements", [])) for r in camp_reports)
-
             earnings = self.statistics.get_earnings(self.user.username, camp)
             total_earnings += earnings
 

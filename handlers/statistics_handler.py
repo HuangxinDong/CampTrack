@@ -69,7 +69,7 @@ class StatisticsHandler:
 
             if injured > 0:
                 keywords.append(r.get("incident_details", ""))
-            return count, keywords
+        return count, keywords
 
 
     def get_earnings(self, leader_username, camp):
