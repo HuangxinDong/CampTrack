@@ -1,136 +1,213 @@
-# handlers/leader_handler.py
 from datetime import datetime
+import csv
+
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
 
+from persistence.dao.camp_manager import CampManager
+from persistence.dao.daily_report_manager import DailyReportManager
+from persistence.dao.user_manager import UserManager
+
+from models.camper import Camper
+from handlers.statistics_handler import StatisticsHandler
+
 
 class LeaderHandler(BaseHandler):
-    """Handles Leader-specific actions."""
+    """Handles Leader-specific operations."""
 
     def __init__(self, user, user_manager, message_manager, camp_manager):
         super().__init__(user, user_manager, message_manager)
+
         self.camp_manager = camp_manager
+        self.daily_report_manager = DailyReportManager()
+        self.statistics = StatisticsHandler()
 
         self.commands = self.parent_commands + [
-            {
-                "name": "Select Camps to Supervise",
-                "command": self.select_camps_to_supervise,
-            },
+            {"name": "Select Camps to Supervise", "command": self.select_camps_to_supervise},
             {"name": "Edit Camp", "command": self.edit_camp},
+            {"name": "Assign Campers from CSV", "command": self.assign_campers_from_csv},
+            {"name": "Create Daily Report", "command": self.create_daily_report},
+            {"name": "View My Statistics", "command": self.view_statistics},
         ]
 
         self.main_commands = self.commands.copy()
-
-
-    @staticmethod
-    def dates_conflict(start1, end1, start2, end2):
-        return (start1 <= end2) and (end1 >= start2)
 
     @cancellable
     def select_camps_to_supervise(self):
         camps = self.camp_manager.read_all()
 
-        if not camps:
-            print("No camps available.")
-            return
-
         print("\nAvailable camps:")
-        for i, camp in enumerate(camps, 1):
+        for idx, camp in enumerate(camps, 1):
             if camp.camp_leader == self.user.username:
                 status = " (You are the leader)"
             elif camp.camp_leader:
-                status = f" (Assigned to: {camp.camp_leader})"
+                status = f" (Assigned to {camp.camp_leader})"
             else:
                 status = " (Available)"
-            print(f"{i}. {camp.name} - {camp.location}{status}")
 
-        print("\nEnter camp numbers to supervise, please seperate with commas:")
-        print("Note: You can only select camps that are available or already yours.")
-        selection = get_input("Your selection: ")
+            print(f"{idx}. {camp.name} - {camp.location}{status}")
 
+        selection = get_input("\nEnter camp numbers (comma-separated): ")
         try:
-            selected_indices = [int(x.strip()) - 1 for x in selection.split(",")]
-            my_camps = [c for c in camps if c.camp_leader == self.user.username]
-            for index in selected_indices:
-                if not (0 <= index < len(camps)):
-                    print(f"Invalid selection: {index + 1}")
-                    continue
+            picks = [int(x.strip()) - 1 for x in selection.split(",")]
+        except:
+            print("Invalid input.")
+            return
 
-                camp = camps[index]
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
-                if camp.camp_leader and camp.camp_leader != self.user.username:
-                    print(
-                        f"Cannot select '{camp.name}' - already assigned to {camp.camp_leader}"
-                    )
-                    continue
-                # check if the time is conflict
-                new_start = datetime.strptime(str(camp.start_date), "%Y-%m-%d")
-                new_end = datetime.strptime(str(camp.end_date), "%Y-%m-%d")
+        for index in picks:
+            if not (0 <= index < len(camps)):
+                print(f"Invalid selection {index + 1}")
+                continue
 
-                conflict = False
-                for c in my_camps:
-                    s = datetime.strptime(c.start_date, "%Y-%m-%d")
-                    e = datetime.strptime(c.end_date, "%Y-%m-%d")
-                    if (new_start <= e) and (new_end >= s):
-                        print(
-                            f"Cannot select '{camp.name}' - schedule conflicts with '{c.name}'."
-                        )
-                        conflict = True
-                        break
-                if conflict:
-                    continue
+            camp = camps[index]
 
-                if camp.camp_leader == self.user.username:
-                    print(f"You are already supervising '{camp.name}'")
-                    continue
-                camp.assign_leader(self.user.username)
-                self.camp_manager.update(camp)
-                print(f"You are now supervising: {camp.name}")
+            if camp.camp_leader and camp.camp_leader != self.user.username:
+                print(f"Cannot select {camp.name} — assigned to {camp.camp_leader}")
+                continue
 
-        except ValueError:
-            print("Invalid input. Please enter numbers separated by commas.")
+            if self._has_schedule_conflict(camp, my_camps):
+                print(f"Cannot select '{camp.name}' — date conflict detected.")
+                continue
 
+            camp.camp_leader = self.user.username
+            self.camp_manager.update(camp)
+            print(f"You are now supervising: {camp.name}")
+
+
+    def _has_schedule_conflict(self, new_camp, my_camps):
+        """
+        Private method to check schedule conflict.
+        """
+        new_start = datetime.strptime(str(new_camp.start_date), "%Y-%m-%d").date()
+        new_end = datetime.strptime(str(new_camp.end_date), "%Y-%m-%d").date()
+
+        for c in my_camps:
+            s = datetime.strptime(str(c.start_date), "%Y-%m-%d").date()
+            e = datetime.strptime(str(c.end_date), "%Y-%m-%d").date()
+
+            if new_start <= e and new_end >= s:
+                return True
+
+        return False
+
+
+    @cancellable
     def edit_camp(self):
         camps = self.camp_manager.read_all()
-        my_camps = [camp for camp in camps if camp.camp_leader == self.user.username]
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            print(
-                "You are not supervising any camps. Use 'Select Camps to Supervise' first."
-            )
+            print("You are not supervising any camps.")
             return
 
         print("\nYour camps:")
-        for i, camp in enumerate(my_camps, 1):
-            print(f"{i}. {camp.name} - {camp.location}")
+        for idx, camp in enumerate(my_camps, 1):
+            print(f"{idx}. {camp.name}")
 
-        self.commands = [
-            {
-                "name": "Assign food per camper per day",
-                "command": self.assign_food_per_camper_per_day,
-            },
-        ]
+        choice = get_input("Select camp to edit: ")
+        try:
+            camp = my_camps[int(choice) - 1]
+        except:
+            print("Invalid selection.")
+            return
+
+        new_amount = get_positive_int("Enter food per camper per day: ")
+        camp.food_per_camper_per_day = new_amount
+        self.camp_manager.update(camp)
+
+        print(f"Updated food requirement for {camp.name}.")
+
+
 
     @cancellable
-    def assign_food_per_camper_per_day(self):
-        camp_name = get_input("Enter the camp name to top up food stock for: ")
+    def assign_campers_from_csv(self):
         camps = self.camp_manager.read_all()
-        selected_camp = next((camp for camp in camps if camp.name == camp_name), None)
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
-        if not selected_camp:
-            print("Camp not found")
+        if not my_camps:
+            print("You are not supervising any camps.")
             return
 
-        if selected_camp.camp_leader != self.user.username:
-            print(
-                "You cannot edit a camp if you are not a leader. Ask coordinator to add you."
-            )
+        print("\nYour camps:")
+        for idx, camp in enumerate(my_camps, 1):
+            print(f"{idx}. {camp.name}")
+
+        try:
+            camp = my_camps[int(get_input("Choose a camp: ")) - 1]
+        except:
+            print("Invalid selection.")
             return
-        food_per_camper_per_day = get_positive_int("Enter food per camper per day: ")
-        selected_camp.food_per_camper_per_day = food_per_camper_per_day
-        self.camp_manager.update(selected_camp)
 
-        print(f"Food requirement updated for camp '{selected_camp.name}'.")
+        path = get_input("Enter CSV file path: ")
 
-        self.commands = self.main_commands
+        try:
+            with open(path, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    camper = Camper(
+                        name=row.get("name"),
+                        age=int(row.get("age", 0)),
+                        contact=row.get("contact"),
+                        medical_info=row.get("medical_info")
+                    )
+                    camp.campers.append(camper)
+
+            self.camp_manager.update(camp)
+            print(f"Imported campers into {camp.name}.")
+
+        except Exception as e:
+            print("Error reading CSV:", e)
+
+
+    @cancellable
+    def create_daily_report(self):
+        camps = self.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            print("You are not supervising any camps.")
+            return
+
+        print("\nYour camps:")
+        for idx, camp in enumerate(my_camps, 1):
+            print(f"{idx}. {camp.name}")
+
+        try:
+            camp = my_camps[int(get_input("Choose a camp: ")) - 1]
+        except:
+            print("Invalid selection.")
+            return
+
+        today = datetime.today().strftime("%Y-%m-%d")
+        text = get_input("Enter today's report text: ")
+
+        report = {
+            "camp_id": camp.camp_id,
+            "leader_username": self.user.username,
+            "date": today,
+            "text": text,
+        }
+
+        self.daily_report_manager.add_report(report)
+        print("Daily report saved.")
+
+
+    def view_statistics(self):
+        camps = self.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            print("You are not supervising any camps.")
+            return
+
+        print("\n===== Statistics =====")
+
+        for camp in my_camps:
+            print(f"\nCamp: {camp.name}")
+            print(f"- Participants: {self.statistics.get_participation(camp)}")
+            print(f"- Food usage: {self.statistics.get_food_usage(camp)}")
+            print(f"- Incident count: {self.statistics.get_incident_count(camp.camp_id)}")
+            print(f"- Earnings: £{self.statistics.get_earnings(self.user.username, camp)}")
