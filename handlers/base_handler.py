@@ -22,8 +22,11 @@ class BaseHandler:
 
         self.message_view_commands = [
             {"name": "View specific chat", "command": self.view_chat},
-            {"name": "Placeholder 2", "command": self.send_new_message},
+            {"name": "Send new message", "command": self.send_message},
         ]
+        
+        # Optimization: Cache summaries to avoid redundant reads between menus
+        self.current_summaries = []
 
 
     def get_my_messages(self):
@@ -39,13 +42,14 @@ class BaseHandler:
         """
         while True:
             messages = self.message_manager.read_all()
-            summaries = get_conversation_summaries(messages, self.user.username)
+            # Update cache for view_chat to use
+            self.current_summaries = get_conversation_summaries(messages, self.user.username)
             
-            if not summaries:
+            if not self.current_summaries:
                 print("No conversations.")
                 return
             
-            conversation_display.display_list(summaries)
+            conversation_display.display_list(self.current_summaries)
             
             # Dynamic Menu Display
             for i, cmd in enumerate(self.message_view_commands):
@@ -71,12 +75,14 @@ class BaseHandler:
         """
         prompt = "Enter conversation number: "
         
-        # We need to re-fetch summaries to know what the numbers mean
-        # (This is slightly inefficient fetching twice but safe)
-        messages = self.message_manager.read_all()
-        summaries = get_conversation_summaries(messages, self.user.username)
-        
-        if not summaries:
+        # Optimization: Use cached summaries from view_messages if available
+        # This prevents reading the file and calculating summaries twice
+        if not self.current_summaries:
+             # Fallback if accessed directly (though unlikely in current flow)
+             messages = self.message_manager.read_all()
+             self.current_summaries = get_conversation_summaries(messages, self.user.username)
+
+        if not self.current_summaries:
             print("No conversations to view.")
             return
 
@@ -89,12 +95,14 @@ class BaseHandler:
                 return
 
             idx = int(choice) - 1
-            if idx < 0 or idx >= len(summaries):
+            if idx < 0 or idx >= len(self.current_summaries):
                 print("Invalid selection.")
                 return
             
             # Valid selection -> Show thread
-            partner = summaries[idx]['partner']
+            partner = self.current_summaries[idx]['partner']
+    
+            messages = self.message_manager.read_all()
             
             # Filter messages for this partner
             chat = []
@@ -110,10 +118,33 @@ class BaseHandler:
             if unread_ids:
                 self.message_manager.mark_as_read_batch(unread_ids)
 
-            conversation_display.display_chat_thread(partner, chat, self.user.username)
-            
-            # Wait for user before returning to menu
-            get_input("")
+            # Loop for chat interaction (Reply or Back)
+            while True:
+                conversation_display.display_chat_thread(partner, chat, self.user.username)
+                
+                # Wait for user action
+                action = get_input("")
+                
+                if action.lower() == 'r':
+                    # Reply logic: Call send_message with recipient pre-filled
+                    self.send_message(recipient_username=partner)
+                    
+                    # Refetch messages for this partner
+                    all_messages = self.message_manager.read_all()
+                    
+                    # Filter again
+                    chat = []
+                    for m in all_messages:
+                        if (m['from_user'] == self.user.username and m['to_user'] == partner) or \
+                           (m['from_user'] == partner and m['to_user'] == self.user.username):
+                            chat.append(m)
+                    # Continue the inner loop to re-display
+                    continue
+                
+                # If just Enter/anything else, treat as back (which is standard 'b' behavior too)
+                # But get_input raises BackException for 'b'. 
+                # If they just press Enter (empty string), we return to menu.
+                break
             
         except Exception as e:
             from cli.input_utils import QuitException, BackException
@@ -127,30 +158,43 @@ class BaseHandler:
                 
             print(f"Error viewing chat: {e}")
 
-    def send_new_message(self):
-        print("Placeholder 2 executed")
+
 
     
     @cancellable
     def send_message(self, recipient_username=None):
-        # If no recipient provided, ask for one
-        if recipient_username is None:
-            recipient_username = get_input('Enter the username for recipient: ')
+        # 1. REPLY CONTEXT (Recipient provided)
+        if recipient_username:
+             # Just check once to be safe, though usually safe from chat context
+             if recipient_username == self.user.username:
+                 print('You cannot send a message to yourself.')
+                 return
+             if not self.user_manager.find_user(recipient_username):
+                 print('This user does not exist.')
+                 return
 
-        # Validate: can't message yourself
-        if recipient_username == self.user.username:
-            print('You cannot send a message to yourself.')
-            return
+        # 2. NEW MESSAGE CONTEXT (Recipient is None) - Loop until valid
+        while recipient_username is None:
+            username_input = get_input('Enter the username for recipient: ')
+            
+            # Validate: can't message yourself
+            if username_input == self.user.username:
+                print('You cannot send a message to yourself.')
+                continue
+            
+            # Validate: recipient must exist
+            recipient = self.user_manager.find_user(username_input)
+            if not recipient:
+                print('This user does not exist, please try again.')
+                continue
+            
+            # Valid!
+            recipient_username = username_input
 
-        # Validate: recipient must exist
-        recipient = self.user_manager.find_user(recipient_username)
-        if not recipient:
-            print('This user does not exist, please try again.')
-            return
-
+        # At this point, recipient_username is valid
         message_content = get_input('Enter your message: ')
 
-        message = Message(str(uuid.uuid4()), self.user.username, recipient['username'], message_content)
+        message = Message(str(uuid.uuid4()), self.user.username, recipient_username, message_content)
 
         try:
             self.message_manager.add(message.to_dict())

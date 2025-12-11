@@ -73,7 +73,7 @@ class ConversationDisplay(DisplayHelper):
                 print(f"  [{timestamp}] {sender}: {content}")
         
         self.print_footer()
-        print("(Press Enter to go back)")
+        print("(Press Enter to go back, or 'r' to reply)")
 
 
 # Default instance for easy import
