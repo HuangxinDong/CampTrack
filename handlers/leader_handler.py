@@ -1,5 +1,6 @@
 from datetime import datetime
 import csv
+import os
 
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
@@ -136,23 +137,46 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            print("You are not supervising any camps.")
+            console_manager.print_error("You are not supervising any camps.")
             return
 
-        print("\nYour camps:")
-        for idx, camp in enumerate(my_camps, 1):
-            print(f"{idx}. {camp.name}")
+        menu_items = [f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name}" 
+                    for idx, camp in enumerate(my_camps, 1)]
+        console_manager.print_menu("\nYour camps:", menu_items)
 
         try:
-            camp = my_camps[int(get_input("Choose a camp: ")) - 1]
-        except:
-            print("Invalid selection.")
+            camp_choice = int(get_input("Choose a camp: ")) - 1
+            camp = my_camps[camp_choice]
+        except (ValueError, IndexError):
+            console_manager.print_error("Invalid selection.")
             return
 
-        path = get_input("Enter CSV file path: ")
+        folder_path = "persistence/data/campers"
+        try:
+            csv_files = [f for f in os.listdir(folder_path) if f.lower().endswith(".csv")]
+            if not csv_files:
+                console_manager.print_error(f"No CSV files found in {folder_path}.")
+                return
+        except FileNotFoundError:
+            console_manager.print_error(f"Folder not found: {folder_path}")
+            return
+
+        menu_items = [f"[bold medium_purple1]{idx}.[/bold medium_purple1] {file_name}" 
+                    for idx, file_name in enumerate(csv_files, 1)]
+        console_manager.print_menu("\nAvailable CSV files:", menu_items)
 
         try:
-            with open(path, newline="", encoding="utf-8") as f:
+            csv_choice = int(get_input("Choose a CSV file by number: ")) - 1
+            csv_file = csv_files[csv_choice]
+        except (ValueError, IndexError):
+            console_manager.print_error("Invalid selection.")
+            return
+
+        csv_path = os.path.join(folder_path, csv_file)
+
+        # Import campers
+        try:
+            with open(csv_path, newline="", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     camper = Camper(
@@ -164,11 +188,10 @@ class LeaderHandler(BaseHandler):
                     camp.campers.append(camper)
 
             self.context.camp_manager.update(camp)
-            print(f"Imported campers into {camp.name}.")
+            console_manager.print_success(f"Imported campers into {camp.name} from {csv_file}.")
 
         except Exception as e:
-            print("Error reading CSV:", e)
-
+            console_manager.print_error(f"Error reading CSV: {e}")
 
     @cancellable
     def create_daily_report(self):
