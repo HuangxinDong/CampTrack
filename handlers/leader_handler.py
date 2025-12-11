@@ -53,7 +53,7 @@ class LeaderHandler(BaseHandler):
         selection = get_input("\nEnter camp numbers (comma-separated): ")
         try:
             picks = [int(x.strip()) - 1 for x in selection.split(",")]
-        except:
+        except ValueError:
             console_manager.print_error("Invalid input.")
             return
 
@@ -66,7 +66,13 @@ class LeaderHandler(BaseHandler):
 
             camp = camps[index]
 
-            if camp.camp_leader and camp.camp_leader != self.user.username:
+            if camp.camp_leader == self.user.username:
+                camp.camp_leader = None
+                self.context.camp_manager.update(camp)
+                console_manager.print_success(f"You are no longer supervising: {camp.name}")
+                continue
+
+            if camp.camp_leader:
                 console_manager.print_error(f"Cannot select {camp.name} — assigned to {camp.camp_leader}")
                 continue
 
