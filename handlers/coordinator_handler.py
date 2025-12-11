@@ -10,9 +10,9 @@ from persistence.dao.system_notification_manager import SystemNotificationManage
 class CoordinatorHandler(BaseHandler):
     """Handles Coordinator-specific actions."""
 
-    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager, system_notification_manager):
-        super().__init__(user, user_manager, message_manager, camp_manager, announcement_manager, system_notification_manager)
-        self.camp_manager = camp_manager
+    def __init__(self, user, context):
+        super().__init__(user, context)
+
         self.commands = self.parent_commands + [
             {"name": "Create Camp", "command": self.create_camp},
             {"name": "Edit Camp", "command": self.edit_camp_resources},
