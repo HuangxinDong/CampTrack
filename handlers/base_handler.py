@@ -193,8 +193,8 @@ class BaseHandler:
                   print(f"  {a['content']}")
                   print("  " + "-"*36)
         
+        
         print("═"*40)
-        get_input("(Press Enter to go back)")
 
 
 

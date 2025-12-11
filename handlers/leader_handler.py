@@ -8,8 +8,8 @@ from cli.prompts import get_positive_int
 class LeaderHandler(BaseHandler):
     """Handles Leader-specific actions."""
 
-    def __init__(self, user, user_manager, message_manager, camp_manager):
-        super().__init__(user, user_manager, message_manager)
+    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager):
+        super().__init__(user, user_manager, message_manager, camp_manager, announcement_manager)
         self.camp_manager = camp_manager
 
         self.commands = self.parent_commands + [
