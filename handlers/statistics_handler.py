@@ -29,19 +29,26 @@ class StatisticsHandler:
         days = self.get_camp_days(camp)
         return num_campers * food_per_camper * days
 
-    def get_incident_count(self, camp_id):
+    def get_injury_count(self, camp_id):
         reports = self.daily_report_manager.read_all()
 
-        count = 0
+        total_injuries = 0
         for r in reports:
             if r.get("camp_id") != camp_id:
                 continue
 
-            text = r.get("text", "").lower()  
-            if any(w in text for w in ["incident", "injury", "accident"]):
-                count += 1
+            if r.get("injury") == "y":
+                total_injuries += int(r.get("injured_count", 0))
 
-        return count
+        return total_injuries
+    
+    def get_injury_days(self, camp_id):
+        reports = self.daily_report_manager.read_all()
+
+        return sum(
+            1 for r in reports
+            if r.get("camp_id") == camp_id and r.get("injury") == "y"
+        )
 
     def get_earnings(self, leader_username, camp):
         user = self.user_manager.find_user(leader_username)
