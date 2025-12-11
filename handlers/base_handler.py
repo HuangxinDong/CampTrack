@@ -34,6 +34,9 @@ class BaseHandler:
 
     @cancellable
     def view_messages(self):
+        """
+        View all messages for the current user.
+        """
         while True:
             messages = self.message_manager.read_all()
             summaries = get_conversation_summaries(messages, self.user.username)
@@ -49,22 +52,9 @@ class BaseHandler:
                 print(f"{i + 1}. {cmd['name']}")
             print("Enter number, 'b' to go back, or 'q' to quit: ")
             
+            
             choice = get_input("")
             
-            if choice == 'b':
-                break
-            elif choice.lower() == 'q':
-                # Re-raising or letting get_input handle it if it wasn't caught
-                # But typically main loop handles 'q'. Here we just break to return to main loop?
-                # Actually, standard pattern in this app is usually returning or raising exceptions.
-                # get_input usually raises QuitException if we enforce it. 
-                # For safety, let's treat 'q' same as 'b' for this sub-loop or 
-                # let it bubble up if get_input handles it.
-                # However, since get_input returns 'q' if not handled, we should respect it.
-                import sys
-                print("Goodbye!")
-                sys.exit(0) 
-
             # Try to match index
             try:
                 idx = int(choice) - 1
