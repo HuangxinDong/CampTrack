@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Message:
@@ -6,7 +6,7 @@ class Message:
         self, message_id, from_user, to_user, content, sent_at = None, mark_as_read=False
     ):
         if sent_at is None:
-            sent_at = datetime.now()
+            sent_at = datetime.now(timezone.utc)
             
         self.message_id = message_id    
         self.from_user = from_user
