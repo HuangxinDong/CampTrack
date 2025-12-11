@@ -29,14 +29,30 @@ class BaseHandler:
 
     @cancellable
     def view_messages(self):
-        messages = self.message_manager.read_all()
-        summaries = get_conversation_summaries(messages, self.user.username)
-        
-        if not summaries:
-            print("No conversations.")
-            return
-        
-        conversation_display.display_list(summaries)
+        while True:
+            messages = self.message_manager.read_all()
+            summaries = get_conversation_summaries(messages, self.user.username)
+            
+            if not summaries:
+                print("No conversations.")
+                return
+            
+            conversation_display.display_list(summaries)
+            
+            print("1. Placeholder 1")
+            print("2. Placeholder 2")
+            print("Enter number, 'b' to go back, or 'q' to quit: ")
+            
+            choice = get_input("")
+            
+            if choice == 'b':
+                break
+            elif choice == '1':
+                print("Placeholder 1 executed")
+            elif choice == '2':
+                print("Placeholder 2 executed")
+            else:
+                print("Invalid selection.")
 
     
     @cancellable

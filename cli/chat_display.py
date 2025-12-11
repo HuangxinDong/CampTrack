@@ -51,7 +51,6 @@ class ConversationDisplay(DisplayHelper):
             print()
         
         self.print_footer()
-        # print("Enter conversation number (0 to go back, q to quit): ")
 
 
 # Default instance for easy import
