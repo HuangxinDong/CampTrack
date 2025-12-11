@@ -109,25 +109,27 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            print("You are not supervising any camps.")
+            console_manager.print_error("You are not supervising any camps.")
             return
 
-        print("\nYour camps:")
-        for idx, camp in enumerate(my_camps, 1):
-            print(f"{idx}. {camp.name}")
+        # Display your camps as a menu
+        menu_items = [f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name}" 
+                    for idx, camp in enumerate(my_camps, 1)]
+        console_manager.print_menu("\nYour camps:", menu_items)
 
         choice = get_input("Select camp to edit: ")
         try:
             camp = my_camps[int(choice) - 1]
-        except:
-            print("Invalid selection.")
+        except (ValueError, IndexError):
+            console_manager.print_error("Invalid selection.")
             return
 
         new_amount = get_positive_int("Enter food per camper per day: ")
         camp.food_per_camper_per_day = new_amount
         self.context.camp_manager.update(camp)
 
-        print(f"Updated food requirement for {camp.name}.")
+        console_manager.print_success(f"Updated food requirement for {camp.name}.")
+
 
 
 
@@ -199,30 +201,33 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            print("You are not supervising any camps.")
+            console_manager.print_error("You are not supervising any camps.")
             return
 
-        print("\nYour camps:")
-        for idx, camp in enumerate(my_camps, 1):
-            print(f"{idx}. {camp.name}")
+        # Display your camps as a menu
+        menu_items = [
+            f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name}" 
+            for idx, camp in enumerate(my_camps, 1)
+        ]
+        console_manager.print_menu("\nYour camps:", menu_items)
 
         try:
             camp = my_camps[int(get_input("Choose a camp: ")) - 1]
-        except:
-            print("Invalid selection.")
+        except (ValueError, IndexError):
+            console_manager.print_error("Invalid selection.")
             return
 
         today = datetime.today().strftime("%Y-%m-%d")
         text = get_input("Enter today's report text: ")
-        
+
         # Ask for food usage
         food_usage_int = get_positive_int("Enter amount of food used today: ")
-        
+
         try:
-             camp.remove_food(food_usage_int, today)
-             self.context.camp_manager.update(camp)
+            camp.remove_food(food_usage_int, today)
+            self.context.camp_manager.update(camp)
         except ValueError as e:
-             print(f"Warning: Could not save food usage: {e}")
+            console_manager.print_error(f"Warning: Could not save food usage: {e}")
 
         report = {
             "camp_id": camp.camp_id,
@@ -232,7 +237,8 @@ class LeaderHandler(BaseHandler):
         }
 
         self.daily_report_manager.add_report(report)
-        print("Daily report saved.")
+        console_manager.print_success("Daily report saved.")
+
 
 
     def view_statistics(self):
