@@ -1,8 +1,11 @@
 import uuid
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
+from cli.console_manager import console_manager
 from models.announcement import Announcement
 from persistence.dao.system_notification_manager import SystemNotificationManager
+from views import display_user_table
+
 from cli.console_manager import console_manager
 
 
@@ -19,9 +22,28 @@ class AdminHandler(BaseHandler):
             {"name": "Update User Info", "command": self.handle_update_user_info},
             {"name": "Post announcement", "command": self.post_announcement},
             {"name": "View Audit Logs", "command": self.view_audit_logs},
+            {"name": "View Users", "command": self.view_users},
         ]
 
         self.main_commands = self.commands.copy()
+
+
+    def restore_main_commands(self):
+        self.commands = self.main_commands
+
+
+    def view_users(self):
+        """Fetches all users from the user manager and displays them in a table."""
+        console_manager.console.print("[bold medium_purple1]Fetching user data...[/bold medium_purple1]")
+        
+        # 1. Fetch the data using the user_manager from the context
+        user_list = self.context.user_manager.read_all()
+        
+        # 2. Call the imported display function
+        display_user_table(user_list)
+
+        console_manager.console.print("[bold medium_purple1]Press Enter to return to the main menu...[/bold medium_purple1]")
+        get_input("")
 
 
     @cancellable 
