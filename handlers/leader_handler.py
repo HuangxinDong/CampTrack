@@ -5,7 +5,7 @@ import uuid
 import json
 
 from handlers.base_handler import BaseHandler
-from cli.input_utils import get_input, cancellable
+from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.prompts import get_positive_int
 from cli.console_manager import console_manager
 
@@ -86,6 +86,7 @@ class LeaderHandler(BaseHandler):
 
         console_manager.print_success(f"You are now supervising {camp.name}.")
         self.context.audit_log_manager.log_event(self.user.username, "Supervise Camp", f"Started supervising {camp.name}")
+        wait_for_enter()
 
     def _conflict_with_existing(self, new, existing):
         ns = datetime.strptime(str(new.start_date), "%Y-%m-%d").date()
@@ -126,6 +127,7 @@ class LeaderHandler(BaseHandler):
             f"\n[bold]Total Food Required for {camp.name}:[/bold] {total_required} units\n"
             f"  ({num_campers} campers x {days} days x {new_food} food)"
         )
+        wait_for_enter()
 
 
     @cancellable
@@ -177,9 +179,11 @@ class LeaderHandler(BaseHandler):
 
             self.context.camp_manager.update(camp)
             console_manager.print_success(f"Imported campers into {camp.name}.")
+            wait_for_enter()
 
         except Exception as e:
             console_manager.print_error(f"Error reading CSV: {e}")
+            wait_for_enter()
 
 
     def view_campers(self):
@@ -204,6 +208,7 @@ class LeaderHandler(BaseHandler):
                 table_lines.append(f"{c.name} (Age {c.age}) — {c.contact}")
 
         console.print(Panel("\n".join(table_lines), style="cyan"))
+        wait_for_enter()
 
     @cancellable
     def daily_reports_menu(self):
@@ -282,6 +287,7 @@ b. Back
 
         self.daily_report_manager.add_report(report)
         console_manager.print_success("Report saved.")
+        wait_for_enter()
 
 
     def view_daily_reports(self):
@@ -326,6 +332,8 @@ b. Back
             )
 
         console.print(table)
+        wait_for_enter()
+
 
     def delete_daily_report(self):
         camps = self.context.camp_manager.read_all()
@@ -365,6 +373,7 @@ b. Back
         self.daily_report_manager.save_all(all_reports)
 
         console_manager.print_success("Report deleted.")
+        wait_for_enter()
 
 
     def show_statistics(self):
@@ -373,7 +382,7 @@ b. Back
 
         if not my_camps:
             console.print("You are not supervising any camps.", style="yellow")
-            input("Press Enter to continue...")
+            wait_for_enter()
             return
 
         console.print(Panel("Statistics for Your Camps", style="cyan"))
@@ -423,7 +432,7 @@ b. Back
                 style="green"
             )
         )
-        input("Press Enter to continue...")
+        wait_for_enter()
 
 
 
@@ -432,13 +441,16 @@ b. Back
         for i, c in enumerate(camps, 1):
             console.print(f"{i}. {c.name} ({c.location})")
 
-        choice = get_input("Choose camp number: ")
-
-        try:
-            return camps[int(choice) - 1]
-        except:
-            console_manager.print_error("Invalid selection.")
-            return None
+        while True:
+            choice = get_input("Choose camp number: ")
+            try:
+                index = int(choice) - 1
+                if 0 <= index < len(camps):
+                    return camps[index]
+                else:
+                    console_manager.print_error("Invalid selection. Please choose a number from the list.")
+            except ValueError:
+                console_manager.print_error("Invalid input. Please enter a number.")
 
     # ACTIVITES
 
@@ -459,7 +471,7 @@ b. Back
 1. Add Activities to Camp
 2. View Camp Activities
 3. Add New Activity 
-4. Back
+b. Back
 """, style="blue"))
 
             choice = get_input("Choose an option: ")
@@ -470,7 +482,7 @@ b. Back
                 self.view_camp_activities()
             elif choice == "3":
                 self.add_activity_to_library()
-            elif choice == "4":
+            elif choice.lower() == "b":
                 break
             else:
                 console_manager.print_error("Invalid choice.")
@@ -537,6 +549,7 @@ b. Back
                 f"Added {', '.join(added)} to {camp.name}. "
                 f"All {len(camp.campers)} campers ({camper_names}) assigned."
             )
+            wait_for_enter()
 
     def view_camp_activities(self):
         camps = self.context.camp_manager.read_all()
@@ -561,6 +574,7 @@ b. Back
             lines.append(f"• {activity['name']} ({camper_count} campers)")
 
         console.print(Panel("\n".join(lines), style="blue"))
+        wait_for_enter()
 
     def add_activity_to_library(self):
         activity_library = self._load_activity_library()
@@ -585,4 +599,5 @@ b. Back
         activity_library.append(new_activity)
         self._save_activity_library(activity_library)
         console_manager.print_success(f"Added '{new_activity}' to activity library.")
+        wait_for_enter()
 

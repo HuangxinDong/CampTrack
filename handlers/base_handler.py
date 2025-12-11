@@ -1,7 +1,6 @@
 import uuid
 from models.message import Message
-from cli.input_utils import get_input, cancellable
-from cli.input_utils import get_input, cancellable
+from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.chat_display import conversation_display
 from cli.console_manager import console_manager
 
@@ -177,7 +176,7 @@ class BaseHandler:
         
         if not self.context.announcement_manager:
               console_manager.print_error("Announcement service unavailable.")
-              get_input("(Press Enter to continue)")
+              wait_for_enter()
               return
 
         announcements = self.context.announcement_manager.read_all()
@@ -193,8 +192,7 @@ class BaseHandler:
                   console_manager.print_panel(content, style="blue")
         
         console_manager.print_message("═"*40)
-        console_manager.console.print("[bold medium_purple1]Press Enter to return to the main menu...[/bold medium_purple1]")
-        get_input("")
+        wait_for_enter()
 
 
     @cancellable

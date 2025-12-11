@@ -4,6 +4,7 @@ import plotext as plt
 from rich.console import Console
 from rich.panel import Panel
 from rich import box
+from cli.input_utils import get_input, wait_for_enter
 
 # Global console instance
 console = Console()
@@ -138,5 +139,4 @@ def plot_camp_location_distribution(camp_manager):
 
 def _wait_for_user():
     print() # spacing
-    console.print("[dim italic]Press Enter to continue...[/dim italic]")
-    input()
+    wait_for_enter()

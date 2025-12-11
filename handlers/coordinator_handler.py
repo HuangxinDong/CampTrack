@@ -3,7 +3,7 @@ from datetime import datetime, date
 from cli.console_manager import console_manager
 from models.camp import Camp
 from handlers.base_handler import BaseHandler
-from cli.input_utils import get_input, cancellable
+from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.prompts import get_positive_int
 from cli.coordinator_display import coordinator_display
 import cli.visualisations as visualisations
@@ -143,7 +143,7 @@ class CoordinatorHandler(BaseHandler):
                 f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}."
             )
             self.context.audit_log_manager.log_event(self.user.username, "Top Up Food", f"Added {additional_food} to {selected_camp.name}")
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         except ValueError as e:
             from cli.console_manager import console_manager
 
@@ -401,3 +401,4 @@ class CoordinatorHandler(BaseHandler):
         console_manager.print_table("CAMP DASHBOARD", df.columns.tolist(), df.values.tolist())
 
         print(f"\nTotal Camps: {len(df)}")
+        wait_for_enter()

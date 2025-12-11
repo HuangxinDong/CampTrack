@@ -1,12 +1,11 @@
 import uuid
 from handlers.base_handler import BaseHandler
-from cli.input_utils import get_input, cancellable
+from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.console_manager import console_manager
 from models.announcement import Announcement
 from persistence.dao.system_notification_manager import SystemNotificationManager
 from views import display_user_table
 
-from cli.console_manager import console_manager
 
 
 class AdminHandler(BaseHandler):
@@ -27,7 +26,6 @@ class AdminHandler(BaseHandler):
 
         self.main_commands = self.commands.copy()
 
-
     def restore_main_commands(self):
         self.commands = self.main_commands
 
@@ -36,23 +34,24 @@ class AdminHandler(BaseHandler):
         """Fetches all users from the user manager and displays them in a table."""
         console_manager.console.print("[bold medium_purple1]Fetching user data...[/bold medium_purple1]")
         
-        # 1. Fetch the data using the user_manager from the context
         user_list = self.context.user_manager.read_all()
         
-        # 2. Call the imported display function
         display_user_table(user_list)
 
-        console_manager.console.print("[bold medium_purple1]Press Enter to return to the main menu...[/bold medium_purple1]")
-        get_input("")
+        wait_for_enter()
 
 
     @cancellable 
     def handle_create_user(self):
         while True:
-            username = get_input("Enter username: ")
-            if username.strip():
-                break
-            console_manager.print_error("Username cannot be empty.")
+            username = get_input("Enter username (letters and numbers only): ")
+            if not username.strip():
+                console_manager.print_error("Username cannot be empty.")
+                continue
+            if not username.isalnum():
+                console_manager.print_error("Username must contain only letters and numbers.")
+                continue
+            break
 
         password = get_input("Enter password: ")
         
@@ -73,20 +72,20 @@ class AdminHandler(BaseHandler):
         if success:
             console_manager.print_success(message)
             self.context.audit_log_manager.log_event(self.user.username, "Create User", f"Created user {username} as {role}")
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         else:
             console_manager.print_error(message)
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
 
 
     @cancellable 
     def handle_delete_user(self):
-        username = get_input("Enter username to delete: ")
-        
-        user = self.context.user_manager.find_user(username)
-        if not user:
-            console_manager.print_error(f"User '{username}' not found.")
-            return
+        while True:
+            username = get_input("Enter username to delete: ")
+            user = self.context.user_manager.find_user(username)
+            if user:
+                break
+            console_manager.print_error(f"User '{username}' not found. Please try again.")
 
         confirm = get_input(f"Are you sure you want to delete user '{username}'? (y/n): ")
         if confirm.lower() != 'y':
@@ -97,19 +96,19 @@ class AdminHandler(BaseHandler):
         if success:
             console_manager.print_success(message)
             self.context.audit_log_manager.log_event(self.user.username, "Delete User", f"Deleted user {username}")
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         else:
             console_manager.print_error(message)
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
 
     @cancellable
     def handle_toggle_status(self):
-        username = get_input("Enter username: ")
-        user = self.context.user_manager.find_user(username)
-        
-        if not user:
-            console_manager.print_error(f"User '{username}' not found.")
-            return
+        while True:
+            username = get_input("Enter username: ")
+            user = self.context.user_manager.find_user(username)
+            if user:
+                break
+            console_manager.print_error(f"User '{username}' not found. Please try again.")
             
         if user['username'] == self.user.username:
             console_manager.print_error("You cannot disable your own account.")
@@ -133,7 +132,7 @@ class AdminHandler(BaseHandler):
         else:
             console_manager.print_info("No changes made.")
         
-        get_input("(Press Enter to continue)")
+        wait_for_enter()
 
     @cancellable 
     def handle_update_user_info(self):
@@ -149,27 +148,30 @@ class AdminHandler(BaseHandler):
         choice = get_input("Select option: ")
         
         if choice == '1':
-            username = get_input("Enter username: ")
-            if not self.context.user_manager.find_user(username):
-                console_manager.print_error(f"User '{username}' not found.")
-                return
+            while True:
+                username = get_input("Enter username: ")
+                if self.context.user_manager.find_user(username):
+                    break
+                console_manager.print_error(f"User '{username}' not found. Please try again.")
+
             new_password = get_input("Enter new password: ")
             success, msg = self.context.user_manager.update_password(username, new_password)
             if success: 
                 console_manager.print_success(msg)
                 self.context.audit_log_manager.log_event(self.user.username, "Update Password", f"Updated password for {username}")
             else: console_manager.print_error(msg)
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         elif choice == '2':
-            username = get_input("Enter username: ")
-            user = self.context.user_manager.find_user(username)
-            if not user:
-                console_manager.print_error(f"User '{username}' not found.")
-                get_input("(Press Enter to continue)")
-                return
+            while True:
+                username = get_input("Enter username: ")
+                user = self.context.user_manager.find_user(username)
+                if user:
+                    break
+                console_manager.print_error(f"User '{username}' not found. Please try again.")
+
             if user.get('role') != 'Leader':
                 console_manager.print_error(f"User '{username}' is not a Leader.")
-                get_input("(Press Enter to continue)")
+                wait_for_enter()
                 return
                 
             try:
@@ -181,36 +183,47 @@ class AdminHandler(BaseHandler):
                 else: console_manager.print_error(msg)
             except ValueError:
                 console_manager.print_error("Invalid rate.")
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         elif choice == '3':
-            old_username = get_input("Enter current username: ")
-            if not self.context.user_manager.find_user(old_username):
-                console_manager.print_error(f"User '{old_username}' not found.")
-                get_input("(Press Enter to continue)")
-                return
-            new_username = get_input("Enter new username: ")
+            while True:
+                old_username = get_input("Enter current username: ")
+                if self.context.user_manager.find_user(old_username):
+                    break
+                console_manager.print_error(f"User '{old_username}' not found. Please try again.")
+
+            while True:
+                new_username = get_input("Enter new username (letters and numbers only): ")
+                if not new_username.strip():
+                    console_manager.print_error("Username cannot be empty.")
+                    continue
+                if not new_username.isalnum():
+                    console_manager.print_error("Username must contain only letters and numbers.")
+                    continue
+                break
+
             success, msg = self.context.user_manager.update_username(old_username, new_username)
             if success: 
                 console_manager.print_success(msg)
                 self.context.audit_log_manager.log_event(self.user.username, "Update Username", f"Changed {old_username} to {new_username}")
             else: console_manager.print_error(msg)
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         elif choice == '4':
-            username = get_input("Enter username: ")
-            if not self.context.user_manager.find_user(username):
-                console_manager.print_error(f"User '{username}' not found.")
-                get_input("(Press Enter to continue)")
-                return
+            while True:
+                username = get_input("Enter username: ")
+                if self.context.user_manager.find_user(username):
+                    break
+                console_manager.print_error(f"User '{username}' not found. Please try again.")
+
             new_role = get_input("Enter new role (Leader/Coordinator): ")
             success, msg = self.context.user_manager.update_role(username, new_role)
             if success: 
                 console_manager.print_success(msg)
                 self.context.audit_log_manager.log_event(self.user.username, "Update Role", f"Changed {username} role to {new_role}")
             else: console_manager.print_error(msg)
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
         else:
             console_manager.print_error("Invalid selection")
-            get_input("(Press Enter to continue)")
+            wait_for_enter()
 
     @cancellable
     def post_announcement(self):
@@ -255,4 +268,4 @@ class AdminHandler(BaseHandler):
             ])
         
         console_manager.print_table("System Audit Logs", columns, rows)
-        get_input("(Press Enter to continue)")
+        wait_for_enter()

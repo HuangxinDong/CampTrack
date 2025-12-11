@@ -74,3 +74,7 @@ def cancellable(func):
 # Default instance for easy import
 input_handler = InputHandler()
 get_input = input_handler.get_input
+
+def wait_for_enter(prompt="[bold cyan italic]Press Enter to continue...[/bold cyan italic]"):
+    """Waits for user to press Enter."""
+    get_input(prompt)
