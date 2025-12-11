@@ -193,6 +193,8 @@ class BaseHandler:
                   console_manager.print_panel(content, style="blue")
         
         console_manager.print_message("═"*40)
+        console_manager.console.print("[bold medium_purple1]Press Enter to return to the main menu...[/bold medium_purple1]")
+        get_input("")
 
 
     @cancellable
