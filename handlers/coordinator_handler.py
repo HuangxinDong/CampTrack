@@ -4,7 +4,6 @@ from models.camp import Camp
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
-from persistence.dao.system_notification_manager import SystemNotificationManager
 
 
 class CoordinatorHandler(BaseHandler):
@@ -59,7 +58,7 @@ class CoordinatorHandler(BaseHandler):
             end_date=end_date,
             current_food_stock=food,
         )
-        self.camp_manager.add(camp)
+        self.context.camp_manager.add(camp)
         print(f"Camp '{name}' created successfully.")
 
     def edit_camp_resources(self):
@@ -69,7 +68,7 @@ class CoordinatorHandler(BaseHandler):
 
     @cancellable
     def top_up_food_stock(self):
-        camps = self.camp_manager.read_all()
+        camps = self.context.camp_manager.read_all()
         if not camps:
             print("No camps available.")
             return
@@ -99,7 +98,7 @@ class CoordinatorHandler(BaseHandler):
             return
         additional_food = get_positive_int("Enter the amount of food to add: ")
         selected_camp.add_food(additional_food)
-        self.camp_manager.update(selected_camp)
+        self.context.camp_manager.update(selected_camp)
         print(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
         self.commands = self.main_commands
 
@@ -107,7 +106,7 @@ class CoordinatorHandler(BaseHandler):
     def set_daily_payment_limit(self):
         scout_leader_name = get_input("Enter the name of the scout leader: ")
 
-        scout_leader = self.user_manager.find_user(scout_leader_name)
+        scout_leader = self.context.user_manager.find_user(scout_leader_name)
         if scout_leader is None:
             print("Cannot find user")
             return
@@ -116,5 +115,5 @@ class CoordinatorHandler(BaseHandler):
             return
 
         daily_payment_rate = get_positive_int("Enter the new daily payment rate: ")
-        self.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
+        self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
         print(f"Daily payment rate updated for {scout_leader_name}.")

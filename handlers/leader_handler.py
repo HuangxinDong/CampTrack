@@ -5,10 +5,7 @@ from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
 
-from persistence.dao.camp_manager import CampManager
 from persistence.dao.daily_report_manager import DailyReportManager
-from persistence.dao.user_manager import UserManager
-from persistence.dao.system_notification_manager import SystemNotificationManager
 
 from models.camper import Camper
 from handlers.statistics_handler import StatisticsHandler
@@ -35,7 +32,7 @@ class LeaderHandler(BaseHandler):
 
     @cancellable
     def select_camps_to_supervise(self):
-        camps = self.camp_manager.read_all()
+        camps = self.context.camp_manager.read_all()
 
         print("\nAvailable camps:")
         for idx, camp in enumerate(camps, 1):
@@ -73,7 +70,7 @@ class LeaderHandler(BaseHandler):
                 continue
 
             camp.camp_leader = self.user.username
-            self.camp_manager.update(camp)
+            self.context.camp_manager.update(camp)
             print(f"You are now supervising: {camp.name}")
 
 
@@ -96,7 +93,7 @@ class LeaderHandler(BaseHandler):
 
     @cancellable
     def edit_camp(self):
-        camps = self.camp_manager.read_all()
+        camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
@@ -116,7 +113,7 @@ class LeaderHandler(BaseHandler):
 
         new_amount = get_positive_int("Enter food per camper per day: ")
         camp.food_per_camper_per_day = new_amount
-        self.camp_manager.update(camp)
+        self.context.camp_manager.update(camp)
 
         print(f"Updated food requirement for {camp.name}.")
 
@@ -124,7 +121,7 @@ class LeaderHandler(BaseHandler):
 
     @cancellable
     def assign_campers_from_csv(self):
-        camps = self.camp_manager.read_all()
+        camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
@@ -155,7 +152,7 @@ class LeaderHandler(BaseHandler):
                     )
                     camp.campers.append(camper)
 
-            self.camp_manager.update(camp)
+            self.context.camp_manager.update(camp)
             print(f"Imported campers into {camp.name}.")
 
         except Exception as e:
@@ -164,7 +161,7 @@ class LeaderHandler(BaseHandler):
 
     @cancellable
     def create_daily_report(self):
-        camps = self.camp_manager.read_all()
+        camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
@@ -189,7 +186,7 @@ class LeaderHandler(BaseHandler):
         
         try:
              camp.remove_food(food_usage_int, today)
-             self.camp_manager.update(camp)
+             self.context.camp_manager.update(camp)
         except ValueError as e:
              print(f"Warning: Could not save food usage: {e}")
 
@@ -205,7 +202,7 @@ class LeaderHandler(BaseHandler):
 
 
     def view_statistics(self):
-        camps = self.camp_manager.read_all()
+        camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:

@@ -28,39 +28,17 @@ class BaseHandler:
         # Optimization: Cache summaries to avoid redundant reads between menus
         self.current_summaries = []
 
-    @property
-    def user_manager(self):
-        return self.context.user_manager
-
-    @property
-    def message_manager(self):
-        return self.context.message_manager
-
-    @property
-    def camp_manager(self):
-        return self.context.camp_manager
-
-    @property
-    def announcement_manager(self):
-        return self.context.announcement_manager
-    
-    @property
-    def system_notification_manager(self):
-        return self.context.system_notification_manager
-
-
-
 
     def get_unread_message_alert(self):
         """Returns notification string if unread messages exist."""
-        count = self.message_manager.get_unread_message_count(self.user.username)
+        count = self.context.message_manager.get_unread_message_count(self.user.username)
         if count > 0:
             return f"\n*** You have {count} unread messages ***\n"
         return None
 
     def get_my_messages(self):
         """Returns list of messages for current user."""
-        messages = self.message_manager.read_all()
+        messages = self.context.message_manager.read_all()
         return [m for m in messages if m['to_user'] == self.user.username]
 
 
@@ -72,7 +50,7 @@ class BaseHandler:
         while True:
             # Update cache for view_chat to use
             # Refactored: Use manager method directly
-            self.current_summaries = self.message_manager.get_conversation_summaries(self.user.username)
+            self.current_summaries = self.context.message_manager.get_conversation_summaries(self.user.username)
             
             if not self.current_summaries:
                 print("No conversations.")
@@ -109,7 +87,7 @@ class BaseHandler:
         if not self.current_summaries:
              # Fallback if accessed directly (though unlikely in current flow)
              # Refactored: Use manager method directly
-             self.current_summaries = self.message_manager.get_conversation_summaries(self.user.username)
+             self.current_summaries = self.context.message_manager.get_conversation_summaries(self.user.username)
 
         if not self.current_summaries:
             print("No conversations to view.")
@@ -131,7 +109,7 @@ class BaseHandler:
             # Valid selection -> Show thread
             partner = self.current_summaries[idx]['partner']
     
-            messages = self.message_manager.read_all()
+            messages = self.context.message_manager.read_all()
             
             # Filter messages for this partner
             chat = []
@@ -145,7 +123,7 @@ class BaseHandler:
                          if m['to_user'] == self.user.username and not m.get('mark_as_read', False)]
             
             if unread_ids:
-                self.message_manager.mark_as_read_batch(unread_ids)
+                self.context.message_manager.mark_as_read_batch(unread_ids)
 
             # Loop for chat interaction (Reply or Back)
             while True:
@@ -159,7 +137,7 @@ class BaseHandler:
                     self.send_message(recipient_username=partner)
                     
                     # Refetch messages for this partner
-                    all_messages = self.message_manager.read_all()
+                    all_messages = self.context.message_manager.read_all()
                     
                     # Filter again
                     chat = []
@@ -194,12 +172,12 @@ class BaseHandler:
         print("  CAMP ANNOUNCEMENTS")
         print("═"*40)
         
-        if not self.announcement_manager:
+        if not self.context.announcement_manager:
               print("Announcement service unavailable.")
               get_input("(Press Enter to go back)")
               return
 
-        announcements = self.announcement_manager.read_all()
+        announcements = self.context.announcement_manager.read_all()
         
         if not announcements:
              print("No announcements yet.")
@@ -216,8 +194,6 @@ class BaseHandler:
         print("═"*40)
 
 
-
-    
     @cancellable
     def send_message(self, recipient_username=None):
         # 1. REPLY CONTEXT (Recipient provided)
@@ -226,7 +202,7 @@ class BaseHandler:
              if recipient_username == self.user.username:
                  print('You cannot send a message to yourself.')
                  return
-             if not self.user_manager.find_user(recipient_username):
+             if not self.context.user_manager.find_user(recipient_username):
                  print('This user does not exist.')
                  return
 
@@ -240,7 +216,7 @@ class BaseHandler:
                 continue
             
             # Validate: recipient must exist
-            recipient = self.user_manager.find_user(username_input)
+            recipient = self.context.user_manager.find_user(username_input)
             if not recipient:
                 print('This user does not exist, please try again.')
                 continue
@@ -254,7 +230,7 @@ class BaseHandler:
         message = Message(str(uuid.uuid4()), self.user.username, recipient_username, message_content)
 
         try:
-            self.message_manager.add(message.to_dict())
+            self.context.message_manager.add(message.to_dict())
             print("Message sent successfully.")
         except Exception as e:
             print("Failed to send message. Please try again later.")

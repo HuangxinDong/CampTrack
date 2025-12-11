@@ -27,14 +27,14 @@ class AdminHandler(BaseHandler):
         username = get_input("Enter username: ")
         password = get_input("Enter password: ")
         
-        success, message = self.user_manager.create_user(username, password)
+        success, message = self.context.user_manager.create_user(username, password)
         print(message)
 
 
     @cancellable 
     def handle_delete_user(self):
         username = get_input("Enter username to delete: ")
-        success, message = self.user_manager.delete_user(username)
+        success, message = self.context.user_manager.delete_user(username)
         print(message)
 
 
@@ -51,10 +51,10 @@ class AdminHandler(BaseHandler):
         )
         
         try:
-            # This assumes self.announcement_manager exists and has an 'add' method
+            # This assumes self.context.announcement_manager exists and has an 'add' method
             # If not, the user needs to ensure it's initialized in __init__
-            if self.announcement_manager:
-                self.announcement_manager.add(announcement.to_dict())
+            if self.context.announcement_manager:
+                self.context.announcement_manager.add(announcement.to_dict())
                 print("Announcement posted successfully.")
             else:
                 print("Error: Announcement manager not initialized.")
