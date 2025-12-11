@@ -1,5 +1,6 @@
 # handlers/coordinator_handler.py
 from datetime import datetime
+from cli.console_manager import console_manager
 from models.camp import Camp
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
@@ -27,7 +28,13 @@ class CoordinatorHandler(BaseHandler):
 
     @cancellable
     def create_camp(self):
-        name = get_input("Enter camp name: ")
+        camps = self.context.camp_manager.read_all()
+        while True:
+            name = get_input("Enter camp name: ")
+            if any(camp.name == name for camp in camps):
+                console_manager.print_error("Camp name already exists. Please enter a different name.")
+            else:
+                break
         location = get_input("Enter camp location: ")
         camp_type = get_input("Enter camp type: ")
 
