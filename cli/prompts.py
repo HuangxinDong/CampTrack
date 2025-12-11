@@ -1,11 +1,13 @@
 def get_positive_int(prompt: str) -> int:
+    from .input_utils import get_input
+    from .console_manager import console_manager
     while True:
-        value_str = input(prompt)
+        value_str = get_input(prompt)
         try:
             value = int(value_str)
             if value < 0:
-                print("Error: Value must be zero or positive.")
+                console_manager.print_error("Value must be zero or positive.")
                 continue
             return value
         except ValueError:
-            print("Error: Please enter a valid integer.")
+            console_manager.print_error("Please enter a valid integer.")

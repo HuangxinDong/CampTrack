@@ -2,20 +2,23 @@
 """Main program loop and command processing."""
 from cli.input_utils import get_input, QuitException, BackException
 
-HOME_PROMPT = "Please enter a number or press q to quit.\n> "
-SUBMENU_PROMPT = "Please enter a number, q to quit, or b for back.\n> "
+HOME_PROMPT = "> "
+SUBMENU_PROMPT = "> "
   
 
-def display_menu(handler):
-    """Display available commands for the handler."""
-    # Check for notifications (e.g., Unread Messages)
-    if hasattr(handler, 'get_unread_message_alert'):
-        note = handler.get_unread_message_alert()
-        if note:
-            print(note)
+from cli.homepage_display import homepage_display
 
-    for i, command in enumerate(handler.commands):
-        print(f"{i + 1}. {command['name']}")
+def display_menu(handler):
+    """Display available commands for the handler using HomepageDisplay."""
+    # Check for notifications (e.g., Unread Messages)
+    note = None
+    if hasattr(handler, 'get_unread_message_alert'):
+        # The handler returns a formatted string with newlines, we probably want to strip them for the panel
+        raw_note = handler.get_unread_message_alert()
+        if raw_note:
+            note = raw_note.strip()
+
+    homepage_display.display_home_menu(handler.commands, notification=note)
 
 
 def get_menu_choice(prompt):

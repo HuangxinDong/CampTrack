@@ -3,6 +3,7 @@ from models.message import Message
 from cli.input_utils import get_input, cancellable
 from cli.input_utils import get_input, cancellable
 from cli.chat_display import conversation_display
+from cli.console_manager import console_manager
 
 
 class BaseHandler:
@@ -59,9 +60,10 @@ class BaseHandler:
             conversation_display.display_list(self.current_summaries)
             
             # Dynamic Menu Display
-            for i, cmd in enumerate(self.message_view_commands):
-                print(f"{i + 1}. {cmd['name']}")
-            print("Enter number, 'b' to go back, or 'q' to quit: ")
+            # Dynamic Menu Display
+            menu_options = [f"[bold medium_purple1]{i + 1}.[/bold medium_purple1] {cmd['name']}" for i, cmd in enumerate(self.message_view_commands)]
+            console_manager.print_menu("OPTIONS", menu_options)
+            console_manager.print_message("\n[bold medium_purple1]Enter number, 'b' to go back, or 'q' to quit[/bold medium_purple1]")
             
             
             choice = get_input("")
@@ -168,30 +170,26 @@ class BaseHandler:
     @cancellable
     def view_announcements(self):
         """View all announcements."""
-        print("\n" + "═"*40)
-        print("  CAMP ANNOUNCEMENTS")
-        print("═"*40)
+        console_manager.print_header("CAMP ANNOUNCEMENTS")
         
         if not self.context.announcement_manager:
-              print("Announcement service unavailable.")
+              console_manager.print_error("Announcement service unavailable.")
               get_input("(Press Enter to go back)")
               return
 
         announcements = self.context.announcement_manager.read_all()
         
         if not announcements:
-             print("No announcements yet.")
+             console_manager.print_info("No announcements yet.")
         else:
-             # Sort latest first (assuming they are stored chronologically or we sort here)
+             # Sort latest first
              announcements.sort(key=lambda x: x['created_at'], reverse=True)
              
              for a in announcements:
-                  print(f"\n  [{a['created_at']}] {a['author']}:")
-                  print(f"  {a['content']}")
-                  print("  " + "-"*36)
+                  content = f"[bold]{a['author']}[/bold] ({a['created_at']}):\n{a['content']}"
+                  console_manager.print_panel(content, style="blue")
         
-        
-        print("═"*40)
+        console_manager.print_message("═"*40)
 
 
     @cancellable
@@ -231,6 +229,6 @@ class BaseHandler:
 
         try:
             self.context.message_manager.add(message.to_dict())
-            print("Message sent successfully.")
+            console_manager.print_success("Message sent successfully.")
         except Exception as e:
             print("Failed to send message. Please try again later.")
