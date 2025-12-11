@@ -48,7 +48,7 @@ class StatisticsHandler:
         if not user:
             return 0
 
-        daily_rate = getattr(user, "daily_payment_rate", 0)  # ← 修正点
+        daily_rate = getattr(user, "daily_payment_rate", 100) 
         days = self.get_camp_days(camp)
 
         return daily_rate * days

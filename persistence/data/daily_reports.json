@@ -1,16 +1,32 @@
 [
     {
-        "report_id": "uuid",
+        "id": "uuid",
         "camp_id": "camp1",
         "leader_username": "leader1",
         "date": "2026-01-02",
         "text": "Today we hiked. One minor incident."
     },
     {
-        "report_id": "62bf47b6-6730-48df-81cd-8bf30a2c434c",
+        "id": "62bf47b6-6730-48df-81cd-8bf30a2c434c",
         "camp_id": "48ee70b4-679f-4379-9ab0-dd9295c38016",
         "leader_username": "leader1",
         "date": "2025-12-10",
         "text": "hike"
+    },
+    {
+        "id": "4a27444f-d600-4c8f-a21d-e03d8c3ddfa1",
+        "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff4527",
+        "leader_username": "leader1",
+        "date": "2025-12-11",
+        "text": "Incident: No\nSummary: hike\nInjuries: n\nNotes: all happy",
+        "incident": false
+    },
+    {
+        "id": "775c7d0a-fc36-4c29-86b7-f56a04336f66",
+        "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff4527",
+        "leader_username": "leader1",
+        "date": "2025-12-11",
+        "text": "Incident: Yes\nSummary: cycling\nInjuries: 1\nNotes: no",
+        "incident": true
     }
 ]

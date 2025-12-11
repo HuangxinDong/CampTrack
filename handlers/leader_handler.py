@@ -1,5 +1,6 @@
 from datetime import datetime
 import csv
+import uuid
 import os
 
 from handlers.base_handler import BaseHandler
@@ -12,94 +13,72 @@ from persistence.dao.daily_report_manager import DailyReportManager
 from models.camper import Camper
 from handlers.statistics_handler import StatisticsHandler
 
+from interface.interface_leader import LeaderInterface
+
 
 class LeaderHandler(BaseHandler):
-    """Handles Leader-specific operations."""
 
     def __init__(self, user, context):
         super().__init__(user, context)
 
         self.daily_report_manager = DailyReportManager()
         self.statistics = StatisticsHandler()
+        self.interface = LeaderInterface()    
 
         self.commands = self.parent_commands + [
             {"name": "Select Camps to Supervise", "command": self.select_camps_to_supervise},
             {"name": "Edit Camp", "command": self.edit_camp},
             {"name": "Assign Campers from CSV", "command": self.assign_campers_from_csv},
-            {"name": "Create Daily Report", "command": self.create_daily_report},
+            {'name': 'View Campers', 'command': self.view_campers}, 
+            {"name": "Daily Reports", "command": self.daily_reports_menu},
             {"name": "View My Statistics", "command": self.view_statistics},
         ]
 
         self.main_commands = self.commands.copy()
 
+
     @cancellable
     def select_camps_to_supervise(self):
         camps = self.context.camp_manager.read_all()
 
-        menu_items = []
-        for idx, camp in enumerate(camps, 1):
-            if camp.camp_leader == self.user.username:
-                status = " (You are the leader)"
-            elif camp.camp_leader:
-                status = f" (Assigned to {camp.camp_leader})"
-            else:
-                status = " (Available)"
+        self.interface.show_available_camps(camps, self.user.username)
 
-            menu_items.append(
-                f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name} - {camp.location}{status}"
-            )
-
-        console_manager.print_menu("\nAvailable camps:", menu_items)
-
-        selection = get_input("\nEnter camp numbers (comma-separated): ")
+        selection = get_input("Enter camp numbers (comma-separated): ")
         try:
             picks = [int(x.strip()) - 1 for x in selection.split(",")]
-        except ValueError:
-            console_manager.print_error("Invalid input.")
+        except:
+            self.interface.show_message("Invalid input.")
             return
 
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         for index in picks:
             if not (0 <= index < len(camps)):
-                console_manager.print_error(f"Invalid selection {index + 1}")
+                self.interface.show_message(f"Invalid selection {index + 1}")
                 continue
 
             camp = camps[index]
 
-            if camp.camp_leader == self.user.username:
-                camp.camp_leader = None
-                self.context.camp_manager.update(camp)
-                console_manager.print_success(f"You are no longer supervising: {camp.name}")
-                continue
-
-            if camp.camp_leader:
-                console_manager.print_error(f"Cannot select {camp.name} — assigned to {camp.camp_leader}")
+            if camp.camp_leader and camp.camp_leader != self.user.username:
+                self.interface.show_message(f"Cannot select {camp.name} — assigned to {camp.camp_leader}")
                 continue
 
             if self._has_schedule_conflict(camp, my_camps):
-                console_manager.print_error(f"Cannot select '{camp.name}' — date conflict detected.")
+                self.interface.show_message(f"Cannot select '{camp.name}' — date conflict detected.")
                 continue
 
             camp.camp_leader = self.user.username
-            self.context.camp_manager.update(camp)
-            console_manager.print_success(f"You are now supervising: {camp.name}")
-
+            self.camp_manager.update(camp)
+            self.interface.show_message(f"You are now supervising: {camp.name}")
 
     def _has_schedule_conflict(self, new_camp, my_camps):
-        """
-        Private method to check schedule conflict.
-        """
         new_start = datetime.strptime(str(new_camp.start_date), "%Y-%m-%d").date()
         new_end = datetime.strptime(str(new_camp.end_date), "%Y-%m-%d").date()
-
         for c in my_camps:
             s = datetime.strptime(str(c.start_date), "%Y-%m-%d").date()
             e = datetime.strptime(str(c.end_date), "%Y-%m-%d").date()
-
             if new_start <= e and new_end >= s:
                 return True
-
         return False
 
 
@@ -109,19 +88,12 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You are not supervising any camps.")
+            self.interface.show_message("You are not supervising any camps.")
             return
 
-        # Display your camps as a menu
-        menu_items = [f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name}" 
-                    for idx, camp in enumerate(my_camps, 1)]
-        console_manager.print_menu("\nYour camps:", menu_items)
-
-        choice = get_input("Select camp to edit: ")
-        try:
-            camp = my_camps[int(choice) - 1]
-        except (ValueError, IndexError):
-            console_manager.print_error("Invalid selection.")
+        camp = self.interface.select_camp(my_camps)
+        if not camp:
+            self.interface.show_message("Invalid selection.")
             return
 
         new_amount = get_positive_int("Enter food per camper per day: ")
@@ -130,7 +102,7 @@ class LeaderHandler(BaseHandler):
 
         console_manager.print_success(f"Updated food requirement for {camp.name}.")
 
-
+        self.interface.show_message(f"Updated food requirement for {camp.name}.")
 
 
     @cancellable
@@ -139,33 +111,15 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You are not supervising any camps.")
+            self.interface.show_message("You are not supervising any camps.")
             return
 
-        menu_items = [f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name}" 
-                    for idx, camp in enumerate(my_camps, 1)]
-        console_manager.print_menu("\nYour camps:", menu_items)
-
-        try:
-            camp_choice = int(get_input("Choose a camp: ")) - 1
-            camp = my_camps[camp_choice]
-        except (ValueError, IndexError):
-            console_manager.print_error("Invalid selection.")
+        camp = self.interface.select_camp(my_camps)
+        if not camp:
+            self.interface.show_message("Invalid selection.")
             return
 
-        folder_path = "persistence/data/campers"
-        try:
-            csv_files = [f for f in os.listdir(folder_path) if f.lower().endswith(".csv")]
-            if not csv_files:
-                console_manager.print_error(f"No CSV files found in {folder_path}.")
-                return
-        except FileNotFoundError:
-            console_manager.print_error(f"Folder not found: {folder_path}")
-            return
-
-        menu_items = [f"[bold medium_purple1]{idx}.[/bold medium_purple1] {file_name}" 
-                    for idx, file_name in enumerate(csv_files, 1)]
-        console_manager.print_menu("\nAvailable CSV files:", menu_items)
+        path = self.interface.get_csv_path()
 
         try:
             csv_choice = int(get_input("Choose a CSV file by number: ")) - 1
@@ -189,11 +143,48 @@ class LeaderHandler(BaseHandler):
                     )
                     camp.campers.append(camper)
 
-            self.context.camp_manager.update(camp)
-            console_manager.print_success(f"Imported campers into {camp.name} from {csv_file}.")
+            self.camp_manager.update(camp)
+            self.interface.show_message(f"Imported campers into {camp.name}.")
 
         except Exception as e:
-            console_manager.print_error(f"Error reading CSV: {e}")
+            self.interface.show_message(f"Error reading CSV: {e}")
+
+
+    def view_campers(self):
+        camps = self.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            self.interface.show_message("You are not supervising any camps.")
+            return
+
+        camp = self.interface.select_camp(my_camps)
+        if not camp:
+            self.interface.show_message("Invalid selection.")
+            return
+
+        self.interface.show_campers_table(camp)
+    
+    def daily_reports_menu(self):
+        while True:
+            choice = input("""
+            ===== Daily Reports =====
+                1. Create New Report
+                2. Review Reports
+                3. Delete Report
+                4. Back
+                Choose an option: """)
+            if choice == "1":
+                self.create_daily_report()
+            elif choice == "2":
+                self.view_daily_reports()
+            elif choice == "3":
+                self.delete_daily_report()
+            elif choice == "4":
+                break
+            else:
+                self.interface.show_message("Invalid choice.")
+
 
     @cancellable
     def create_daily_report(self):
@@ -201,24 +192,17 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You are not supervising any camps.")
+            self.interface.show_message("You are not supervising any camps.")
             return
 
-        # Display your camps as a menu
-        menu_items = [
-            f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name}" 
-            for idx, camp in enumerate(my_camps, 1)
-        ]
-        console_manager.print_menu("\nYour camps:", menu_items)
-
-        try:
-            camp = my_camps[int(get_input("Choose a camp: ")) - 1]
-        except (ValueError, IndexError):
-            console_manager.print_error("Invalid selection.")
+        camp = self.interface.select_camp(my_camps)
+        if not camp:
+            self.interface.show_message("Invalid selection.")
             return
+
+        report_text, incident_flag = self.interface.get_daily_report_input()
 
         today = datetime.today().strftime("%Y-%m-%d")
-        text = get_input("Enter today's report text: ")
 
         # Ask for food usage
         food_usage_int = get_positive_int("Enter amount of food used today: ")
@@ -230,30 +214,91 @@ class LeaderHandler(BaseHandler):
             console_manager.print_error(f"Warning: Could not save food usage: {e}")
 
         report = {
+            "id": str(uuid.uuid4()),
             "camp_id": camp.camp_id,
             "leader_username": self.user.username,
             "date": today,
-            "text": text,
+            "text": report_text,
+            "incident": incident_flag
         }
 
         self.daily_report_manager.add_report(report)
-        console_manager.print_success("Daily report saved.")
+        self.interface.show_message("Daily report saved.")
 
-
-
-    def view_statistics(self):
-        camps = self.context.camp_manager.read_all()
+    def view_daily_reports(self):
+        camps = self.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            print("You are not supervising any camps.")
+            self.interface.show_message("You are not supervising any camps.")
             return
 
-        print("\n===== Statistics =====")
+        camp = self.interface.select_camp(my_camps)
+        if not camp:
+            self.interface.show_message("Invalid selection.")
+            return
+
+        reports = [r for r in self.daily_report_manager.read_all()
+                if r["camp_id"] == camp.camp_id]
+
+        if not reports:
+            self.interface.show_message("No reports yet.")
+            return
+
+        reports.sort(key=lambda r: r["date"], reverse=True)
+
+        self.interface.show_reports_table(camp, reports)
+    
+    @cancellable
+    def delete_daily_report(self):
+        camps = self.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            self.interface.show_message("You are not supervising any camps.")
+            return
+
+        camp = self.interface.select_camp(my_camps)
+        if not camp:
+            self.interface.show_message("Invalid selection.")
+            return
+
+        reports = [r for r in self.daily_report_manager.read_all()
+                if r["camp_id"] == camp.camp_id]
+
+        if not reports:
+            self.interface.show_message("No reports to delete.")
+            return
+
+        self.interface.show_reports_table(camp, reports)
+
+        to_delete = self.interface.pick_report_to_delete(reports)
+        if not to_delete:
+            self.interface.show_message("Invalid selection.")
+            return
+
+        all_reports = self.daily_report_manager.read_all()
+        all_reports = [r for r in all_reports if r["id"] != to_delete["id"]]
+
+        self.daily_report_manager.save_all(all_reports)
+        self.interface.show_message("Report deleted.")
+
+
+    def view_statistics(self):
+        camps = self.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            self.interface.show_message("You are not supervising any camps.")
+            return
 
         for camp in my_camps:
-            print(f"\nCamp: {camp.name}")
-            print(f"- Participants: {self.statistics.get_participation(camp)}")
-            print(f"- Food usage: {self.statistics.get_food_usage(camp)}")
-            print(f"- Incident count: {self.statistics.get_incident_count(camp.camp_id)}")
-            print(f"- Earnings: £{self.statistics.get_earnings(self.user.username, camp)}")
+            stats = {
+                "participants": self.statistics.get_participation(camp),
+                "food": self.statistics.get_food_usage(camp),
+                "incidents": self.statistics.get_incident_count(camp.camp_id),
+                "earnings": self.statistics.get_earnings(self.user.username, camp)
+            }
+
+            self.interface.show_statistics(camp, stats)
+

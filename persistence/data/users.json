@@ -13,6 +13,13 @@
         "daily_payment_rate": 40
     },
     {
+        "username": "leader2",
+        "password": "",
+        "role": "Leader",
+        "enabled": true,
+        "daily_payment_rate": 100
+    },
+    {
         "username": "coordinator1",
         "password": "",
         "role": "Coordinator",
