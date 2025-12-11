@@ -44,7 +44,7 @@ def main():
         return
 
     # Create handler for this user's role
-    handler = create_handler(user, user_manager, camp_manager, message_manager, announcement_manager)
+    handler = create_handler(user, user_manager, camp_manager, message_manager, announcement_manager, system_notification_manager)
 
     # Run main loop with both user and handler
     run_program(user, handler)

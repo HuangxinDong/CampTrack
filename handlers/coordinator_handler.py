@@ -4,13 +4,14 @@ from models.camp import Camp
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
+from persistence.dao.system_notification_manager import SystemNotificationManager
 
 
 class CoordinatorHandler(BaseHandler):
     """Handles Coordinator-specific actions."""
 
-    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager):
-        super().__init__(user, user_manager, message_manager, camp_manager, announcement_manager)
+    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager, system_notification_manager):
+        super().__init__(user, user_manager, message_manager, camp_manager, announcement_manager, system_notification_manager)
         self.camp_manager = camp_manager
         self.commands = self.parent_commands + [
             {"name": "Create Camp", "command": self.create_camp},
