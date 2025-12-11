@@ -2,6 +2,7 @@ from datetime import datetime
 import csv
 import os
 import uuid
+import json
 
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
@@ -18,6 +19,8 @@ from rich.table import Table
 
 console = Console()
 
+ACTIVITIES_FILE = os.path.join("persistence", "data", "activities.json")
+
 
 class LeaderHandler(BaseHandler):
 
@@ -32,6 +35,7 @@ class LeaderHandler(BaseHandler):
             {"name": "Edit Camp Food Settings", "command": self.edit_camp},
             {"name": "Assign Campers from CSV", "command": self.import_campers_from_csv},
             {"name": "View Campers", "command": self.view_campers},
+            {"name": "Manage Activities", "command": self.activities_menu},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
             {"name": "View My Statistics", "command": self.show_statistics}
         ]
@@ -376,4 +380,150 @@ class LeaderHandler(BaseHandler):
         except:
             console_manager.print_error("Invalid selection.")
             return None
+
+    # ACTIVITES
+
+    def _load_activity_library(self):
+        if os.path.exists(ACTIVITIES_FILE):
+            with open(ACTIVITIES_FILE, "r") as f:
+                return json.load(f)
+        return []
+
+    def _save_activity_library(self, activities):
+        with open(ACTIVITIES_FILE, "w") as f:
+            json.dump(activities, f, indent=4)
+
+    def activities_menu(self):
+        while True:
+            console.print(Panel("""
+[bold]Manage Activities[/bold]
+1. Add Activities to Camp
+2. View Camp Activities
+3. Add New Activity 
+4. Back
+""", style="blue"))
+
+            choice = get_input("Choose an option: ")
+
+            if choice == "1":
+                self.add_activities_to_camp()
+            elif choice == "2":
+                self.view_camp_activities()
+            elif choice == "3":
+                self.add_activity_to_library()
+            elif choice == "4":
+                break
+            else:
+                console_manager.print_error("Invalid choice.")
+
+    def add_activities_to_camp(self):
+        camps = self.context.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            console_manager.print_error("You don't supervise any camps.")
+            return
+
+        camp = self._select_camp(my_camps)
+        if not camp:
+            return
+
+        if not camp.campers:
+            console_manager.print_error("This camp has no campers yet. Add campers first.")
+            return
+
+        activity_library = self._load_activity_library()
+
+        if not activity_library:
+            console_manager.print_error("No activities in library. Add some first.")
+            return
+
+        console.print(Panel("Available Activities", style="blue"))
+        for i, activity in enumerate(activity_library, 1):
+            already_added = activity in [a["name"] for a in camp.activities]
+            status = " [dim](already added)[/dim]" if already_added else ""
+            console.print(f"{i}. {activity}{status}")
+
+        choice = get_input("Enter activity numbers (comma-separated): ")
+
+        try:
+            picks = [int(x.strip()) - 1 for x in choice.split(",")]
+        except:
+            console_manager.print_error("Invalid input.")
+            return
+
+        added = []
+        camper_ids = [c.camper_id for c in camp.campers]
+
+        for index in picks:
+            if not (0 <= index < len(activity_library)):
+                continue
+
+            activity_name = activity_library[index]
+
+            if activity_name in [a["name"] for a in camp.activities]:
+                console.print(f"[yellow]{activity_name} already added.[/yellow]")
+                continue
+
+            camp.activities.append({
+                "name": activity_name,
+                "camper_ids": camper_ids
+            })
+            added.append(activity_name)
+
+        if added:
+            self.context.camp_manager.update(camp)
+            camper_names = ", ".join([c.name for c in camp.campers])
+            console_manager.print_success(
+                f"Added {', '.join(added)} to {camp.name}. "
+                f"All {len(camp.campers)} campers ({camper_names}) assigned."
+            )
+
+    def view_camp_activities(self):
+        camps = self.context.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            console_manager.print_error("You don't supervise any camps.")
+            return
+
+        camp = self._select_camp(my_camps)
+        if not camp:
+            return
+
+        if not camp.activities:
+            console_manager.print_error("No activities assigned to this camp yet.")
+            return
+
+        lines = [f"[bold]{camp.name} Activities[/bold]", "─" * 40]
+
+        for activity in camp.activities:
+            camper_count = len(activity.get("camper_ids", []))
+            lines.append(f"• {activity['name']} ({camper_count} campers)")
+
+        console.print(Panel("\n".join(lines), style="blue"))
+
+    def add_activity_to_library(self):
+        activity_library = self._load_activity_library()
+
+        console.print(Panel("Current Activity Library", style="blue"))
+        if activity_library:
+            for i, a in enumerate(activity_library, 1):
+                console.print(f"{i}. {a}")
+        else:
+            console.print("[dim]No activities yet.[/dim]")
+
+        new_activity = get_input("Enter new activity name: ").strip()
+
+        if not new_activity:
+            console_manager.print_error("Activity name cannot be empty.")
+            return
+
+        if new_activity in activity_library:
+            console_manager.print_error("Activity already exists.")
+            return
+
+        activity_library.append(new_activity)
+        self._save_activity_library(activity_library)
+        console_manager.print_success(f"Added '{new_activity}' to activity library.")
 

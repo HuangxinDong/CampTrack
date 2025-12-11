@@ -14,7 +14,8 @@ class Camp:
         camp_leader: str = None,
         campers: list = [],
         food_per_camper_per_day: int = 1,
-        initial_food_stock: int = 0
+        initial_food_stock: int = 0,
+        activities: list = None
     ):
         self.camp_id = camp_id if camp_id else str(uuid.uuid4())
         self.name = name
@@ -26,8 +27,9 @@ class Camp:
         self.campers = campers
         self.food_per_camper_per_day = food_per_camper_per_day
         self.initial_food_stock = initial_food_stock
-        self.current_food_stock = initial_food_stock 
+        self.current_food_stock = initial_food_stock
         self.food_usage = {}
+        self.activities = activities if activities is not None else []
 
     def add_food(self, amount: int):
         if amount < 0:
@@ -139,14 +141,15 @@ class Camp:
             "food_per_camper_per_day": self.food_per_camper_per_day,
             "initial_food_stock": self.initial_food_stock,
             "current_food_stock": self.current_food_stock,
-            "food_usage": self.food_usage
+            "food_usage": self.food_usage,
+            "activities": self.activities
         }
 
     @classmethod
     def from_dict(cls, data):
         start_date = datetime.strptime(data["start_date"], "%Y-%m-%d").date()
         end_date = datetime.strptime(data["end_date"], "%Y-%m-%d").date()
-        return cls(
+        camp = cls(
             camp_id=data["camp_id"],
             name=data["name"],
             location=data["location"],
@@ -156,5 +159,9 @@ class Camp:
             camp_leader=data.get("camp_leader"),
             campers=[Camper.from_dict(c) for c in data.get("campers", [])],
             food_per_camper_per_day=data.get("food_per_camper_per_day", 1),
-            initial_food_stock=data.get("initial_food_stock", 0)
+            initial_food_stock=data.get("initial_food_stock", 0),
+            activities=data.get("activities", [])
         )
+        camp.current_food_stock = data.get("current_food_stock", camp.initial_food_stock)
+        camp.food_usage = data.get("food_usage", {})
+        return camp

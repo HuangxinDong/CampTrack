@@ -33,7 +33,17 @@
         "food_per_camper_per_day": 12,
         "initial_food_stock": 0,
         "current_food_stock": 0,
-        "food_usage": {}
+        "food_usage": {},
+        "activities": [
+            {
+                "name": "Make smores",
+                "camper_ids": [
+                    "cf556079-2f00-4347-bff8-9b92de4179e5",
+                    "7f194cfb-9ced-40e5-a81b-45f58e55269f",
+                    "1ea2f893-5888-4703-8216-f06bef6df626"
+                ]
+            }
+        ]
     },
     {
         "camp_id": "4e44c1cf-d9d1-423b-8690-6b31a5925aa5",
@@ -69,7 +79,41 @@
         "food_per_camper_per_day": 2,
         "initial_food_stock": 50,
         "current_food_stock": 50,
-        "food_usage": {}
+        "food_usage": {},
+        "activities": [
+            {
+                "name": "Swimming",
+                "camper_ids": [
+                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
+                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
+                    "757fa5c7-0924-4571-907f-670283fb5999"
+                ]
+            },
+            {
+                "name": "Archery",
+                "camper_ids": [
+                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
+                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
+                    "757fa5c7-0924-4571-907f-670283fb5999"
+                ]
+            },
+            {
+                "name": "Campfire songs",
+                "camper_ids": [
+                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
+                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
+                    "757fa5c7-0924-4571-907f-670283fb5999"
+                ]
+            },
+            {
+                "name": "Make smores",
+                "camper_ids": [
+                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
+                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
+                    "757fa5c7-0924-4571-907f-670283fb5999"
+                ]
+            }
+        ]
     },
     {
         "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff1132",
@@ -83,7 +127,8 @@
         "food_per_camper_per_day": 1,
         "initial_food_stock": 50,
         "current_food_stock": 50,
-        "food_usage": {}
+        "food_usage": {},
+        "activities": []
     },
     {
         "camp_id": "b060e273-4096-437e-9475-06923f738b8c",
@@ -97,7 +142,8 @@
         "food_per_camper_per_day": 1,
         "initial_food_stock": 60,
         "current_food_stock": 60,
-        "food_usage": {}
+        "food_usage": {},
+        "activities": []
     },
     {
         "camp_id": "3e616f3c-8974-4d44-9bec-6254192f8526",
@@ -111,7 +157,8 @@
         "food_per_camper_per_day": 1,
         "initial_food_stock": 80,
         "current_food_stock": 80,
-        "food_usage": {}
+        "food_usage": {},
+        "activities": []
     },
     {
         "camp_id": "c683262e-ecfd-4ed1-8265-e0bfe7890cef",
@@ -125,6 +172,7 @@
         "food_per_camper_per_day": 1,
         "initial_food_stock": 50,
         "current_food_stock": 50,
-        "food_usage": {}
+        "food_usage": {},
+        "activities": []
     }
 ]
