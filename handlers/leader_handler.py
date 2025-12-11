@@ -4,6 +4,7 @@ import csv
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable
 from cli.prompts import get_positive_int
+from cli.console_manager import console_manager
 
 from persistence.dao.daily_report_manager import DailyReportManager
 
@@ -34,7 +35,7 @@ class LeaderHandler(BaseHandler):
     def select_camps_to_supervise(self):
         camps = self.context.camp_manager.read_all()
 
-        print("\nAvailable camps:")
+        menu_items = []
         for idx, camp in enumerate(camps, 1):
             if camp.camp_leader == self.user.username:
                 status = " (You are the leader)"
@@ -43,35 +44,39 @@ class LeaderHandler(BaseHandler):
             else:
                 status = " (Available)"
 
-            print(f"{idx}. {camp.name} - {camp.location}{status}")
+            menu_items.append(
+                f"[bold medium_purple1]{idx}.[/bold medium_purple1] {camp.name} - {camp.location}{status}"
+            )
+
+        console_manager.print_menu("\nAvailable camps:", menu_items)
 
         selection = get_input("\nEnter camp numbers (comma-separated): ")
         try:
             picks = [int(x.strip()) - 1 for x in selection.split(",")]
         except:
-            print("Invalid input.")
+            console_manager.print_error("Invalid input.")
             return
 
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         for index in picks:
             if not (0 <= index < len(camps)):
-                print(f"Invalid selection {index + 1}")
+                console_manager.print_error(f"Invalid selection {index + 1}")
                 continue
 
             camp = camps[index]
 
             if camp.camp_leader and camp.camp_leader != self.user.username:
-                print(f"Cannot select {camp.name} — assigned to {camp.camp_leader}")
+                console_manager.print_error(f"Cannot select {camp.name} — assigned to {camp.camp_leader}")
                 continue
 
             if self._has_schedule_conflict(camp, my_camps):
-                print(f"Cannot select '{camp.name}' — date conflict detected.")
+                console_manager.print_error(f"Cannot select '{camp.name}' — date conflict detected.")
                 continue
 
             camp.camp_leader = self.user.username
             self.context.camp_manager.update(camp)
-            print(f"You are now supervising: {camp.name}")
+            console_manager.print_success(f"You are now supervising: {camp.name}")
 
 
     def _has_schedule_conflict(self, new_camp, my_camps):
