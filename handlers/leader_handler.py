@@ -182,6 +182,15 @@ class LeaderHandler(BaseHandler):
 
         today = datetime.today().strftime("%Y-%m-%d")
         text = get_input("Enter today's report text: ")
+        
+        # Ask for food usage
+        food_usage_int = get_positive_int("Enter amount of food used today: ")
+        
+        try:
+             camp.remove_food(food_usage_int, today)
+             self.camp_manager.update(camp)
+        except ValueError as e:
+             print(f"Warning: Could not save food usage: {e}")
 
         report = {
             "camp_id": camp.camp_id,

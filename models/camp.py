@@ -14,12 +14,11 @@ class Camp:
         start_date: date,
         end_date: date,
         camp_leader: str = None,
-        initial_food_stock_per_day: int = None,
         campers: list[str] = [],
-        food_per_camper_per_day = 1,
-        precamp_stock = 0,
-        topups= [],
-        food_usage={}
+        food_per_camper_per_day: int = 1,
+        initial_food_stock: int = 0,
+        current_food_stock: int = 0,
+        food_usage: dict = None
     ):
         self.camp_id = camp_id if camp_id else str(uuid.uuid4())
         self.name = name
@@ -29,17 +28,49 @@ class Camp:
         self.end_date = end_date
         self.camp_leader = camp_leader
         self.campers = campers
-        self.initial_food_stock_per_day = initial_food_stock_per_day
         self.food_per_camper_per_day = food_per_camper_per_day
-        self.precamp_stock = precamp_stock
-        self.topups = topups
-        self.food_usage = food_usage
+        self.initial_food_stock = initial_food_stock
+        self.current_food_stock = current_food_stock
+        self.food_usage = food_usage if food_usage else {}
 
-    def topup_food(self, amount):
-        if self.has_camp_started():
-            self.topups.append(amount)
+    def add_food(self, amount: int):
+        if amount < 0:
+             raise ValueError("amount must be positive")
+        
+        # Check if camp has finished
+        if self.has_camp_finished():
+            raise ValueError("Cannot add food to a finished camp")
+
+        # Optionally check if camp has started? User said "Checking to see if the camp has started as well as ended"
+        # for "topping up and removing food".
+        # Assuming we can top up before start? But user explicitly asked for this check.
+        # "Thirdly, when topping up and removing food, why have you not included the logic Checking to see if the camp has started as well as ended"
+        # I will strictly follow the instruction to check both.
+        if not self.has_camp_started():
+             raise ValueError("Cannot add food before camp has started")
+
+        self.current_food_stock += amount
+
+    def remove_food(self, amount: int, date_str: str = None):
+        if amount < 0:
+             raise ValueError("amount must be positive")
+        
+        if not self.has_camp_started():
+            raise ValueError("Cannot remove food before camp start")
+        
+        if self.has_camp_finished():
+            raise ValueError("Cannot remove food after camp end")
+
+        if date_str is None:
+            date_str = datetime.now().strftime("%Y-%m-%d")
+
+        self.current_food_stock -= amount
+        
+        # Track usage
+        if date_str in self.food_usage:
+            self.food_usage[date_str] += amount
         else:
-            self.precamp_stock += amount
+            self.food_usage[date_str] = amount
 
     def has_camp_started(self):
         now = datetime.now().date()
@@ -53,12 +84,10 @@ class Camp:
         self.food_per_camper_per_day = amount
 
     # Used by coordinator to see how much is required based on current campers
-    # They can then set the precamp_stock
     def total_food_required(self):
         total_campers = len(self.campers)
         days = (self.end_date - self.start_date).days + 1
-
-        return total_campers * self.food_per_camp_per_day * days
+        return total_campers * self.food_per_camper_per_day * days
 
     def is_food_shortage(self):
         if self.has_camp_finished():
@@ -66,18 +95,17 @@ class Camp:
 
         today = datetime.now().date()
         total_campers = len(self.campers)
-        total_stock = self.precamp_stock + sum(self.topups)
-        used_so_far = sum(self.food_usage.values())
-
+        
+        # If camp hasn't started, check against total duration requirements
         if not self.has_camp_started():
-            total_days = (self.end_date - self.start_date).days + 1
-            total_required = total_campers * self.food_per_camper_per_day * total_days
-            return total_stock < total_required
+            days_needed = (self.end_date - self.start_date).days + 1
+        else:
+            # Camp started, check remaining days
+            days_needed = (self.end_date - today).days + 1
+            if days_needed < 0: days_needed = 0
 
-        remaining_days = (self.end_date - today).days + 1
-        remaining_required = total_campers * self.food_per_camper_per_day * remaining_days
-        remaining_stock = total_stock - used_so_far
-        return remaining_stock < remaining_required
+        total_required = total_campers * self.food_per_camper_per_day * days_needed
+        return self.current_food_stock < total_required
 
     def add_camper(self, camper):
         self.campers.append(camper)
@@ -91,11 +119,6 @@ class Camp:
     def assign_leader(self, username):
         self.camp_leader = username
 
-    def add_food_usage(self, amount: int, day: date):
-        if not (self.start_date <= day <= self.end_date):
-            raise ValueError("Food usage date must be within the camp start and end dates.")
-        self.food_usage[day.strftime("%Y-%m-%d")] = amount
-
     def to_dict(self):
         return {
             "camp_id": self.camp_id,
@@ -106,17 +129,33 @@ class Camp:
             "end_date": self.end_date.strftime("%Y-%m-%d"),
             "camp_leader": self.camp_leader,
             "campers": [camper.to_dict() for camper in self.campers],
-            "initial_food_stock_per_day": self.initial_food_stock_per_day,
             "food_per_camper_per_day": self.food_per_camper_per_day,
-            "precamp_stock": self.precamp_stock,
-            "topups": self.topups,
-            "food_usage": self.food_usage,
+            "initial_food_stock": self.initial_food_stock,
+            "current_food_stock": self.current_food_stock,
+            "food_usage": self.food_usage
         }
 
     @classmethod
     def from_dict(cls, data):
         start_date = datetime.strptime(data["start_date"], "%Y-%m-%d").date()
         end_date = datetime.strptime(data["end_date"], "%Y-%m-%d").date()
+        
+        # MIGRATION LOGIC:
+        # If 'current_food_stock' is missing, try to calculate it from old fields.
+        if "current_food_stock" in data:
+            stock = data["current_food_stock"]
+        else:
+            # Fallback calculation
+            precamp = data.get("precamp_stock", 0)
+            if precamp == 0: 
+                # Catch the bug I just fixed in previous turn: maybe it's in initial_food_stock_per_day
+                precamp = data.get("initial_food_stock_per_day", 0)
+                if precamp is None: precamp = 0
+            
+            topups = sum(data.get("topups", []))
+            usage = sum(data.get("food_usage", {}).values())
+            stock = precamp + topups - usage
+        
         camp = cls(
             camp_id=data["camp_id"],
             name=data["name"],
@@ -126,11 +165,11 @@ class Camp:
             end_date=end_date,
             camp_leader=data["camp_leader"],
             campers=[Camper.from_dict(camper) for camper in data["campers"]],
-            initial_food_stock_per_day=data["initial_food_stock_per_day"],
-            food_per_camper_per_day=data["food_per_camper_per_day"],
-            precamp_stock=data["precamp_stock"],
-            topups=data["topups"],
-            food_usage=data["food_usage"],
+            food_per_camper_per_day=data.get("food_per_camper_per_day", 1),
+            initial_food_stock=data.get("initial_food_stock", 0),
+            current_food_stock=stock,
+            food_usage=data.get("food_usage", {})
         )
 
         return camp
+

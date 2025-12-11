@@ -35,6 +35,11 @@ class CoordinatorHandler(BaseHandler):
             try:
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
                 end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+                
+                if start_date < datetime.now().date():
+                    print("Error: Start date cannot be in the past.")
+                    continue
+
                 if end_date < start_date:
                     print("Error: End date must be after start date.")
                     continue
@@ -44,14 +49,14 @@ class CoordinatorHandler(BaseHandler):
 
         food = get_positive_int("Enter camp food stock: ")
 
-        camp = camp = Camp(
+        camp = Camp(
             camp_id=None,
             name=name,
             location=location,
             camp_type=camp_type,
             start_date=start_date,
             end_date=end_date,
-            initial_food_stock_per_day=food,
+            current_food_stock=food,
         )
         self.camp_manager.add(camp)
         print(f"Camp '{name}' created successfully.")
@@ -92,7 +97,7 @@ class CoordinatorHandler(BaseHandler):
             print("Camp not found")
             return
         additional_food = get_positive_int("Enter the amount of food to add: ")
-        selected_camp.topup_food(additional_food)
+        selected_camp.add_food(additional_food)
         self.camp_manager.update(selected_camp)
         print(f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}.")
         self.commands = self.main_commands

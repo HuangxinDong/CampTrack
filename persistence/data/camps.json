@@ -1,17 +1,16 @@
 [
     {
-        "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff4527",
-        "name": "test",
+        "camp_id": "4e44c1cf-d9d1-423b-8690-6b31a5925aa5",
+        "name": "tester",
         "location": "test",
-        "camp_type": "test",
-        "start_date": "2026-01-01",
-        "end_date": "2026-01-03",
-        "camp_leader": "leader1",
+        "camp_type": "uwfguw",
+        "start_date": "2023-01-20",
+        "end_date": "2023-01-22",
+        "camp_leader": null,
         "campers": [],
-        "initial_food_stock_per_day": 50,
         "food_per_camper_per_day": 1,
-        "precamp_stock": 42,
-        "topups": [],
+        "initial_food_stock": 0,
+        "current_food_stock": 50,
         "food_usage": {}
     }
 ]

@@ -26,7 +26,17 @@ class CampManager:
             raise ValueError("camps.json must contain a JSON array.")
 
         try:
-            return [Camp.from_dict(item) for item in data]
+            valid_camps = []
+            for item in data:
+                try:
+                    if not isinstance(item, dict):
+                        logging.warning(f"Skipping invalid item in camps.json (not a dict): {item}")
+                        continue
+                    valid_camps.append(Camp.from_dict(item))
+                except Exception as e:
+                    logging.warning(f"Skipping undefined/malformed camp item: {e}")
+            
+            return valid_camps
         except Exception as e:
             logging.error(f"Error converting JSON to Camp objects: {e}")
             raise
