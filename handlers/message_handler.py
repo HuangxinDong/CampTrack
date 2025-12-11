@@ -15,7 +15,6 @@ def get_conversations_from_messages(messages, username):
     return conversations
 
 
-
 def count_unread_messages(messages: list[dict], username: str) -> int:
     """
     Count messages where user is recipient and mark_as_read is False.

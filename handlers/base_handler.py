@@ -2,7 +2,7 @@ import uuid
 from models.message import Message
 from cli.input_utils import get_input, cancellable
 from handlers.message_handler import get_conversation_summaries
-from cli.display import conversation_display
+from cli.chat_display import conversation_display
 
 
 class BaseHandler:
