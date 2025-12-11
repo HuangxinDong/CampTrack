@@ -16,9 +16,8 @@ from handlers.statistics_handler import StatisticsHandler
 class LeaderHandler(BaseHandler):
     """Handles Leader-specific operations."""
 
-    def __init__(self, user, user_manager, message_manager, camp_manager):
-        super().__init__(user, user_manager, message_manager)
-
+    def __init__(self, user, user_manager, message_manager, camp_manager, announcement_manager):
+        super().__init__(user, user_manager, message_manager, camp_manager, announcement_manager)
         self.camp_manager = camp_manager
         self.daily_report_manager = DailyReportManager()
         self.statistics = StatisticsHandler()

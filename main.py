@@ -5,6 +5,7 @@ from cli.main_loop import run_program
 from persistence.dao.user_manager import UserManager
 from persistence.dao.camp_manager import CampManager
 from persistence.dao.message_manager import MessageManager
+from persistence.dao.announcement_manager import AnnouncementManager
 
 from handlers.admin_handler import AdminHandler
 from handlers.coordinator_handler import CoordinatorHandler
@@ -21,16 +22,17 @@ HANDLERS = {
     "Leader": LeaderHandler,
 }
 
-def create_handler(user, user_manager, camp_manager, message_manager):
+def create_handler(user, user_manager, camp_manager, message_manager, announcement_manager):
     """Create the appropriate handler based on user role."""
     handler_class = HANDLERS.get(user.role, BaseHandler)
-    return handler_class(user, user_manager, message_manager, camp_manager)
+    return handler_class(user, user_manager, message_manager, camp_manager, announcement_manager)
 
 def main():
     # Create managers ONCE (dependency injection)
     user_manager = UserManager()
     camp_manager = CampManager()
     message_manager = MessageManager()
+    announcement_manager = AnnouncementManager()
 
     # Login
     session = Session()
@@ -40,7 +42,7 @@ def main():
         return
 
     # Create handler for this user's role
-    handler = create_handler(user, user_manager, camp_manager, message_manager)
+    handler = create_handler(user, user_manager, camp_manager, message_manager, announcement_manager)
 
     # Run main loop with both user and handler
     run_program(user, handler)

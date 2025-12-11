@@ -5,7 +5,7 @@
         "to_user": "leader1",
         "content": "hey leader1",
         "sent_at": "2025-12-10T13:41:03.345945",
-        "mark_as_read": false
+        "mark_as_read": true
     },
     {
         "message_id": "0cc9045f-1b97-4cb3-b5d4-ae0c3ca7f322",
@@ -13,7 +13,7 @@
         "to_user": "leader1",
         "content": "hello",
         "sent_at": "2025-12-10T14:35:35.676656",
-        "mark_as_read": false
+        "mark_as_read": true
     },
     {
         "message_id": "d3373a7c-9c39-49f5-93d8-6125bfe7b2d3",
@@ -21,7 +21,7 @@
         "to_user": "leader1",
         "content": "hi leaderrrrr",
         "sent_at": "2025-12-10T14:36:34.707024",
-        "mark_as_read": false
+        "mark_as_read": true
     },
     {
         "message_id": "fc42bf8c-a4ea-41e4-ab34-f7507c71dd8c",
@@ -29,6 +29,22 @@
         "to_user": "leader1",
         "content": "hey q and b",
         "sent_at": "2025-12-10T15:09:10.837098",
-        "mark_as_read": false
+        "mark_as_read": true
+    },
+    {
+        "message_id": "fc99dc70-ee60-4c7f-ae41-9d46a952452d",
+        "from_user": "leader1",
+        "to_user": "admin1",
+        "content": "hey admin!",
+        "sent_at": "2025-12-11T01:19:24.935705",
+        "mark_as_read": true
+    },
+    {
+        "message_id": "d86d55eb-84c5-4287-88a2-9215624cb4ef",
+        "from_user": "admin1",
+        "to_user": "coordinator1",
+        "content": "hello coordinator!",
+        "sent_at": "2025-12-11T01:29:51.040893",
+        "mark_as_read": true
     }
 ]

@@ -10,7 +10,7 @@
         "password": "",
         "role": "Leader",
         "enabled": true,
-        "daily_payment_rate": 100
+        "daily_payment_rate": 50
     },
     {
         "username": "coordinator1",

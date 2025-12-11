@@ -8,6 +8,12 @@ SUBMENU_PROMPT = "Please enter a number, q to quit, or b for back.\n> "
 
 def display_menu(handler):
     """Display available commands for the handler."""
+    # Check for notifications (e.g., Unread Messages)
+    if hasattr(handler, 'get_unread_message_alert'):
+        note = handler.get_unread_message_alert()
+        if note:
+            print(note)
+
     for i, command in enumerate(handler.commands):
         print(f"{i + 1}. {command['name']}")
 
@@ -49,4 +55,8 @@ def run_program(user, handler):
             print("Please enter a number from the list.")
             continue
         
-        handler.commands[choice - 1]["command"]()
+        try:
+            handler.commands[choice - 1]["command"]()
+        except QuitException:
+            print("Goodbye!")
+            break
