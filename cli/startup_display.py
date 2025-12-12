@@ -19,6 +19,7 @@ class StartupDisplay:
             r"/____/\___/\____/\__,_/\__/   \____/\__,_/_/ /_/ /_/ .___/ " + "\n"
             r"                                                  /_/      " + "\n"
             "\n[bold white]CAMPSITE MANAGEMENT SYSTEM[/bold white]"
+            "\n[italic dim]Tip: Press 'b' to go back or 'q' to quit at any prompt.[/italic dim]"
         )
         
         console_manager.print_banner(

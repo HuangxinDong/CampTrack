@@ -1,11 +1,14 @@
 import uuid
+import os
+import json
+from datetime import datetime
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.console_manager import console_manager
 from models.announcement import Announcement
 from persistence.dao.system_notification_manager import SystemNotificationManager
 from cli.view_admin import display_user_table
-
+from rich.table import Table
 
 
 class AdminHandler(BaseHandler):
@@ -22,6 +25,9 @@ class AdminHandler(BaseHandler):
             {"name": "Post announcement", "command": self.post_announcement},
             {"name": "View Audit Logs", "command": self.view_audit_logs},
             {"name": "View Users", "command": self.view_users},
+            {"name": "System Health Check", "command": self.handle_system_health_check},
+            {"name": "Backup System Data", "command": self.handle_backup_data},
+            {"name": "Restore System Data", "command": self.handle_restore_data},
         ]
 
         self.main_commands = self.commands.copy()
@@ -280,4 +286,269 @@ class AdminHandler(BaseHandler):
             ])
         
         console_manager.print_table("System Audit Logs", columns, rows)
+        wait_for_enter()
+
+    def handle_system_health_check(self):
+        """Performs a comprehensive system health check and displays a dashboard."""
+        import os
+        from rich.panel import Panel
+        from rich.columns import Columns
+        from rich.align import Align
+        from rich.table import Table
+
+        console_manager.print_info("Running System Health Check...")
+        
+        camps = self.context.camp_manager.read_all()
+        users = self.context.user_manager.read_all()
+        user_map = {u['username']: u for u in users}
+        
+        issues = []
+        food_shortages = []
+        missing_contacts = []
+        medical_cases = 0
+        total_campers = 0
+        total_projected_cost = 0.0
+        total_activities = 0
+        total_camp_days = 0
+        
+        for camp in camps:
+            if camp.camp_leader:
+                if camp.camp_leader not in user_map:
+                    issues.append(f"[Camp: {camp.name}] Leader '{camp.camp_leader}' does not exist.")
+                else:
+                    leader_data = user_map[camp.camp_leader]
+                    if leader_data.get('role') != "Leader":
+                        issues.append(f"[Camp: {camp.name}] Assigned leader '{camp.camp_leader}' has role '{leader_data.get('role')}', expected 'Leader'.")
+                    
+                    # Financials (Projected Cost)
+                    rate = leader_data.get('daily_payment_rate', 0.0)
+                    duration = (camp.end_date - camp.start_date).days + 1
+                    total_projected_cost += (rate * duration)
+            else:
+                issues.append(f"[Camp: {camp.name}] No leader assigned.")
+                
+            if camp.start_date > camp.end_date:
+                issues.append(f"[Camp: {camp.name}] Invalid dates: Start ({camp.start_date}) > End ({camp.end_date}).")
+                
+            if camp.is_food_shortage():
+                food_shortages.append(camp.name)
+            
+            # 4. Campers & Safety
+            for camper in camp.campers:
+                total_campers += 1
+                if camper.medical_info:
+                    medical_cases += 1
+                if not camper.contact:
+                    missing_contacts.append(f"{camper.name} (in {camp.name})")
+            
+            # 5. Activities
+            total_activities += len(camp.activities)
+            total_camp_days += (camp.end_date - camp.start_date).days + 1
+
+        # --- Storage Stats ---
+        storage_stats = []
+        # Safely access filepaths if they exist on the managers
+        managers_to_check = [
+            ("Users", getattr(self.context.user_manager, 'filepath', None)),
+            ("Camps", getattr(self.context.camp_manager, 'filepath', None))
+        ]
+        
+        for name, path in managers_to_check:
+            if path and os.path.exists(path):
+                try:
+                    size_kb = os.path.getsize(path) / 1024
+                    storage_stats.append(f"{name}: {size_kb:.2f} KB")
+                except Exception:
+                    storage_stats.append(f"{name}: Error")
+            else:
+                storage_stats.append(f"{name}: N/A")
+
+        # --- Display Construction ---
+        
+        # 1. Critical Alerts Panel
+        alerts = []
+        if food_shortages:
+            alerts.append(f"[bold red]! Food Shortage in {len(food_shortages)} camps[/bold red]")
+        if missing_contacts:
+            alerts.append(f"[bold red]! {len(missing_contacts)} campers missing emergency contact[/bold red]")
+        if issues:
+            alerts.append(f"[bold red]! {len(issues)} integrity issues detected[/bold red]")
+            
+        if not alerts:
+            alert_panel = Panel("[bold green]No Critical Alerts[/bold green]", title="[bold red]Critical Alerts[/bold red]", border_style="green")
+        else:
+            alert_panel = Panel("\n".join(alerts), title="[bold red]Critical Alerts[/bold red]", border_style="red")
+
+        # 2. Operational Stats Table
+        stats_table = Table(show_header=False, box=None, padding=(0, 2))
+        stats_table.add_row("Total Users", str(len(users)))
+        stats_table.add_row("Total Camps", str(len(camps)))
+        stats_table.add_row("Total Campers", str(total_campers))
+        stats_table.add_row("Medical Cases", f"[yellow]{medical_cases}[/yellow]")
+        stats_table.add_row("Avg Activities/Day", f"{total_activities/total_camp_days:.2f}" if total_camp_days > 0 else "0")
+        
+        stats_panel = Panel(stats_table, title="[bold blue]Operational Stats[/bold blue]", border_style="blue")
+
+        # 3. Financial & System Panel
+        fin_table = Table(show_header=False, box=None, padding=(0, 2))
+        fin_table.add_row("Projected Staff Cost", f"[bold green]${total_projected_cost:,.2f}[/bold green]")
+        fin_table.add_row("Storage Usage", "\n".join(storage_stats))
+        
+        fin_panel = Panel(fin_table, title="[bold magenta]Financial & System[/bold magenta]", border_style="magenta")
+
+        # Render Dashboard
+        console_manager.console.print("\n")
+        console_manager.console.print(Align.center("[bold underline]System Health Dashboard[/bold underline]"))
+        console_manager.console.print(alert_panel)
+        console_manager.console.print(Columns([stats_panel, fin_panel]))
+        
+        if food_shortages:
+            console_manager.console.print("\n[bold red]Camps with Food Shortage:[/bold red]")
+            for name in food_shortages:
+                console_manager.console.print(f"- {name}")
+
+        if missing_contacts:
+             console_manager.console.print("\n[bold red]Missing Emergency Contacts:[/bold red]")
+             for c in missing_contacts:
+                 console_manager.console.print(f"- {c}")
+
+        if issues:
+            console_manager.console.print("\n[bold red]Integrity Issues Details:[/bold red]")
+            for issue in issues:
+                console_manager.console.print(f"- {issue}")
+        
+        if not issues and not food_shortages and not missing_contacts:
+            console_manager.print_success("\nSystem is running smoothly.")
+
+        wait_for_enter()
+
+    @cancellable
+    def handle_backup_data(self):
+        """Backs up all system data to a JSON file."""
+        backup_dir = "backups"
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"backup_{timestamp}.json"
+        filepath = os.path.join(backup_dir, filename)
+        
+        console_manager.print_info(f"Creating backup: {filename}...")
+        
+        try:
+            # Gather data
+            # Note: CampManager returns objects, need to convert to dicts
+            camps_data = [c.to_dict() for c in self.context.camp_manager.read_all()]
+            
+            backup_data = {
+                "timestamp": timestamp,
+                "users": self.context.user_manager.read_all(),
+                "camps": camps_data,
+                "messages": self.context.message_manager.read_all(),
+                "announcements": self.context.announcement_manager.read_all(),
+                "notifications": self.context.system_notification_manager.read_all(),
+                "audit_logs": self.context.audit_log_manager.read_all()
+            }
+            
+            with open(filepath, "w") as f:
+                json.dump(backup_data, f, indent=4)
+                
+            console_manager.print_success(f"Backup created successfully at {filepath}")
+            self.context.audit_log_manager.log_event(self.user.username, "System Backup", f"Created backup {filename}")
+            
+        except Exception as e:
+            console_manager.print_error(f"Backup failed: {e}")
+            
+        wait_for_enter()
+
+    @cancellable
+    def handle_restore_data(self):
+        """Restores system data from a backup file."""
+        backup_dir = "backups"
+        if not os.path.exists(backup_dir):
+            console_manager.print_error("No backups directory found.")
+            wait_for_enter()
+            return
+            
+        files = [f for f in os.listdir(backup_dir) if f.endswith(".json")]
+        if not files:
+            console_manager.print_error("No backup files found.")
+            wait_for_enter()
+            return
+            
+        files.sort(reverse=True) # Newest first
+        
+        console_manager.print_info("Available Backups:")
+        for i, f in enumerate(files, 1):
+            print(f"{i}. {f}")
+            
+        choice = get_input("Select backup to restore (number): ")
+        try:
+            idx = int(choice) - 1
+            if idx < 0 or idx >= len(files):
+                console_manager.print_error("Invalid selection.")
+                return
+            selected_file = files[idx]
+        except ValueError:
+            console_manager.print_error("Invalid input.")
+            return
+            
+        confirm = get_input(f"WARNING: This will OVERWRITE all current system data with data from {selected_file}.\nType 'CONFIRM' to proceed: ")
+        if confirm != "CONFIRM":
+            console_manager.print_info("Restore cancelled.")
+            return
+            
+        filepath = os.path.join(backup_dir, selected_file)
+        console_manager.print_info(f"Restoring from {selected_file}...")
+        
+        try:
+            with open(filepath, "r") as f:
+                data = json.load(f)
+                
+            # Restore Users
+            # UserManager caches data in memory, so we update memory and save
+            if "users" in data:
+                self.context.user_manager.users = data["users"]
+                self.context.user_manager.save_data()
+                print("✓ Users restored")
+                
+            # Restore Camps
+            if "camps" in data:
+                with open(self.context.camp_manager.filepath, "w") as f:
+                    json.dump(data["camps"], f, indent=4)
+                print("✓ Camps restored")
+                
+            # Restore Messages
+            if "messages" in data:
+                with open(self.context.message_manager.filepath, "w") as f:
+                    json.dump(data["messages"], f, indent=4)
+                print("✓ Messages restored")
+                
+            # Restore Announcements
+            if "announcements" in data:
+                # AnnouncementManager uses 'data_file'
+                with open(self.context.announcement_manager.data_file, "w") as f:
+                    json.dump(data["announcements"], f, indent=4)
+                print("✓ Announcements restored")
+                
+            # Restore Notifications
+            if "notifications" in data:
+                # SystemNotificationManager uses 'file_path'
+                with open(self.context.system_notification_manager.file_path, "w") as f:
+                    json.dump(data["notifications"], f, indent=4)
+                print("✓ Notifications restored")
+                
+            # Restore Audit Logs
+            if "audit_logs" in data:
+                with open(self.context.audit_log_manager.filepath, "w") as f:
+                    json.dump(data["audit_logs"], f, indent=4)
+                print("✓ Audit Logs restored")
+                
+            console_manager.print_success("System restore completed successfully.")
+            self.context.audit_log_manager.log_event(self.user.username, "System Restore", f"Restored from {selected_file}")
+            
+        except Exception as e:
+            console_manager.print_error(f"Restore failed: {e}")
+            import traceback
+            traceback.print_exc()
+            
         wait_for_enter()

@@ -78,7 +78,7 @@ logs/
 .idea/
 *.swp
 *.swo
-
+.idea/
 
 # System backups
 *.bak
