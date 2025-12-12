@@ -2,3 +2,4 @@ rich
 numpy
 pandas
 plotext
+requests

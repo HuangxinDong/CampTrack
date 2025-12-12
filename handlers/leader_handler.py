@@ -2,6 +2,9 @@ from datetime import datetime
 import uuid
 import json
 
+
+
+
 from handlers.base_handler import BaseHandler
 from cli.prompts import get_index_from_options, get_positive_int
 from cli.input_utils import get_input, cancellable, wait_for_enter
@@ -16,6 +19,11 @@ from handlers.statistics_handler import StatisticsHandler
 
 from handlers.activity_handler import ActivityHandler
 from cli.leader_display import leader_display
+
+from services.weather_service import WeatherService
+from rich.table import Table
+from rich.console import Console
+import pandas as pd
 
 class LeaderHandler(BaseHandler):
 
@@ -49,7 +57,8 @@ class LeaderHandler(BaseHandler):
             {"name": "Manage Activities", "command": self.activities_menu},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
             {"name": "View My Statistics", "command": self.show_statistics},
-            {"name": "View Camp Schedules", "command": self.view_camp_schedules}
+            {"name": "View Camp Schedules", "command": self.view_camp_schedules},
+            {"name": "View Weather Forecast", "command": self.view_weather_forecast},
         ]
 
         self.main_commands = self.commands.copy()
@@ -427,3 +436,81 @@ class LeaderHandler(BaseHandler):
     @cancellable
     def view_camp_schedules(self):
         self.activity_handler.view_weekly_schedule()
+    
+    @cancellable
+    def view_weather_forecast(self):
+        camps = self.context.camp_manager.read_all()
+
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            self.display.display_error("You don't supervise any camps")
+            return
+        
+        camp = self._select_camp(my_camps)
+        if not camp:
+            return
+        
+        console = Console()
+        with console.status("[bold green]Fetching live weather data, please hold on...[/]"):
+            ws = WeatherService()
+            df_forecast, error = ws.get_weekly_forecast(camp.location)
+
+        if error:
+            console_manager.print_error("No Weather Data Is Available Currently. Inconvenience is deeply regretted.")
+            wait_for_enter()
+            return
+        
+        table = Table(title=f"7-Day Forecast for {camp.location}")
+        table.add_column("date")
+        table.add_column("Condition")
+
+        for index, row in df_forecast.iterrows():
+            status = row['status']
+            color = "green" if status == "Good" else ("yellow" if status == "Rainy" else "red")
+            table.add_row(str(row['date']), f"[{color}]{status}[/]")
+
+        console_manager.console.print(table)
+
+        self._display_weather_conflicts(camp, df_forecast)
+        wait_for_enter()
+
+    def _display_weather_conflicts(self, camp, df_forecast):
+        forecast_map = pd.Series(df_forecast.status.values, index=df_forecast.date).to_dict()
+
+        conflicts = []
+
+        for activity in camp.activities:
+            if isinstance(activity, dict):
+                act_date = str(activity.get('date'))
+                act_name = activity.get('name')
+            else:
+                act_date = str(activity.date)
+                act_name = activity.name
+                
+            weather = forecast_map.get(act_date)
+
+            if weather in ["Rainy", "Stormy"]:
+                conflicts.append((act_date, act_name, weather))
+
+        if conflicts:
+            console_manager.console.print("\n[bold red] WEATHER ALERT FOR SCHEDULED ACTIVITIES[/]")
+
+            alert_table = Table(box=box.SIMPLE)
+            alert_table.add_column("Date")
+            alert_table.add_column("Activity")
+            alert_table.add_column("Forecast")
+
+            for date, name, weather in conflicts:
+                alert_table.add_row(date, name, f"[red]{weather}[/]")
+
+            console_manager.console.print(alert_table)
+        else:
+            console_manager.console.print("\n[bold green]No bad weather conflicts for scheduled activities.[/]")
+
+            
+
+
+        
+    
+

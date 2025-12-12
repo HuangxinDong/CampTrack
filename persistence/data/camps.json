@@ -239,5 +239,35 @@
                 "camper_ids": []
             }
         ]
+    },
+    {
+        "camp_id": "c68c5e5c-ef55-4029-b927-2226dabc70d4",
+        "name": "Urban Explorers",
+        "location": "London",
+        "camp_type": "Urban",
+        "start_date": "2025-12-12",
+        "end_date": "2025-12-19",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 10,
+        "current_food_stock": 10,
+        "food_usage": {},
+        "activities": []
+    },
+    {
+        "camp_id": "83de200f-1aa2-46e5-a70c-a2ea0a24b90c",
+        "name": "Wilderness Quest",
+        "location": "Yosemite National Park",
+        "camp_type": "Wilderness",
+        "start_date": "2025-12-12",
+        "end_date": "2025-12-19",
+        "camp_leader": "leader1",
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 10,
+        "current_food_stock": 10,
+        "food_usage": {},
+        "activities": []
     }
 ]

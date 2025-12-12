@@ -54,6 +54,22 @@
         "details": "Updated food settings for test for leader funtions"
     },
     {
+        "timestamp": "2025-12-12 12:59:41",
+        "username": "coordinator1",
+        "action": "Create Camp",
+        "details": "Created camp Urban Explorers"
+    },
+    {
+        "timestamp": "2025-12-12 13:00:07",
+        "username": "coordinator1",
+        "action": "Create Camp",
+        "details": "Created camp Wilderness Quest"
+    },
+    {
+        "timestamp": "2025-12-12 13:01:27",
+        "username": "leader1",
+        "action": "Supervise Camp",
+        "details": "Started supervising Wilderness Quest"
         "timestamp": "2025-12-12 09:18:12",
         "username": "admin1",
         "action": "System Backup",

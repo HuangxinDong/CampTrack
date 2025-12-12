@@ -8,6 +8,9 @@ from cli.prompts import get_positive_int
 from cli.coordinator_display import coordinator_display
 import cli.visualisations as visualisations
 from cli.console_manager import console_manager
+from services.weather_service import WeatherService
+from rich.table import Table
+from rich.console import Console
 
 class CoordinatorHandler(BaseHandler):
     """Handles Coordinator-specific actions."""
@@ -26,6 +29,7 @@ class CoordinatorHandler(BaseHandler):
             },
             {"name": "See Visualizations", "command": self.visualization_menu},
             {"name": "View Dashboard", "command": self.view_dashboard},
+            {"name": "View Weather Forecast", "command": self.view_weather_forecast},
         ]
 
         self.main_commands = self.commands.copy()
@@ -363,7 +367,7 @@ class CoordinatorHandler(BaseHandler):
             },
         ]
 
-    @cancellable
+    
     @cancellable
     def view_dashboard(self):
         # Phase 9C: Fetch Pandas-powered Overview
@@ -374,3 +378,53 @@ class CoordinatorHandler(BaseHandler):
         
         self.display.display_full_dashboard(overview_data, engagement_metrics=metrics)
         wait_for_enter()
+
+    @cancellable
+    def view_weather_forecast(self):
+        camps = self.context.camp_manager.read_all()
+
+        if not camps:
+            console_manager.print_error("No camps available.")
+            return
+        
+        self.display.display_camp_list(camps)
+
+        while True:
+            choice = get_input("Select camp number: ")
+            if not choice.isdigit(): continue
+            idx = int(choice) - 1
+            if 0 <= idx < len(camps):
+                camp = camps[idx]
+                break
+
+        console = Console()
+        with console.status("[bold green]Fetching live weather data, Please wait...[/]"):
+            ws = WeatherService()
+            df_forecast, error = ws.get_weekly_forecast(camp.location)
+
+        if error:
+            console_manager.print_error(f"Weather Unavailable: {error}")
+            wait_for_enter()
+            return
+        
+        if df_forecast is None or df_forecast.empty:
+            console_manager.print_error("No weather data returned. Inconvenience is deeply regretted.")
+            wait_for_enter()
+            return
+        
+        table = Table(title=f"7-Day Forecast for {camp.location}")
+        table.add_column("Date")
+        table.add_column("Condition")
+
+
+        for index, row in df_forecast.iterrows():
+            status = row['status']
+            color = "green" if status == "Good" else ("yellow" if status == "Rainy" else "red")
+            table.add_row(str(row['date']), f"[{color}]{status}[/]")
+
+
+        console_manager.console.print(table)
+
+        wait_for_enter()
+
+
