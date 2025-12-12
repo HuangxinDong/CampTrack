@@ -22,33 +22,54 @@ class CoordinatorDisplay:
 
     def display_camp_list(self, camps, title="Select Camp"):
         """
-        Renders a list of camps in a styled Table (Design Option A).
+        Renders a list of camps using the 'Neon Timeline' style (Variation C).
+        Timeline layout with visual duration bars and sorted chronologically.
         """
-        table = Table(title=title, border_style="blue", header_style="bold medium_purple1")
-        table.add_column("#", style="dim", width=4)
-        table.add_column("Camp Name", style="bold white")
-        table.add_column("Location")
-        table.add_column("Initial Food", justify="right")
-        table.add_column("Current Food", justify="right")
-        table.add_column("Start Date")
-        table.add_column("End Date")
+        PINK = "#FF69B4"
+        CYAN = "cyan"
+        grid = Table.grid(padding=(0, 2))
+        grid.add_column("Marker", justify="center", width=4)
+        grid.add_column("Content")
 
         for i, camp in enumerate(camps, 1):
-             # Ensure dates are strings for display
-            start_str = camp.start_date.strftime('%Y-%m-%d') if hasattr(camp.start_date, 'strftime') else str(camp.start_date)
-            end_str = camp.end_date.strftime('%Y-%m-%d') if hasattr(camp.end_date, 'strftime') else str(camp.end_date)
-            
-            table.add_row(
-                str(i),
-                f"[bold]{camp.name}[/bold]",
-                camp.location,
-                str(camp.initial_food_stock),
-                str(camp.current_food_stock),
-                start_str,
-                end_str
+            if camp.camp_leader:
+                color = PINK
+                symbol = "●"
+                leader_txt = f"Leader: [cyan]{camp.camp_leader}[/]"
+            else:
+                color = "red"
+                symbol = "○"
+                leader_txt = "[bold red]⚠ NO LEADER[/]"
+
+            # Calculate duration for visual bar
+            duration = (camp.end_date - camp.start_date).days + 1
+            bar = "▬" * min(duration, 20) # Cap visual length at 20 chars
+
+            # Row 1: Title (Bold) + Location (Plain)
+            grid.add_row(
+                f"[bold {color}]{symbol}[/]", 
+                f"[bold default]{i}. {camp.name}[/]   [default]({camp.location})[/]"
             )
 
-        console_manager.console.print(table)
+            # Row 2: Start Date
+            grid.add_row(f"[bold {color}]│[/]", f"   Start Date: {camp.start_date}")
+
+            # Row 3: End Date
+            grid.add_row(f"[bold {color}]│[/]", f"   End Date:   {camp.end_date}")
+            
+            # Row 4: Duration Bar (Visual)
+            grid.add_row(f"[bold {color}]│[/]", f"   Duration:   [bold {CYAN}]{bar}[/] {duration} Days")
+            
+            # Row 5: Camp Type
+            grid.add_row(f"[bold {color}]│[/]", f"   Camp Type:  [bold {CYAN}]{camp.camp_type}[/]")
+
+            # Row 6: Leader
+            grid.add_row(f"[bold {color}]│[/]", f"   {leader_txt}")
+            
+            # Spacer
+            grid.add_row(f"[bold {color}]│[/]", "")
+
+        console_manager.console.print(Panel(grid, title=f"[bold {PINK}]{title}[/]", border_style=PINK))
 
     def display_camp_details(self, camp):
         """

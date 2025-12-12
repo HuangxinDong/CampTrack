@@ -65,6 +65,8 @@ class CoordinatorHandler(BaseHandler):
     @cancellable
     def create_camp(self):
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date) # Sort by date for better UX
+
         
         # 1. Name Validation
         while True:
@@ -131,9 +133,6 @@ class CoordinatorHandler(BaseHandler):
         coordinator_display.display_camp_creation_success(camp)
         self.context.audit_log_manager.log_event(self.user.username, "Create Camp", f"Created camp {camp.name}")
         
-        if get_input("Do you want to assign a leader now? (y/n): ").lower() == 'y':
-            self._assign_leader_to_camp(camp)
-        
         wait_for_enter()
 
     def edit_camp_resources(self):
@@ -142,72 +141,13 @@ class CoordinatorHandler(BaseHandler):
             {"name": "Top Up Food Stock", "command": self.top_up_food_stock},
             {"name": "Edit Camp Location", "command": self.edit_camp_location},
             {"name": "Edit Camp Dates", "command": self.edit_camp_dates},
-            {"name": "Assign/Change Camp Leader", "command": self.assign_camp_leader},
         ]
 
-    @cancellable
-    def assign_camp_leader(self):
-        """Assign or change the leader for a camp."""
-        camps = self.context.camp_manager.read_all()
-        if not camps:
-            console_manager.print_error("No camps available.")
-            return
-
-        coordinator_display.display_camp_list(camps)
-        
-        while True:
-            selection = get_input("\nEnter camp number to assign leader: ")
-            if selection.isdigit() and 1 <= int(selection) <= len(camps):
-                break
-            console_manager.print_error("Invalid selection.")
-
-        selected_camp = camps[int(selection) - 1]
-        self._assign_leader_to_camp(selected_camp)
-        wait_for_enter()
-
-    def _assign_leader_to_camp(self, camp):
-        """Helper to assign a leader to a camp with validation."""
-        while True:
-            username = self.get_username_with_search("Enter leader username", role_filter="Leader")
-            user = self.context.user_manager.find_user(username)
-            
-            if not user:
-                console_manager.print_error(f"User '{username}' not found.")
-                continue
-                
-            if user.get('role') != 'Leader':
-                console_manager.print_error(f"User '{username}' is not a Leader (Role: {user.get('role')}).")
-                continue
-                
-            # Conflict Check
-            # We need to check if this user is leading other camps that overlap with THIS camp
-            # Temporarily set leader to check conflicts (or pass username explicitly if I refactor _get_conflicting_camps)
-            
-            # Let's manually check here to be safe and explicit
-            all_camps = self.context.camp_manager.read_all()
-            conflicts = []
-            for other in all_camps:
-                if other.camp_id == camp.camp_id:
-                    continue
-                if other.camp_leader == username:
-                    if Camp.dates_overlap(camp.start_date, camp.end_date, other.start_date, other.end_date):
-                        conflicts.append(other.name)
-            
-            if conflicts:
-                console_manager.print_error(f"Conflict detected! {username} is already leading: {', '.join(conflicts)} during this period.")
-                if get_input("Assign anyway? (y/n): ").lower() != 'y':
-                    continue
-            
-            break
-            
-        camp.camp_leader = username
-        self.context.camp_manager.update(camp)
-        console_manager.print_success(f"Leader '{username}' assigned to camp '{camp.name}'.")
-        self.context.audit_log_manager.log_event(self.user.username, "Assign Leader", f"Assigned {username} to {camp.name}")
 
     @cancellable
     def top_up_food_stock(self):
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
         if not camps:
             print("No camps available.")
             return
@@ -255,6 +195,7 @@ class CoordinatorHandler(BaseHandler):
     def edit_camp_location(self):
         """Allow coordinator to edit a camp's location."""
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
         if not camps:
             console_manager.print_error("No camps available.")
             return
@@ -306,6 +247,8 @@ class CoordinatorHandler(BaseHandler):
         from cli.prompts import get_valid_date_range
 
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
+
         if not camps:
             console_manager.print_error("No camps available.")
             return
