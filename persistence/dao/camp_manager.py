@@ -180,7 +180,9 @@ class CampManager:
                 'name': c.name,
                 'leader': leader,
                 'campers_count': count,
-                'food_stock': stock
+                'food_stock': stock,
+                'schedule_status': c.get_schedule_status()
+
             })
 
         # 2. Create DataFrame

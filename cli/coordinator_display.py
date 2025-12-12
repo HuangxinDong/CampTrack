@@ -200,20 +200,22 @@ class CoordinatorDisplay:
             
         p_act = Panel(t_act, title="[bold white]ACTIVITY ENGAGEMENT[/]", border_style=self.PINK, height=9)
 
-        # 3. Leader Allocation Map
-        t_lead = Table(box=box.SIMPLE, show_header=False, expand=True)
-        t_lead.add_column("N", style="bold white")
-        t_lead.add_column("S")
+        t_stat = Table(box=box.SIMPLE, show_header=False, expand=True)
+        t_stat.add_column("N", style="bold white")
+        t_stat.add_column("L")
+        t_stat.add_column("S", justify="right")
         
         for row in details:
             leader = row['leader']
-            if leader and leader != '[Unassigned]':
-                status = f"[{self.GOOD_COLOR}]● ASSIGNED ({leader})[/]"
-            else:
-                status = f"[bold {self.BAD_COLOR}]✖ UNASSIGNED[/]"
-            t_lead.add_row(row['name'], status)
+            l_icon = f"[{self.GOOD_COLOR}]●[/]" if leader and leader != '[Unassigned]' else f"[{self.BAD_COLOR}]✖[/]"
             
-        p_lead = Panel(t_lead, title="[bold white]LEADER ALLOCATION[/]", border_style=self.PINK, height=9)
+            sched = row.get('schedule_status', 'Empty')
+            s_color = self.GOOD_COLOR if sched == 'Full' else ("yellow" if sched == 'Partial' else self.BAD_COLOR)
+            s_str = f"[{s_color}]{sched}[/]"
+
+            t_stat.add_row(row['name'], f"{l_icon} {leader}", s_str)
+            
+        p_lead = Panel(t_stat, title="[bold white]CAMP STATUS[/]", border_style=self.PINK, height=9)
 
         # 4. Food Stock Levels
         t_food = Table(box=box.SIMPLE, show_header=False, expand=True)
@@ -229,6 +231,7 @@ class CoordinatorDisplay:
             color = self.GOOD_COLOR if stock >= 10 else self.BAD_COLOR
             bar_len = int((stock / max_stock) * 15)
             bar = "█" * bar_len
+
             t_food.add_row(row['name'], f"[{color}]{bar}[/]", str(stock))
             
         p_food = Panel(t_food, title="[bold white]FOOD STOCK LEVELS[/]", border_style=self.PINK, height=9)
