@@ -9,8 +9,8 @@ def install_dependencies():
     marker_file = ".dependencies_installed"
     req_file = "requirements.txt"
     
-    if os.path.exists(marker_file):
-        return
+    # if os.path.exists(marker_file):
+    #     return
 
     required_packages = []
     if os.path.exists(req_file):

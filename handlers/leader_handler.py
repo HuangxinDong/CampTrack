@@ -285,6 +285,12 @@ class LeaderHandler(BaseHandler):
 
         summary = LeaderHandler.extract_summary(text)
 
+        today_str = datetime.now().date().isoformat()
+        todays_activities = [
+            act.get('name') for act in camp.activities 
+            if act.get('date') == today_str
+        ]
+
         injury_flag = get_input("Any injuries today? (y/n): ")
 
         injured_count = 0
@@ -311,7 +317,7 @@ class LeaderHandler(BaseHandler):
             "injury": injury_flag,
             "injured_count": injured_count,
             "incident_details": details,
-            "activities": summary["activities"],
+            "activities": todays_activities,
             "achievements": summary["achievements"],
         }
 
@@ -404,14 +410,23 @@ class LeaderHandler(BaseHandler):
         
         for camp in my_camps:
             total_participants = self.statistics.get_total_participants(camp)
-            avg_rate = self.statistics.get_average_participation_rate(camp)  
-            avg_rate_str = f"{avg_rate * 100:.1f}%" if avg_rate > 0 else "0%"
+            
+            if not camp.has_camp_started():
+                avg_rate_str = "N/A"
+                earnings_str = "N/A"
+                earnings = 0
+            else:
+                avg_rate = self.statistics.get_average_participation_rate(camp)  
+                avg_rate_str = f"{avg_rate * 100:.1f}%" if avg_rate > 0 else "0%"
+                earnings = self.statistics.get_earnings(self.user.username, camp)
+                earnings_str = f"£{earnings}"
+
             food_usage = self.statistics.get_food_usage(camp)
             camp_reports = [r for r in all_reports if r["camp_id"] == camp.camp_id]
             incident_count = sum(int(r.get("injured_count", 0)) for r in camp_reports)
             activity_count = sum(len(r.get("activities", [])) for r in camp_reports)
             achievement_count = sum(len(r.get("achievements", [])) for r in camp_reports)
-            earnings = self.statistics.get_earnings(self.user.username, camp)
+            
             total_earnings += earnings
 
             stats_data.append({
@@ -422,7 +437,7 @@ class LeaderHandler(BaseHandler):
                 "incidents": str(incident_count),
                 "activities": str(activity_count),
                 "achievements": str(achievement_count),
-                "earnings": f"£{earnings}"
+                "earnings": earnings_str
             })
 
         self.display.display_statistics(stats_data, total_earnings)
