@@ -76,5 +76,11 @@
         "username": "admin1",
         "action": "System Backup",
         "details": "Created backup backup_20251212_091812.json"
+    },
+    {
+        "timestamp": "2025-12-12 12:42:03",
+        "username": "coordinator1",
+        "action": "Create Camp",
+        "details": "Created camp Camp Nova"
     }
 ]

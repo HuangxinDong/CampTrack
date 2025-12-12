@@ -140,7 +140,6 @@ class CoordinatorHandler(BaseHandler):
             {"name": "Top Up Food Stock", "command": self.top_up_food_stock},
             {"name": "Edit Camp Location", "command": self.edit_camp_location},
             {"name": "Edit Camp Dates", "command": self.edit_camp_dates},
-            {"name": "Assign/Change Camp Leader", "command": self.assign_camp_leader},
         ]
 
     @cancellable
