@@ -126,13 +126,15 @@ class UserManager:
         if user is None:
             return False, "User not found."
             
-        if new_role not in ["Leader", "Coordinator", "Admin"]:
-             return False, "Invalid role."
+        match new_role.lower():
+            case "leader" | "l":
+                user["role"] = "Leader"
+                if "daily_payment_rate" not in user:
+                    user["daily_payment_rate"] = 0.0
+            case "coordinator" | "c":
+                user["role"] = "Coordinator"
+            case _:
+                return False, "Invalid role."
 
-        user["role"] = new_role
-        # If switching to Leader, ensure daily_payment_rate exists
-        if new_role == "Leader" and "daily_payment_rate" not in user:
-            user["daily_payment_rate"] = 0.0
-            
         self.save_data()
-        return True, f"Role updated to {new_role} for {username}."
+        return True, f"Role updated to {user["role"]} for {username}."
