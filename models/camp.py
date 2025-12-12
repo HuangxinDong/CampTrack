@@ -1,25 +1,26 @@
 import uuid
 from datetime import datetime, date, timedelta
+from typing import Optional, List, Dict
 from models.camper import Camper
 from models.resource import Equipment
 
 class Camp:
     def __init__(
         self,
-        camp_id: str,
+        camp_id: Optional[str],
         name: str,
         location: str,
         camp_type: str,
         start_date: date,
         end_date: date,
-        camp_leader: str = None,
-        campers: list = [],
+        camp_leader: Optional[str] = None,
+        campers: List = [],
         food_per_camper_per_day: int = 1,
         initial_food_stock: int = 0,
         current_food_stock: int=0,
-        food_usage: dict = None,
-        equipment: list = []
-        activities: list = None
+        food_usage: Optional[Dict] = None,
+        equipment: List = [],
+        activities: Optional[List] = None
     ):
         self.camp_id = camp_id if camp_id else str(uuid.uuid4())
         self.name = name
@@ -43,7 +44,7 @@ class Camp:
             raise ValueError("Cannot add food to a finished camp")
         self.current_food_stock += amount
 
-    def remove_food(self, amount: int, date_str: str = None):
+    def remove_food(self, amount: int, date_str: Optional[str] = None):
         if amount < 0:
             raise ValueError("amount must be positive")
         if not self.has_camp_started():
@@ -151,7 +152,7 @@ class Camp:
             "initial_food_stock": self.initial_food_stock,
             "current_food_stock": self.current_food_stock,
             "food_usage": self.food_usage,
-            "equipment": [e.to_dict() for e in self.equipment]
+            "equipment": [e.to_dict() for e in self.equipment],
             "activities": self.activities
         }
 
@@ -170,7 +171,7 @@ class Camp:
             campers=[Camper.from_dict(c) for c in data.get("campers", [])],
             food_per_camper_per_day=data.get("food_per_camper_per_day", 1),
             initial_food_stock=data.get("initial_food_stock", 0),
-            equipment=equipment_list
+            equipment=[Equipment.from_dict(e) for e in data.get("equipment", [])],
             activities=data.get("activities", [])
         )
         camp.current_food_stock = data.get("current_food_stock", camp.initial_food_stock)

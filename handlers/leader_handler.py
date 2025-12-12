@@ -477,19 +477,19 @@ class LeaderHandler(BaseHandler):
         for camp in my_camps:
             console_manager.print_header(f"Equipment Checklist: {camp.name}")
 
-        if not camp.equipment:
-            print(" No equipment listed")
-            continue
+            if not camp.equipment:
+                print(" No equipment listed")
+                continue
 
-        print(f" {'Item':<20} | {'Qty':<10} | {'Status':<10}")
-        print(" " + "-"*45)
+            print(f" {'Item':<20} | {'Qty':<10} | {'Status':<10}")
+            print(" " + "-"*45)
 
-        for eq in camp.equipment:
-            qty_str = f"{eq.current_quantity}/{eq.target_quantity}"
-            if eq.current_quantity < eq.target_quantity:
-                qty_str = f"[bold red]{qty_str}[/bold red]"
+            for eq in camp.equipment:
+                qty_str = f"{eq.current_quantity}/{eq.target_quantity}"
+                if eq.current_quantity < eq.target_quantity:
+                    qty_str = f"[bold red]{qty_str}[/bold red]"
 
-            print(f" {eq.name:<20} | {qty_str:<25} | {eq.condition:<10}")
+                print(f" {eq.name:<20} | {qty_str:<25} | {eq.condition:<10}")
             print(" "+ "-"*45)
 
 

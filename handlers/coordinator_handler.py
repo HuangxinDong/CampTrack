@@ -521,9 +521,6 @@ class CoordinatorHandler(BaseHandler):
 
         wait_for_enter()
 
-
-        print(f"\nTotal Camps: {len(df)}")
-
     @cancellable
     def manage_equipment(self):
         camps = self.context.camp_manager.read_all()
@@ -571,5 +568,6 @@ class CoordinatorHandler(BaseHandler):
             camp.equipment.append(new_eq)
             self.context.camp_manager.update(camp)
             console_manager.print_success(f"Added {name} to {camp.name}.")
+            wait_for_enter()
             
 
