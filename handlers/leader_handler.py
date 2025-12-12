@@ -214,23 +214,25 @@ class LeaderHandler(BaseHandler):
                 
             self.display.display_camper_search_results(found)
             
-            console_manager.console.print("[dim]Enter number to view Emergency/Medical Info, 's' to search again, or 'b' to back[/dim]")
-            choice = get_input("Choice (enter a number): ")
-            
-            if choice.lower() == 's':
-                continue
-            if choice.lower() == 'b':
-                break
+            while True:
+                choice = get_input("Choice (enter a number): ")
                 
-            if choice.isdigit():
-                idx = int(choice) - 1
-                if 0 <= idx < len(found):
-                    camp_name, camper = found[idx]
-                    self.display.display_emergency_details(camper, camp_name)
-                    wait_for_enter()
-                    continue
-            
-            console_manager.print_error("Invalid selection.")
+                if choice.lower() == 's':
+                    break
+                if choice.lower() == 'b':
+                    return
+                    
+                if choice.isdigit():
+                    idx = int(choice) - 1
+                    if 0 <= idx < len(found):
+                        camp_name, camper = found[idx]
+                        self.display.display_emergency_details(camper, camp_name)
+                        wait_for_enter()
+                        break
+                    else:
+                        console_manager.print_error("Invalid selection. Please try again.")
+                else:
+                    console_manager.print_error("Invalid selection. Please try again.")
 
     @cancellable
     def daily_reports_menu(self):
@@ -324,7 +326,7 @@ class LeaderHandler(BaseHandler):
         ]
 
         if not reports:
-            console_manager.print_error("No reports available.")
+            console_manager.print_info("No reports available.")
             return
 
         reports.sort(key=lambda r: r["date"], reverse=True)

@@ -2,18 +2,53 @@
 
 A CLI-based management system for Scout Camps. Developed for COMP0066 Course Project.
 
+In addition to meeting all the requirements of the coursework brief, we also implemented:
+
+## Core Functionality
+
+### Administrator
+*  **System Health Overview**: Displays key indicators related to data integrity and resource status.
+*   **Backup & Restore**: JSON-based full system snapshot and restoration.
+*   **Audit Log**: Records critical administrative actions.
+*   **User Protection Rules**: Prevents deletion of active leaders.
+
+### Coordinator
+*   **Schedule Conflict Detection**: Automated identification of leader schedule overlaps.
+*   **Visual Analytics**: Terminal-based charting for food stocks and demographics.
+*   **Camp Overview**: Provides aggregated information across camps.
+
+### Camp Leader
+*   **Bulk Camper Import**: Bulk CSV camper registration with cross-camp conflict validation.
+*   **Activity Scheduling**: Scheduling system with rule enforcement (max 2/day) and slot collision handling.
+*   **Emergency Information Lookup**: Quick access to camper contact and medical details.
+*   **Daily Reports**: Keyword extraction for daily activity summaries.
+
 ## Features
 
-### Access Control
-*   **Admin**: System-wide configuration, user management, system health monitoring, data backup/restore, and audit logging.
-*   **Camp Leader**: Camp-specific management including camper CSV imports, resource tracking, and emergency contact lookup.
-*   **Coordinator**: Multi-camp oversight and logistics planning.
-
-### Functionality
-*   **Global Search**: Integrated search for campers, activities, and messages (hotkey: `s`).
-*   **Data Integrity**: Conflict detection for scheduling and camper registration.
-*   **Communication**: Internal messaging and system-wide announcements.
+*   **Search Helper**: Type `s` at any selection prompt to search.
+*   **Internal Messaging**: Internal messaging system and global announcements.
 *   **Persistence**: JSON-based storage with automated backup capabilities.
+*   **Authentication**: Role-based login with password confirmation and uniqueness checks.
+*   **Weather Integration**: Real-time forecasting via Open-Meteo API for safe activity planning.
+*   **Auto-Provisioning**: Automatic verification and installation of system dependencies on startup.
+
+
+
+## Controls
+
+*   `b`: Back / Cancel
+*   `q`: Quit
+*   `s`: Search (When prompted for input)
+
+## Folder Structure
+
+```
+handlers/       # Role-specific business logic
+models/         # Data models and domain entities
+persistence/    # JSON storage and data access layer
+cli/            # Command-line interface components
+backups/        # Generated system snapshots
+```
 
 ## Setup
 
@@ -28,18 +63,3 @@ Requires Python 3.8+.
     ```bash
     python main.py
     ```
-
-## Controls
-
-*   `b`: Back / Cancel
-*   `q`: Quit
-*   `s`: Global Search (Main Menu)
-
-## Architecture
-
-*   `handlers/`: Role-specific business logic.
-*   `models/`: Domain entities.
-*   `persistence/`: Data access layer (DAO) and JSON storage.
-*   `cli/`: Terminal interface components.
-*   `backups/`: System snapshots.
-

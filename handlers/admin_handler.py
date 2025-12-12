@@ -109,6 +109,18 @@ class AdminHandler(BaseHandler):
                 break
             console_manager.print_error(f"User '{username}' not found. Please try again.")
 
+        camps = self.context.camp_manager.read_all()
+        active_leadership = []
+        for camp in camps:
+            if camp.camp_leader == username and not camp.has_camp_finished():
+                active_leadership.append(camp.name)
+        
+        if active_leadership:
+            console_manager.print_error(f"Cannot delete user '{username}'. They are currently assigned as leader for active camps: {', '.join(active_leadership)}.")
+            console_manager.print_info("Please reassign these camps before deleting the user.")
+            wait_for_enter()
+            return
+
         confirm = get_input(f"Are you sure you want to delete user '{username}'? (y/n): ")
         if confirm.lower() != 'y':
             console_manager.print_info("Deletion cancelled.")
