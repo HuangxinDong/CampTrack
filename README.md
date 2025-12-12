@@ -30,7 +30,6 @@ In addition to meeting all the requirements of the coursework brief, we also imp
 *   **Persistence**: JSON-based storage with automated backup capabilities.
 *   **Authentication**: Role-based login with password confirmation and uniqueness checks.
 *   **Weather Integration**: Real-time forecasting via Open-Meteo API for safe activity planning.
-*   **Auto-Provisioning**: Automatic verification and installation of system dependencies on startup.
 
 
 
