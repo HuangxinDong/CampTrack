@@ -30,7 +30,7 @@
                 "medical_info": "None"
             }
         ],
-        "food_per_camper_per_day": 3,
+        "food_per_camper_per_day": 20,
         "initial_food_stock": 100,
         "current_food_stock": 100,
         "food_usage": {},
@@ -60,9 +60,9 @@
         "name": "Camp Beta",
         "location": "Lakeside",
         "camp_type": "Relax",
-        "start_date": "2026-01-21",
-        "end_date": "2026-01-22",
-        "camp_leader": "leader2",
+        "start_date": "2026-01-16",
+        "end_date": "2026-01-19",
+        "camp_leader": "leader1",
         "campers": [
             {
                 "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
@@ -174,9 +174,9 @@
         "name": "Camp Gamma",
         "location": "Mountain",
         "camp_type": "Hiking",
-        "start_date": "2026-01-11",
-        "end_date": "2026-01-12",
-        "camp_leader": null,
+        "start_date": "2026-01-21",
+        "end_date": "2026-01-22",
+        "camp_leader": "leader1",
         "campers": [
             {
                 "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
@@ -271,32 +271,32 @@
         "activities": []
     },
     {
-        "camp_id": "928d7d01-8440-412d-93d2-c06ffd872727",
-        "name": "Camp Nova",
-        "location": "Mountain",
-        "camp_type": "Sci-Fi Adventure",
-        "start_date": "2026-01-07",
-        "end_date": "2026-01-10",
+        "camp_id": "83de200f-1aa2-46e5-a70c-a2ea0a24b900",
+        "name": "Wilderness Quest 2",
+        "location": "Yosemite National Park",
+        "camp_type": "Wilderness",
+        "start_date": "2026-01-12",
+        "end_date": "2026-01-19",
         "camp_leader": "leader2",
         "campers": [],
         "food_per_camper_per_day": 1,
-        "initial_food_stock": 50,
-        "current_food_stock": 50,
+        "initial_food_stock": 10,
+        "current_food_stock": 10,
         "food_usage": {},
         "activities": []
     },
     {
-        "camp_id": "b10ca840-c96b-4a4c-9605-ac25a6b8c2fd",
-        "name": "Skills in the Wild",
+        "camp_id": "83de200f-1aa2-46e5-a70c-a2ea0a24b900",
+        "name": "Wilderness Quest 3",
         "location": "Yosemite National Park",
         "camp_type": "Wilderness",
-        "start_date": "2026-01-07",
-        "end_date": "2026-01-09",
+        "start_date": "2026-01-12",
+        "end_date": "2026-01-19",
         "camp_leader": null,
         "campers": [],
         "food_per_camper_per_day": 1,
-        "initial_food_stock": 80,
-        "current_food_stock": 80,
+        "initial_food_stock": 10,
+        "current_food_stock": 10,
         "food_usage": {},
         "activities": []
     }

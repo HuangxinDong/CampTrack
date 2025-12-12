@@ -70,5 +70,27 @@
             "swim"
         ],
         "achievements": []
+    },
+    {
+        "id": "eea5dfe0-774b-4da0-9354-35301ef6fd10",
+        "camp_id": "5bf792dd-bbcb-43a5-b78c-7550b4b13ae7",
+        "leader_username": "leader1",
+        "date": "2025-12-12",
+        "text": "Great start to the camp today! During the morning Archery session, Alex showed excellent focus and completed the target challenge with great accuracy. Sam also improved significantly and hit the bullseye for the first time.In the afternoon Arts & Crafts activity, Jordan created an impressive wooden badge and received an achievement award for creativity.During the Night Hike, all campers worked together and completed the full route. Fantastic teamwork!",
+        "daily_participation": 2,
+        "injury": "y",
+        "injured_count": 1,
+        "incident_details": "Sam slipped on a wet patch during the hike and scraped his knee. It was a minor injury and he was treated immediately. He rested for a few minutes and was able to rejoin the group without further issues.",
+        "activities": [
+            "hike",
+            "archery",
+            "craft"
+        ],
+        "achievements": [
+            "completed",
+            "award",
+            "achievement",
+            "improved"
+        ]
     }
 ]
