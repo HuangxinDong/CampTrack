@@ -60,9 +60,9 @@
         "name": "Camp Beta",
         "location": "Lakeside",
         "camp_type": "Relax",
-        "start_date": "2026-01-16",
-        "end_date": "2026-01-19",
-        "camp_leader": "leader1",
+        "start_date": "2026-01-21",
+        "end_date": "2026-01-22",
+        "camp_leader": null,
         "campers": [
             {
                 "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",

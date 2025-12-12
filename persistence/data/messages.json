@@ -62,5 +62,21 @@
         "content": "hi admin!",
         "sent_at": "2025-12-11T05:40:15.010614+00:00",
         "mark_as_read": false
+    },
+    {
+        "message_id": "524a1e27-b8d7-4d88-8b0f-8d17d45df56e",
+        "from_user": "leader2",
+        "to_user": "coordinator1",
+        "content": "hey coordinator! any ideas for the upcoming camp schedules?",
+        "sent_at": "2025-12-12T12:05:47.977769+00:00",
+        "mark_as_read": false
+    },
+    {
+        "message_id": "f32bf39f-f447-4ae3-9d37-c5bda59bf30e",
+        "from_user": "admin1",
+        "to_user": "coordinator1",
+        "content": "hi coordinator! how are you?",
+        "sent_at": "2025-12-12T12:06:40.216850+00:00",
+        "mark_as_read": false
     }
 ]

@@ -61,6 +61,8 @@ class CoordinatorHandler(BaseHandler):
     @cancellable
     def create_camp(self):
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date) # Sort by date for better UX
+
         
         # 1. Name Validation
         while True:
@@ -145,6 +147,7 @@ class CoordinatorHandler(BaseHandler):
     def assign_camp_leader(self):
         """Assign or change the leader for a camp."""
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
         if not camps:
             console_manager.print_error("No camps available.")
             return
@@ -204,6 +207,7 @@ class CoordinatorHandler(BaseHandler):
     @cancellable
     def top_up_food_stock(self):
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
         if not camps:
             print("No camps available.")
             return
@@ -251,6 +255,7 @@ class CoordinatorHandler(BaseHandler):
     def edit_camp_location(self):
         """Allow coordinator to edit a camp's location."""
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
         if not camps:
             console_manager.print_error("No camps available.")
             return
@@ -302,6 +307,8 @@ class CoordinatorHandler(BaseHandler):
         from cli.prompts import get_valid_date_range
 
         camps = self.context.camp_manager.read_all()
+        camps.sort(key=lambda c: c.start_date)
+
         if not camps:
             console_manager.print_error("No camps available.")
             return
