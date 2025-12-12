@@ -75,6 +75,7 @@ class ActivityHandler(BaseHandler):
              options.append(f"{name} ({date} - {sess})")
         
         idx = get_index_from_options("Select Activity to Remove", options)
+        if idx is None: return
         activity_to_remove = camp.activities[idx]
 
         self.display.confirm_activity_removal(activity_to_remove)
@@ -135,16 +136,19 @@ class ActivityHandler(BaseHandler):
         # 1. Select Date
         camp_dates = camp.get_date_range()
         date_index = get_index_from_options("Select Date", camp_dates)
+        if date_index is None: return
         selected_date = camp_dates[date_index]
 
         # 2. Select Session
         session_names = [s.name for s in Session]
         session_index = get_index_from_options("Select Session", session_names)
+        if session_index is None: return
         session_name = session_names[session_index]
 
         # 3. Select Activity from Library
         activity_names = list(activity_library.keys())
         activity_index = get_index_from_options("Select Activity Type", activity_names)
+        if activity_index is None: return
         activity_name = activity_names[activity_index]
 
         # Look up is_indoor from library
@@ -215,6 +219,7 @@ class ActivityHandler(BaseHandler):
              activity_options.append(f"{name} ({date} - {sess})")
 
         act_idx = get_index_from_options("Select Activity to Manage", activity_options)
+        if act_idx is None: return
         selected_activity = camp.activities[act_idx]
         
         while True:
@@ -275,6 +280,7 @@ class ActivityHandler(BaseHandler):
 
         options = [c.name for c in available_campers]
         idx = get_index_from_options("Select Camper to Add", options)
+        if idx is None: return
         camper_to_add = available_campers[idx]
 
         activity_data['camper_ids'].append(camper_to_add.name)
@@ -288,6 +294,7 @@ class ActivityHandler(BaseHandler):
             return
 
         idx = get_index_from_options("Select Camper to Remove", current_ids)
+        if idx is None: return
         removed_name = current_ids.pop(idx)
         self.context.camp_manager.update(camp)
         self.display.display_success(f"Removed {removed_name}.")

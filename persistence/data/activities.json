@@ -13,5 +13,14 @@
     },
     "Cooking": {
         "is_indoor": true
+    },
+    "Smores": {
+        "is_indoor": false
+    },
+    "Hiking": {
+        "is_indoor": false
+    },
+    "Stargazing": {
+        "is_indoor": false
     }
 }

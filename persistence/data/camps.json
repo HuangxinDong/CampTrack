@@ -28,29 +28,77 @@
                 "age": 11,
                 "contact": "Guard: 555-0103",
                 "medical_info": "None"
+            },
+            {
+                "camper_id": "12854146-0650-42c6-80e6-0f8b7d80cbc8",
+                "name": "Alice",
+                "age": 12,
+                "contact": "1111",
+                "medical_info": "Peanut allergy"
+            },
+            {
+                "camper_id": "206321b2-6e92-4ba2-bb86-4cfba16103b7",
+                "name": "Bob",
+                "age": 10,
+                "contact": "2222",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "5c8c763e-d504-4643-8d8f-cb98dc3f01db",
+                "name": "Charlie",
+                "age": 11,
+                "contact": "3333",
+                "medical_info": "Asthma"
             }
         ],
         "food_per_camper_per_day": 20,
         "initial_food_stock": 100,
         "current_food_stock": 100,
         "food_usage": {},
+        "equipment": [],
         "activities": [
             {
                 "name": "Arts & Crafts",
                 "date": "2026-01-11",
                 "session": "Afternoon",
-                "camper_ids": []
+                "camper_ids": [
+                    "Alex",
+                    "Sam",
+                    "Jordan",
+                    "Alice",
+                    "Bob",
+                    "Charlie"
+                ]
             },
             {
                 "name": "Night Hike",
                 "date": "2026-01-11",
                 "session": "Evening",
-                "camper_ids": []
+                "camper_ids": [
+                    "Alex",
+                    "Sam",
+                    "Jordan",
+                    "Alice",
+                    "Bob",
+                    "Charlie"
+                ]
             },
             {
                 "name": "Archery",
                 "date": "2026-01-11",
                 "session": "Morning",
+                "camper_ids": []
+            },
+            {
+                "name": "Swimming",
+                "date": "2026-01-12",
+                "session": "Morning",
+                "camper_ids": []
+            },
+            {
+                "name": "Swimming",
+                "date": "2026-01-13",
+                "session": "Afternoon",
                 "camper_ids": []
             }
         ]
@@ -58,7 +106,7 @@
     {
         "camp_id": "d67c74a9-8712-42b4-b456-1fbae659f681",
         "name": "Camp Beta",
-        "location": "Lakeside",
+        "location": "Mountainview",
         "camp_type": "Relax",
         "start_date": "2026-01-16",
         "end_date": "2026-01-19",
@@ -144,8 +192,9 @@
         ],
         "food_per_camper_per_day": 1,
         "initial_food_stock": 0,
-        "current_food_stock": 0,
+        "current_food_stock": 100,
         "food_usage": {},
+        "equipment": [],
         "activities": [
             {
                 "name": "Swimming",
@@ -223,8 +272,9 @@
         ],
         "food_per_camper_per_day": 1,
         "initial_food_stock": 0,
-        "current_food_stock": 0,
+        "current_food_stock": 150,
         "food_usage": {},
+        "equipment": [],
         "activities": [
             {
                 "name": "Archery",
@@ -253,6 +303,7 @@
         "initial_food_stock": 10,
         "current_food_stock": 10,
         "food_usage": {},
+        "equipment": [],
         "activities": []
     },
     {
@@ -263,11 +314,34 @@
         "start_date": "2025-12-12",
         "end_date": "2025-12-19",
         "camp_leader": "leader1",
-        "campers": [],
+        "campers": [
+            {
+                "camper_id": "33caf006-2e62-47c7-b7c4-0361cc897b15",
+                "name": "Alice",
+                "age": 12,
+                "contact": "1111",
+                "medical_info": "Peanut allergy"
+            },
+            {
+                "camper_id": "4fbba03f-a58b-43f2-ac19-2503edf22b23",
+                "name": "Bob",
+                "age": 10,
+                "contact": "2222",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "02b81d1f-f079-4f3b-880c-6b7983e3686e",
+                "name": "Charlie",
+                "age": 11,
+                "contact": "3333",
+                "medical_info": "Asthma"
+            }
+        ],
         "food_per_camper_per_day": 1,
         "initial_food_stock": 10,
-        "current_food_stock": 10,
+        "current_food_stock": 210,
         "food_usage": {},
+        "equipment": [],
         "activities": []
     },
     {
@@ -283,6 +357,7 @@
         "initial_food_stock": 10,
         "current_food_stock": 10,
         "food_usage": {},
+        "equipment": [],
         "activities": []
     },
     {
@@ -298,6 +373,71 @@
         "initial_food_stock": 10,
         "current_food_stock": 10,
         "food_usage": {},
+        "equipment": [],
+        "activities": []
+    },
+    {
+        "camp_id": "34b88b04-a318-4edb-b73f-ed907fbdc3f4",
+        "name": "Camp Trail",
+        "location": "Yosemite National Park",
+        "camp_type": "Adventure",
+        "start_date": "2026-01-11",
+        "end_date": "2026-01-13",
+        "camp_leader": "leader2",
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 70,
+        "current_food_stock": 70,
+        "food_usage": {},
+        "equipment": [],
+        "activities": []
+    },
+    {
+        "camp_id": "0570747d-cdb2-469a-b872-47a78216ec53",
+        "name": "Desert Discovery",
+        "location": "Joshua Tree National Park",
+        "camp_type": "Desert Explorers",
+        "start_date": "2026-02-11",
+        "end_date": "2026-02-14",
+        "camp_leader": "leader2",
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 100,
+        "current_food_stock": 100,
+        "food_usage": {},
+        "equipment": [],
+        "activities": []
+    },
+    {
+        "camp_id": "58206d6f-1f94-4c9d-bdd9-5ea6560a88eb",
+        "name": "Camp Horizon",
+        "location": "Laguna Beach, CA",
+        "camp_type": "Beach adventure",
+        "start_date": "2026-03-03",
+        "end_date": "2026-03-06",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 100,
+        "current_food_stock": 100,
+        "food_usage": {},
+        "equipment": [],
+        "activities": []
+    },
+    {
+        "camp_id": "b4cfa5b1-1c50-4d58-9c7f-930a8c5f3b7a",
+        "name": "demo camp",
+        "location": "Joshua Tree National Park",
+        "camp_type": "demo",
+        "start_date": "2026-02-08",
+        "end_date": "2026-02-10",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 100,
+        "current_food_stock": 100,
+        "food_usage": {},
+        "equipment": [],
         "activities": []
     }
 ]

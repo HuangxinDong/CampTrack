@@ -181,8 +181,8 @@ class CampManager:
                 'leader': leader,
                 'campers_count': count,
                 'food_stock': stock,
-                'schedule_status': c.get_schedule_status()
-
+                'schedule_status': c.get_schedule_status(),
+                'is_shortage': c.is_food_shortage()
             })
 
         # 2. Create DataFrame
@@ -195,14 +195,14 @@ class CampManager:
                 'total_food': int(df['food_stock'].sum()),
                 'assigned_leaders': int(df['leader'].notna().sum()),
                 'total_camps': len(df),
-                'shortage_camps': int((df['food_stock'] < 10).sum())
+                'shortage_camps': int(df['is_shortage'].sum())
             }
 
             # 4. Vectorized Status Logic using Numpy
             # Priority: Need Leader > Low Food > Good
             conditions = [
                 pd.isna(df['leader']) | (df['leader'] == ''),
-                df['food_stock'] < 10
+                df['is_shortage']
             ]
             choices = ['Need Leader', 'Low Food']
             
