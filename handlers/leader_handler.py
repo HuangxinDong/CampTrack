@@ -49,7 +49,8 @@ class LeaderHandler(BaseHandler):
             {"name": "View Campers", "command": self.view_campers},
             {"name": "Manage Activities", "command": self.activities_menu},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
-            {"name": "View My Statistics", "command": self.show_statistics}
+            {"name": "View My Statistics", "command": self.show_statistics},
+            {"name": "Emergency Contact Lookup", "command": self.emergency_lookup},
         ]
 
         self.main_commands = self.commands.copy()
@@ -599,5 +600,42 @@ b. Back
         activity_library.append(new_activity)
         self._save_activity_library(activity_library)
         console_manager.print_success(f"Added '{new_activity}' to activity library.")
-        wait_for_enter()
+        wait_for_enter
+
+    def emergency_lookup(self):
+        console.print(Panel("Emergency Contact Lookup", style="red"))
+
+        camps = self.context.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            console_manager.print_error("You supervise no camps.")
+            return
+
+        camp = self._select_camp(my_camps)
+        if not camp:
+            return
+
+        if not camp.campers:
+            console_manager.print_error("No campers in this camp.")
+            return
+
+        name = get_input("Enter camper name: ")
+
+        camper = self.find_camper_by_name(name, camp.campers)
+
+        if camper:
+            console.print(f"[green]Name:[/green] {camper.name}")
+            console.print(f"[green]Contact:[/green] {camper.contact}")
+            if camper.medical_info:
+                console.print(f"[yellow]Medical Info:[/yellow] {camper.medical_info}")
+        else:
+            console_manager.print_error("Camper not found. Please check the name.")
+
+
+    def find_camper_by_name(self, name, campers):
+        for camper in campers:
+            if camper.name and camper.name.lower() == name.lower():
+                return camper
+        return None
 
