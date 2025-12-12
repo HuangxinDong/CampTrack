@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Because the project architecture was altered without discussion during development, the project has drifted from its intended direction. This repository will be where I explore my own approach. Just for fun.
+
 # Scout Camp Management System
 
 A CLI-based management system for Scout Camps. Developed for COMP0066 Course Project.
@@ -42,12 +45,25 @@ In addition to meeting all the requirements of the coursework brief, we also imp
 ## Folder Structure
 
 ```
-handlers/       # Role-specific business logic
-models/         # Data models and domain entities
-persistence/    # JSON storage and data access layer
-cli/            # Command-line interface components
-backups/        # Generated system snapshots
+handlers/       # Presentation Layer: CLI interaction and menu logic
+services/       # Business Logic Layer: Core rules, validation, and calculations
+models/         # Domain Layer: Data entities
+persistence/    # Data Access Layer: JSON storage and repositories
+cli/            # UI Components: Display helpers and input utilities
+persistence/data/backups/ # Generated system snapshots
 ```
+
+## Architecture
+
+The system follows a **Service-Repository Pattern** (Layered Architecture) to ensure separation of concerns and testability:
+
+1.  **Presentation Layer (`handlers/`)**: Handles user input and displays output. It delegates all business logic to Services.
+2.  **Business Logic Layer (`services/`)**: Contains the core business rules (e.g., schedule conflict detection, validation, activity limits).
+    *   `UserService`: User management and authentication rules.
+    *   `CampService`: Camp creation, logistics, and resource management.
+    *   `ActivityService`: Activity scheduling and library management.
+    *   `ReportService`: Daily reporting, statistics, and NLP summary extraction.
+3.  **Data Access Layer (`persistence/`)**: Manages data storage and retrieval (JSON).
 
 ## Setup
 

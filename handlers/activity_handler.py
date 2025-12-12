@@ -1,14 +1,14 @@
 from handlers.base_handler import BaseHandler
 from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.prompts import get_index_from_options
-from persistence.dao.activity_manager import ActivityManager
+from services.activity_service import ActivityService
 from cli.leader_display import leader_display
 from models.activity import Activity, Session
 
 class ActivityHandler(BaseHandler):
     def __init__(self, user, context):
         super().__init__(user, context)
-        self.activity_manager = ActivityManager()
+        self.activity_service = ActivityService(self.context.activity_manager, self.context.camp_manager)
         self.display = leader_display
 
     @cancellable
@@ -82,9 +82,11 @@ class ActivityHandler(BaseHandler):
         confirm = get_input("Type 'yes' to confirm: ")
         
         if confirm.lower() == "yes":
-            camp.activities.pop(idx)
-            self.context.camp_manager.update(camp)
-            self.display.display_success("Activity removed.")
+            success, message = self.activity_service.remove_activity(camp.name, idx)
+            if success:
+                self.display.display_success(message)
+            else:
+                self.display.display_error(message)
         else:
             self.display.display_info("Actions cancelled.")
         wait_for_enter()
@@ -92,15 +94,9 @@ class ActivityHandler(BaseHandler):
     @cancellable
     def search_activity(self):
         """Search for an activity in the library."""
-        activity_library = self.activity_manager.load_library()
-        
-        if not activity_library:
-            self.display.display_error("Activity library is empty.")
-            return
-            
         query = get_input("Enter activity name (or part of name): ").lower()
         
-        matches = [a for a in activity_library.keys() if query in a.lower()]
+        matches = self.activity_service.search_library(query)
         
         if not matches:
             self.display.display_info(f"No activities found matching '{query}'.")
@@ -128,7 +124,7 @@ class ActivityHandler(BaseHandler):
             self.display.display_error("Camp has no campers. Add campers before scheduling activities.")
             return
 
-        activity_library = self.activity_manager.load_library()
+        activity_library = self.activity_service.get_library()
         if not activity_library:
             self.display.display_error("Activity Library is empty. Add new activity types to the library first (Option 3).")
             return
@@ -151,53 +147,27 @@ class ActivityHandler(BaseHandler):
         if activity_index is None: return
         activity_name = activity_names[activity_index]
 
-        # Look up is_indoor from library
-        is_indoor = activity_library[activity_name].get("is_indoor", False)
+        # Try to schedule
+        success, message, conflict_activity = self.activity_service.schedule_activity(camp.name, activity_name, selected_date, session_name)
 
-        # Validation: Check max occurrences of this activity on the selected date
-        daily_count = 0
-        for act in camp.activities:
-            a_date = act.get("date") if isinstance(act, dict) else str(act.date)
-            a_name = act.get("name") if isinstance(act, dict) else act.name
-            if a_date == selected_date and a_name == activity_name:
-                daily_count += 1
-        
-        if daily_count >= 2:
-             self.display.display_error(f"Limit reached: '{activity_name}' is already scheduled {daily_count} times on {selected_date}. (Max 2)")
-             return
-
-        # Check for conflicts (Time slot collision) & Smart Resolution
-        conflict_activity = None
-        conflict_index = -1
-        
-        for i, existing_activity_data in enumerate(camp.activities):
-            ex_date = existing_activity_data.get("date") if isinstance(existing_activity_data, dict) else str(existing_activity_data.date)
-            ex_session = existing_activity_data.get("session") if isinstance(existing_activity_data, dict) else existing_activity_data.session.name
-
-            if ex_date == selected_date and ex_session == session_name:
-                conflict_activity = existing_activity_data
-                conflict_index = i
-                break
-
-        if conflict_activity:
-            self.display.display_conflict_resolution(conflict_activity, activity_name)
-            options = ["Replace Existing Activity", "Cancel"]
-            choice = get_index_from_options("Choose Action", options)
-            
-            if choice == 0: # Replace
-                camp.activities.pop(conflict_index)
-            else: # Cancel
-                self.display.display_info("Scheduling cancelled.")
-                return
-
-        # Create Activity
-        activity = Activity(activity_name, selected_date, Session[session_name], is_indoor=is_indoor)
-        
-        # Append as dictionary
-        camp.activities.append(activity.to_dict())
-        self.context.camp_manager.update(camp)
-
-        self.display.display_success(f"Successfully scheduled '{activity_name}' for {selected_date} ({session_name}).")
+        if not success:
+            if conflict_activity:
+                self.display.display_conflict_resolution(conflict_activity, activity_name)
+                options = ["Replace Existing Activity", "Cancel"]
+                choice = get_index_from_options("Choose Action", options)
+                
+                if choice == 0: # Replace
+                    success, message, _ = self.activity_service.schedule_activity(camp.name, activity_name, selected_date, session_name, force_replace=True)
+                    if success:
+                        self.display.display_success(message)
+                    else:
+                        self.display.display_error(message)
+                else: # Cancel
+                    self.display.display_info("Scheduling cancelled.")
+            else:
+                self.display.display_error(message)
+        else:
+            self.display.display_success(message)
 
 
     @cancellable
@@ -227,11 +197,7 @@ class ActivityHandler(BaseHandler):
             current_ids = selected_activity.get('camper_ids', [])
             roster_names = []
             for cid in current_ids:
-                # Find camper name in camp.campers
-                found = next((c for c in camp.campers if c.name == cid or c.camper_id == cid), None) # Assuming ID is strictly used or name if legacy
-                # Note: Currently system seems to use Names or objects. Activity.to_dict uses self.campers which is empty list initially.
-                # Let's assume names are stored for now based on previous display code.
-                roster_names.append(cid) # cid is likely the name string based on legacy code usage
+                roster_names.append(cid)
 
             self.display.display_info(f"\nActivity: {selected_activity['name']} ({selected_activity['date']} - {selected_activity['session']})")
             self.display.display_info(f"Current Roster ({len(current_ids)}): {', '.join(roster_names) if roster_names else 'Empty'}")
@@ -240,37 +206,24 @@ class ActivityHandler(BaseHandler):
             choice_idx = get_index_from_options("Roster Actions", menu)
 
             if choice_idx == 0: # Add
-                self.add_camper_to_activity(selected_activity, camp)
+                self.add_camper_to_activity(selected_activity, camp, act_idx)
             elif choice_idx == 1: # Remove
-                self.remove_camper_from_activity(selected_activity, camp)
+                self.remove_camper_from_activity(selected_activity, camp, act_idx)
             elif choice_idx == 2: # Add All
-                self.add_all_campers_to_activity(selected_activity, camp)
+                self.add_all_campers_to_activity(selected_activity, camp, act_idx)
             else:
                 break
 
-    def add_all_campers_to_activity(self, activity_data, camp):
-        current_ids = set(activity_data.get('camper_ids', []))
-        added_count = 0
-        
-        for camper in camp.campers:
-            if camper.name not in current_ids:
-                activity_data['camper_ids'].append(camper.name)
-                added_count += 1
-        
-        if added_count > 0:
-            self.context.camp_manager.update(camp)
-            self.display.display_success(f"Added {added_count} campers to '{activity_data['name']}'.")
+    def add_all_campers_to_activity(self, activity_data, camp, activity_index):
+        success, message = self.activity_service.add_all_campers_to_activity(camp.name, activity_index)
+        if success:
+            self.display.display_success(message)
         else:
-            self.display.display_info("All campers are already in this activity.")
+            self.display.display_info(message)
             wait_for_enter()
 
-    def add_camper_to_activity(self, activity_data, camp):
+    def add_camper_to_activity(self, activity_data, camp, activity_index):
         current_ids = activity_data.get('camper_ids', [])
-        # Find campers NOT in this activity
-        # Assuming simple name matching for now as per legacy code implication, 
-        # but realistically should use IDs if Campers have them.
-        # Checking Camper model... it likely has IDs or uses names.
-        # LeaderHandler import logic used names ("Alex"). Seed data uses names.
         
         available_campers = [c for c in camp.campers if c.name not in current_ids]
         
@@ -283,11 +236,13 @@ class ActivityHandler(BaseHandler):
         if idx is None: return
         camper_to_add = available_campers[idx]
 
-        activity_data['camper_ids'].append(camper_to_add.name)
-        self.context.camp_manager.update(camp)
-        self.display.display_success(f"Added {camper_to_add.name}.")
+        success, message = self.activity_service.add_camper_to_activity(camp.name, activity_index, camper_to_add.name)
+        if success:
+            self.display.display_success(message)
+        else:
+            self.display.display_error(message)
 
-    def remove_camper_from_activity(self, activity_data, camp):
+    def remove_camper_from_activity(self, activity_data, camp, activity_index):
         current_ids = activity_data.get('camper_ids', [])
         if not current_ids:
             self.display.display_error("Roster is empty.")
@@ -295,9 +250,13 @@ class ActivityHandler(BaseHandler):
 
         idx = get_index_from_options("Select Camper to Remove", current_ids)
         if idx is None: return
-        removed_name = current_ids.pop(idx)
-        self.context.camp_manager.update(camp)
-        self.display.display_success(f"Removed {removed_name}.")
+        removed_name = current_ids[idx]
+        
+        success, message = self.activity_service.remove_camper_from_activity(camp.name, activity_index, removed_name)
+        if success:
+            self.display.display_success(message)
+        else:
+            self.display.display_error(message)
 
 
     @cancellable
@@ -329,7 +288,7 @@ class ActivityHandler(BaseHandler):
 
     @cancellable
     def add_activity_to_library(self):
-        activity_library = self.activity_manager.load_library()
+        activity_library = self.activity_service.get_library()
 
         self.display.display_activity_library(activity_library)
 
@@ -341,13 +300,13 @@ class ActivityHandler(BaseHandler):
 
         is_indoor = get_input("Is this an indoor activity? (y/n): ").lower() == 'y'
 
-        success = self.activity_manager.add_activity(new_activity, is_indoor=is_indoor)
+        success, message = self.activity_service.add_to_library(new_activity, is_indoor)
 
         if not success:
-             self.display.display_error("Activity already exists.")
+             self.display.display_error(message)
              return
 
-        self.display.display_success(f"Added '{new_activity}' to activity library.")
+        self.display.display_success(message)
         wait_for_enter()
 
     def _select_camp_delegated(self):

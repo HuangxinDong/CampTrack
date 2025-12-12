@@ -9,15 +9,15 @@ from cli.prompts import get_positive_int
 from cli.console_manager import console_manager
 
 from models.activity import Activity, Session
-from persistence.dao.daily_report_manager import DailyReportManager
 from models.camper import Camper
 from models.camp import Camp
-from handlers.statistics_handler import StatisticsHandler
 
 from handlers.activity_handler import ActivityHandler
 from cli.leader_display import leader_display
 
 from services.weather_service import WeatherService
+from services.camp_service import CampService
+from services.report_service import ReportService
 from rich.table import Table
 from rich.console import Console
 from rich import box
@@ -25,26 +25,13 @@ import pandas as pd
 
 class LeaderHandler(BaseHandler):
 
-    @staticmethod
-    def extract_summary(text):
-        text_low = text.lower()
-
-        activity_keywords = ["hike", "swim", "archery", "canoe", "craft", "walk", "game", "climb"]
-        achievement_keywords = ["completed", "award", "achievement", "improved", "great job"]
-        activities = [k for k in activity_keywords if k in text_low]
-        achievements = [k for k in achievement_keywords if k in text_low]
-
-        return {
-            "activities": activities,
-            "achievements": achievements,
-        }
     def __init__(self, user, context):
         super().__init__(user, context)
 
-        self.daily_report_manager = DailyReportManager()
-        self.statistics = StatisticsHandler()
         self.display = leader_display
         self.activity_handler = ActivityHandler(user, context)
+        self.camp_service = CampService(self.context.camp_manager)
+        self.report_service = ReportService(self.context.daily_report_manager, self.context.camp_manager, self.context.user_manager)
 
         self.commands = self.parent_commands + [
             {"name": "Select Camps to Supervise", "command": self.select_camps},
@@ -66,8 +53,7 @@ class LeaderHandler(BaseHandler):
     @cancellable
     def select_camps(self):
         camps = self.context.camp_manager.read_all()
-        my_camps = [c for c in camps if c.camp_leader == self.user.username]
-
+        
         self.display.display_camp_selection(camps, self.user.username)
 
         while True:
@@ -89,27 +75,16 @@ class LeaderHandler(BaseHandler):
                     console_manager.print_error(f"Camp already supervised by {camp.camp_leader}. Please select another.")
                 continue
 
-            if self._conflict_with_existing(camp, my_camps):
-                console_manager.print_error("Date conflict detected with your existing camps. Please select another.")
+            success, message = self.camp_service.assign_leader(camp.name, self.user.username)
+            
+            if success:
+                console_manager.print_success(message)
+                self.context.audit_log_manager.log_event(self.user.username, "Supervise Camp", f"Started supervising {camp.name}")
+                wait_for_enter()
+                break
+            else:
+                console_manager.print_error(message)
                 continue
-
-            camp.camp_leader = self.user.username
-            self.context.camp_manager.update(camp)
-
-            console_manager.print_success(f"You are now supervising {camp.name}.")
-            self.context.audit_log_manager.log_event(self.user.username, "Supervise Camp", f"Started supervising {camp.name}")
-            wait_for_enter()
-            break
-
-    def _conflict_with_existing(self, new, existing):
-        ns = datetime.strptime(str(new.start_date), "%Y-%m-%d").date()
-        ne = datetime.strptime(str(new.end_date), "%Y-%m-%d").date()
-        for c in existing:
-            s = datetime.strptime(str(c.start_date), "%Y-%m-%d").date()
-            e = datetime.strptime(str(c.end_date), "%Y-%m-%d").date()
-            if ns <= e and ne >= s:
-                return True
-        return False
 
 
     @cancellable
@@ -282,20 +257,12 @@ class LeaderHandler(BaseHandler):
         text = get_input("Enter report text(please include any achievements or key activities): ")
         daily_participation = get_positive_int("How many campers participated today? ")
 
-        summary = LeaderHandler.extract_summary(text)
-
-        today_str = datetime.now().date().isoformat()
-        todays_activities = [
-            act.get('name') for act in camp.activities 
-            if act.get('date') == today_str
-        ]
-
-        injury_flag = get_input("Any injuries today? (y/n): ")
+        injury_flag = get_input("Any injuries today? (y/n): ").lower() == 'y'
 
         injured_count = 0
         details = ""
 
-        if injury_flag == "y":
+        if injury_flag:
             injured_count = get_positive_int("How many injured? ")
             details = get_input("Describe the incident: ")
             food_used = get_positive_int("Enter food used today: ")
@@ -306,22 +273,20 @@ class LeaderHandler(BaseHandler):
             except Exception as e:
                 console_manager.print_error(f"Could not save food usage: {e}")
 
-        report = {
-            "id": str(uuid.uuid4()),
-            "camp_id": camp.camp_id,
-            "leader_username": self.user.username,
-            "date": datetime.now().date().isoformat(),
-            "text": text,
-            "daily_participation": daily_participation,
-            "injury": injury_flag,
-            "injured_count": injured_count,
-            "incident_details": details,
-            "activities": todays_activities,
-            "achievements": summary["achievements"],
-        }
-
-        self.daily_report_manager.add_report(report)
-        console_manager.print_success("Report saved.")
+        success, message = self.report_service.create_report(
+            camp.name, 
+            self.user.username, 
+            text, 
+            daily_participation, 
+            injury_flag, 
+            injured_count, 
+            details
+        )
+        
+        if success:
+            console_manager.print_success(message)
+        else:
+            console_manager.print_error(message)
         wait_for_enter()
 
 
@@ -338,16 +303,11 @@ class LeaderHandler(BaseHandler):
         if not camp:
             return
 
-        reports = [
-            r for r in self.daily_report_manager.read_all()
-            if r["camp_id"] == camp.camp_id
-        ]
+        reports = self.report_service.get_reports_for_camp(camp.camp_id)
 
         if not reports:
             console_manager.print_info("No reports available.")
             return
-
-        reports.sort(key=lambda r: r["date"], reverse=True)
 
         self.display.display_daily_reports_list(reports)
         wait_for_enter()
@@ -366,10 +326,7 @@ class LeaderHandler(BaseHandler):
         if not camp:
             return
 
-        reports = [
-            r for r in self.daily_report_manager.read_all()
-            if r["camp_id"] == camp.camp_id
-        ]
+        reports = self.report_service.get_reports_for_camp(camp.camp_id)
 
         if not reports:
             console_manager.print_error("No reports to delete.")
@@ -385,11 +342,11 @@ class LeaderHandler(BaseHandler):
             console_manager.print_error("Invalid selection.")
             return
 
-        all_reports = self.daily_report_manager.read_all()
-        all_reports = [x for x in all_reports if x["id"] != r["id"]]
-        self.daily_report_manager.save_all(all_reports)
-
-        console_manager.print_success("Report deleted.")
+        success, message = self.report_service.delete_report(r["id"])
+        if success:
+            console_manager.print_success(message)
+        else:
+            console_manager.print_error(message)
         wait_for_enter()
 
 
@@ -404,38 +361,25 @@ class LeaderHandler(BaseHandler):
             return
 
         stats_data = []
-        all_reports = self.daily_report_manager.read_all()  
         total_earnings = 0
         
         for camp in my_camps:
-            total_participants = self.statistics.get_total_participants(camp)
+            stats = self.report_service.get_camp_statistics(camp, self.user.username)
             
-            if not camp.has_camp_started():
-                avg_rate_str = "N/A"
-                earnings_str = "N/A"
-                earnings = 0
-            else:
-                avg_rate = self.statistics.get_average_participation_rate(camp)  
-                avg_rate_str = f"{avg_rate * 100:.1f}%" if avg_rate > 0 else "0%"
-                earnings = self.statistics.get_earnings(self.user.username, camp)
-                earnings_str = f"£{earnings}"
-
-            food_usage = self.statistics.get_food_usage(camp)
-            camp_reports = [r for r in all_reports if r["camp_id"] == camp.camp_id]
-            incident_count = sum(int(r.get("injured_count", 0)) for r in camp_reports)
-            activity_count = sum(len(r.get("activities", [])) for r in camp_reports)
-            achievement_count = sum(len(r.get("achievements", [])) for r in camp_reports)
+            total_earnings += stats["earnings"]
             
-            total_earnings += earnings
+            # Format for display
+            participation_str = f"{stats['participation_rate'] * 100:.1f}%" if stats['participation_rate'] > 0 else "0%"
+            earnings_str = f"£{stats['earnings']}" if stats['earnings'] > 0 else "N/A"
 
             stats_data.append({
-                "camp_name": camp.name,
-                "campers": str(total_participants),
-                "participation": avg_rate_str,
-                "food_used": str(food_usage),
-                "incidents": str(incident_count),
-                "activities": str(activity_count),
-                "achievements": str(achievement_count),
+                "camp_name": stats["camp_name"],
+                "campers": str(stats["campers"]),
+                "participation": participation_str,
+                "food_used": str(stats["food_used"]),
+                "incidents": str(stats["incidents"]),
+                "activities": str(stats["activities"]),
+                "achievements": str(stats["achievements"]),
                 "earnings": earnings_str
             })
 

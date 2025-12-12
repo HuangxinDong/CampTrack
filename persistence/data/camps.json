@@ -439,5 +439,21 @@
         "food_usage": {},
         "equipment": [],
         "activities": []
+    },
+    {
+        "camp_id": "ab6e6ff7-9974-464a-b711-61acca54d7f3",
+        "name": "New Camp",
+        "location": "Edinburgh",
+        "camp_type": "Adventure",
+        "start_date": "2026-10-01",
+        "end_date": "2026-10-07",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 100,
+        "current_food_stock": 100,
+        "food_usage": {},
+        "equipment": [],
+        "activities": []
     }
 ]
