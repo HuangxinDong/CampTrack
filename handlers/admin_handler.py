@@ -4,7 +4,7 @@ from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.console_manager import console_manager
 from models.announcement import Announcement
 from persistence.dao.system_notification_manager import SystemNotificationManager
-from views import display_user_table
+from cli.view_admin import display_user_table
 
 
 

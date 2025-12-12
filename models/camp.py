@@ -169,3 +169,27 @@ class Camp:
         camp.current_food_stock = data.get("current_food_stock", camp.initial_food_stock)
         camp.food_usage = data.get("food_usage", {})
         return camp
+    def get_schedule_status(self) -> str:
+        """
+        Calculates the schedule status based on activity coverage.
+        Returns:
+            str: "Empty", "Partial", or "Full"
+        """
+        if not self.activities:
+            return "Empty"
+
+        all_dates = set(self.get_date_range())
+        
+        # activities is list of dicts or objects depending on state, handle both safely
+        covered_dates = set()
+        for act in self.activities:
+            d = act.get("date") if isinstance(act, dict) else str(act.date)
+            covered_dates.add(d)
+        
+        if not covered_dates:
+            return "Empty"
+            
+        if all_dates.issubset(covered_dates):
+            return "Full"
+            
+        return "Partial"

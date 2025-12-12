@@ -8,6 +8,7 @@ from persistence.dao.message_manager import MessageManager
 from persistence.dao.announcement_manager import AnnouncementManager
 from persistence.dao.system_notification_manager import SystemNotificationManager
 from persistence.dao.audit_log_manager import AuditLogManager
+from persistence.dao.camper_manager import CamperManager
 
 from handlers.admin_handler import AdminHandler
 from handlers.coordinator_handler import CoordinatorHandler
@@ -38,6 +39,7 @@ def main():
     announcement_manager = AnnouncementManager()
     system_notification_manager = SystemNotificationManager()
     audit_log_manager = AuditLogManager()
+    camper_manager = CamperManager()
 
     # Startup Banner
     from cli.startup_display import startup_display
@@ -57,7 +59,8 @@ def main():
         message_manager, 
         announcement_manager, 
         system_notification_manager,
-        audit_log_manager
+        audit_log_manager,
+        camper_manager
     )
 
     # Create handler for this user's role

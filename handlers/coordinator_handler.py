@@ -15,6 +15,8 @@ class CoordinatorHandler(BaseHandler):
     def __init__(self, user, context):
         super().__init__(user, context)
 
+        self.display = coordinator_display
+
         self.commands = self.parent_commands + [
             {"name": "Create Camp", "command": self.create_camp},
             {"name": "Edit Camp", "command": self.edit_camp_resources},
@@ -362,47 +364,13 @@ class CoordinatorHandler(BaseHandler):
         ]
 
     @cancellable
+    @cancellable
     def view_dashboard(self):
-        import pandas as pd
-
-        camps = self.context.camp_manager.read_all()
-        if not camps:
-            console_manager.print_error("No camps to display.")
-            return
+        # Phase 9C: Fetch Pandas-powered Overview
+        overview_data = self.context.camp_manager.get_camp_overview_stats()
         
-        data = []
-        for c in camps:
-            data.append({
-                "Camp Name": c.name,
-                "Leader": c.camp_leader if c.camp_leader else "[Unassigned]", 
-                "Campers": len(c.campers),
-                "Food Stock": getattr(c, 'current_food_stock', 0),
-                "Status": "Good"
-
-
-            })
-
-        df = pd.DataFrame(data)
-
-        df.loc[df['Leader'] == "[Unassigned]", 'Status'] = "[bold red]Need Leader[/bold red]"
-
-        @staticmethod
-        def get_status(row):
-            statuses = []
-            if row['Leader'] == "[Unassigned]":
-                statuses.append("[bold red]Need Leader[/bold red]")
-            if row['Food Stock'] < 10:
-                statuses.append("[bold red]Low Food[/bold red]")
-
-            return ", ".join(statuses) if statuses else "[green]Good[/green]"
+        # Phase 9B: Fetch Global Engagement Metrics
+        metrics = self.context.camp_manager.get_global_activity_engagement()
         
-        df['Status'] = df.apply(get_status, axis=1)
-
-
-        df['Campers'] = df['Campers'].astype(str)
-        df['Food Stock'] = df['Food Stock'].astype(str)
-
-        console_manager.print_table("CAMP DASHBOARD", df.columns.tolist(), df.values.tolist())
-
-        print(f"\nTotal Camps: {len(df)}")
+        self.display.display_full_dashboard(overview_data, engagement_metrics=metrics)
         wait_for_enter()

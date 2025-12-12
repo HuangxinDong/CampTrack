@@ -1,6 +1,4 @@
 from datetime import datetime
-import csv
-import os
 import uuid
 import json
 
@@ -16,13 +14,8 @@ from models.camper import Camper
 from models.camp import Camp
 from handlers.statistics_handler import StatisticsHandler
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-
-console = Console()
-
-ACTIVITIES_FILE = os.path.join("persistence", "data", "activities.json")
+from handlers.activity_handler import ActivityHandler
+from cli.leader_display import leader_display
 
 class LeaderHandler(BaseHandler):
 
@@ -44,16 +37,19 @@ class LeaderHandler(BaseHandler):
 
         self.daily_report_manager = DailyReportManager()
         self.statistics = StatisticsHandler()
+        self.display = leader_display
+        self.activity_handler = ActivityHandler(user, context)
 
         self.commands = self.parent_commands + [
             {"name": "Select Camps to Supervise", "command": self.select_camps},
             {"name": "Edit Camp Food Settings", "command": self.edit_camp},
-            {"name": "Assign Campers from CSV", "command": self.import_campers_from_csv},
+            {"name": "Assign Campers from CSV", "command": self.assign_campers_ui},
             {"name": "View Campers", "command": self.view_campers},
             {"name": "Search Campers for Emergency Details", "command": self.search_camper},
             {"name": "Manage Activities", "command": self.activities_menu},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
-            {"name": "View My Statistics", "command": self.show_statistics}
+            {"name": "View My Statistics", "command": self.show_statistics},
+            {"name": "View Camp Schedules", "command": self.view_camp_schedules}
         ]
 
         self.main_commands = self.commands.copy()
@@ -64,32 +60,7 @@ class LeaderHandler(BaseHandler):
         camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
-        console.print(Panel("Select a Camp to Supervise", style="cyan"))
-        
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("#", style="dim", width=4)
-        table.add_column("Camp Name")
-        table.add_column("Location")
-        table.add_column("Dates")
-        table.add_column("Current Leader")
-        table.add_column("Status")
-
-        for i, camp in enumerate(camps, 1):
-            leader = camp.camp_leader
-            if not leader:
-                leader_display = "[dim]None[/dim]"
-                status = "[green]Available[/green]"
-            elif leader == self.user.username:
-                leader_display = "[bold green]You[/bold green]"
-                status = "[blue]Already Supervising[/blue]"
-            else:
-                leader_display = f"[red]{leader}[/red]"
-                status = "[red]Taken[/red]"
-            
-            dates = f"{camp.start_date} to {camp.end_date}"
-            table.add_row(str(i), camp.name, camp.location, dates, leader_display, status)
-
-        console.print(table)
+        self.display.display_camp_selection(camps, self.user.username)
 
         while True:
             choice = get_input("Enter camp number to supervise: ")
@@ -139,7 +110,7 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You don't supervise any camps.")
+            self.display.display_error("You don't supervise any camps.")
             return
 
         camp = self._select_camp(my_camps)
@@ -157,103 +128,39 @@ class LeaderHandler(BaseHandler):
         num_campers = len(camp.campers)
         days = (camp.end_date - camp.start_date).days + 1
 
-        console.print(
-            f"\n[bold]Total Food Required for {camp.name}:[/bold] {total_required} units\n"
-            f"  ({num_campers} campers x {days} days x {new_food} food)"
-        )
+        self.display.display_camp_food_update(camp, total_required, num_campers, days, new_food)
         wait_for_enter()
 
 
     @cancellable
-    def import_campers_from_csv(self):
+    def assign_campers_ui(self):
         camps = self.context.camp_manager.read_all()
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You don't supervise any camps.")
+            self.display.display_error("You don't supervise any camps.")
             return
 
         camp = self._select_camp(my_camps)
         if not camp:
             return
 
-        folder_path = os.path.join("persistence", "data", "campers")
-        csv_files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
-
-        if not csv_files:
-            console_manager.print_error("No CSV files found.")
+        csv_files = self.context.camper_manager.get_available_csv_files()
+        
+        # UI: Get selection
+        csv_file = self.display.select_csv_file(csv_files)
+        if not csv_file:
             return
 
-        console.print(Panel("Available Camper CSV Files", style="cyan"))
-        for i, f in enumerate(csv_files, 1):
-            console.print(f"{i}. {f}")
-
-        choice = get_input("Choose CSV file number: ")
-
         try:
-            csv_file = csv_files[int(choice) - 1]
-        except:
-            console_manager.print_error("Invalid selection.")
-            return
-
-        csv_path = os.path.join(folder_path, csv_file)
-
-        all_camps = self.context.camp_manager.read_all()
-        conflicting_camps = []
-        for other_camp in all_camps:
-            if other_camp.camp_id == camp.camp_id:
-                continue
-            if Camp.dates_overlap(camp.start_date, camp.end_date, other_camp.start_date, other_camp.end_date):
-                conflicting_camps.append(other_camp)
-
-        try:
-            with open(csv_path, newline="", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                imported_count = 0
-                skipped_count = 0
-                
-                for row in reader:
-                    name = row.get("name")
-                    if not name:
-                        continue
-
-                    # Check if already in current camp
-                    if any(c.name.lower() == name.lower() for c in camp.campers):
-                        console_manager.print_warning(f"Skipping '{name}': Already registered in this camp.")
-                        skipped_count += 1
-                        continue
-                        
-                    # Check conflict
-                    conflict_found = False
-                    for other_camp in conflicting_camps:
-                        if any(c.name.lower() == name.lower() for c in other_camp.campers):
-                            console_manager.print_warning(f"Skipping '{name}': Already registered in overlapping camp '{other_camp.name}'.")
-                            conflict_found = True
-                            break
-                    
-                    if conflict_found:
-                        skipped_count += 1
-                        continue
-
-                    age_raw = row.get("age")
-                    age = int(age_raw) if age_raw and age_raw.isdigit() else 0
-
-                    camp.campers.append(
-                        Camper(
-                            name=name,
-                            age=age,
-                            contact=row.get("contact") or "",
-                            medical_info=row.get("medical_info") or ""
-                        )
-                    )
-                    imported_count += 1
-
-            self.context.camp_manager.update(camp)
-            console_manager.print_success(f"Imported {imported_count} campers into {camp.name}. (Skipped {skipped_count} conflicts)")
-            wait_for_enter()
+            # Data: Perform import (validation is handled inside)
+            results = self.context.camper_manager.import_campers_from_csv(camp, csv_file, self.context)
+            
+            # UI: Show results
+            self.display.display_import_results(results, camp.name)
 
         except Exception as e:
-            console_manager.print_error(f"Error reading CSV: {e}")
+            self.display.display_error(f"Unexpected Error during import: {e}")
             wait_for_enter()
 
 
@@ -263,23 +170,14 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You supervise no camps.")
+            self.display.display_error("You supervise no camps.")
             return
 
         camp = self._select_camp(my_camps)
         if not camp:
             return
 
-        table_lines = [f"[bold]{camp.name} Campers[/bold]"]
-        table_lines.append("─" * 40)
-
-        if not camp.campers:
-            table_lines.append("No campers yet.")
-        else:
-            for c in camp.campers:
-                table_lines.append(f"{c.name} (Age {c.age}) — {c.contact}")
-
-        console.print(Panel("\n".join(table_lines), style="cyan"))
+        self.display.display_campers(camp)
         wait_for_enter()
 
     @cancellable
@@ -289,7 +187,7 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
         
         if not my_camps:
-            console_manager.print_error("You don't supervise any camps.")
+            self.display.display_error("You don't supervise any camps.")
             return
 
         while True:
@@ -305,18 +203,9 @@ class LeaderHandler(BaseHandler):
                 console_manager.print_error(f"No campers found matching '{query}'. Please try again.")
                 continue
                 
-            table = Table(show_header=True, header_style="bold magenta")
-            table.add_column("#", style="dim", width=4)
-            table.add_column("Camp")
-            table.add_column("Name")
-            table.add_column("Contact")
+            self.display.display_camper_search_results(found)
             
-            for i, (camp_name, camper) in enumerate(found, 1):
-                table.add_row(str(i), camp_name, camper.name, camper.contact)
-                
-            console.print(table)
-            
-            console.print("[dim]Enter number to view Emergency/Medical Info, 's' to search again, or 'b' to back[/dim]")
+            console_manager.console.print("[dim]Enter number to view Emergency/Medical Info, 's' to search again, or 'b' to back[/dim]")
             choice = get_input("Choice (enter a number): ")
             
             if choice.lower() == 's':
@@ -328,14 +217,7 @@ class LeaderHandler(BaseHandler):
                 idx = int(choice) - 1
                 if 0 <= idx < len(found):
                     camp_name, camper = found[idx]
-                    console.print(Panel(f"""
-[bold]Emergency Details[/bold]
-[green]Name:[/green] {camper.name}
-[green]Camp:[/green] {camp_name}
-[green]Age:[/green] {camper.age}
-[green]Contact:[/green] {camper.contact}
-[yellow]Medical Info:[/yellow] {camper.medical_info or 'None'}
-""", style="red"))
+                    self.display.display_emergency_details(camper, camp_name)
                     wait_for_enter()
                     continue
             
@@ -344,12 +226,7 @@ class LeaderHandler(BaseHandler):
     @cancellable
     def daily_reports_menu(self):
         while True:
-            console.print(Panel("""
-[bold]Daily Reports[/bold]
-1. Create New Report
-2. View Reports
-3. Delete Report
-""", style="blue"))
+            self.display.display_daily_reports_menu()
 
             choice = get_input("Choose an option: ")
 
@@ -372,7 +249,7 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You supervise no camps.")
+            self.display.display_error("You supervise no camps.")
             return
 
         camp = self._select_camp(my_camps)
@@ -425,7 +302,7 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You supervise no camps.")
+            self.display.display_error("You supervise no camps.")
             return
 
         camp = self._select_camp(my_camps)
@@ -443,25 +320,7 @@ class LeaderHandler(BaseHandler):
 
         reports.sort(key=lambda r: r["date"], reverse=True)
 
-        from rich.table import Table
-
-        table = Table(show_header=True, header_style="bold cyan")
-        table.add_column("Date", width=12)
-        table.add_column("Summary", width=40)
-        table.add_column("Activities")
-        table.add_column("Incidents")
-        table.add_column("Achievements")
-
-        for r in reports:
-            table.add_row(
-                r["date"],
-                r["text"][:40] + "",
-                ", ".join(r.get("activities", [])),
-                ", ".join(r.get("incidents", [])),
-                ", ".join(r.get("achievements", [])),
-            )
-
-        console.print(table)
+        self.display.display_daily_reports_list(reports)
         wait_for_enter()
 
 
@@ -471,7 +330,7 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console_manager.print_error("You supervise no camps.")
+            self.display.display_error("You supervise no camps.")
             return
 
         camp = self._select_camp(my_camps)
@@ -487,9 +346,7 @@ class LeaderHandler(BaseHandler):
             console_manager.print_error("No reports to delete.")
             return
 
-        console.print(Panel("Reports:", style="blue"))
-        for i, r in enumerate(reports, 1):
-            console.print(f"{i}. {r['date']} — {r['text'][:40]}")
+        self.display.display_reports_for_deletion(reports)
 
         choice = get_input("Choose report number to delete: ")
 
@@ -513,25 +370,14 @@ class LeaderHandler(BaseHandler):
         my_camps = [c for c in camps if c.camp_leader == self.user.username]
 
         if not my_camps:
-            console.print("You are not supervising any camps.", style="yellow")
+            console_manager.print_warning("You are not supervising any camps.")
             wait_for_enter()
             return
 
-        console.print(Panel("Statistics for Your Camps", style="cyan"))
-
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Camp")
-        table.add_column("Campers", justify="center")
-        table.add_column("Avg Participation Rate", justify="center")
-        table.add_column("Food Used", justify="center")
-        table.add_column("Incidents", justify="center")
-        table.add_column("Activities", justify="center")
-        table.add_column("Achievements", justify="center")
-        table.add_column("Earnings", justify="center")
-
-        total_earnings = 0
+        stats_data = []
         all_reports = self.daily_report_manager.read_all()  
-
+        total_earnings = 0
+        
         for camp in my_camps:
             total_participants = self.statistics.get_total_participants(camp)
             avg_rate = self.statistics.get_average_participation_rate(camp)  
@@ -544,34 +390,24 @@ class LeaderHandler(BaseHandler):
             earnings = self.statistics.get_earnings(self.user.username, camp)
             total_earnings += earnings
 
-            table.add_row(
-                camp.name,
-                str(total_participants),
-                avg_rate_str,
-                str(food_usage),
-                str(incident_count),
-                str(activity_count),
-                str(achievement_count),
-                f"£{earnings}",
-            )
+            stats_data.append({
+                "camp_name": camp.name,
+                "campers": str(total_participants),
+                "participation": avg_rate_str,
+                "food_used": str(food_usage),
+                "incidents": str(incident_count),
+                "activities": str(activity_count),
+                "achievements": str(achievement_count),
+                "earnings": f"£{earnings}"
+            })
 
-        console.print(table)
-
-
-        console.print(
-            Panel(
-                f"[bold green]Total Earnings Across All Camps: £{total_earnings}[/bold green]",
-                style="green"
-            )
-        )
+        self.display.display_statistics(stats_data, total_earnings)
         wait_for_enter()
 
 
 
     def _select_camp(self, camps):
-        console.print(Panel("Select Camp", style="cyan"))
-        for i, c in enumerate(camps, 1):
-            console.print(f"{i}. {c.name} ({c.location})")
+        self.display.display_camp_selection_simple(camps)
 
         while True:
             choice = get_input("Choose camp number: ")
@@ -584,167 +420,10 @@ class LeaderHandler(BaseHandler):
             except ValueError:
                 console_manager.print_error("Invalid input. Please enter a number.")
 
-    # ACTIVITES
-
-    def _load_activity_library(self):
-        if os.path.exists(ACTIVITIES_FILE):
-            with open(ACTIVITIES_FILE, "r") as f:
-                return json.load(f)
-        return []
-
-    def _save_activity_library(self, activities):
-        with open(ACTIVITIES_FILE, "w") as f:
-            json.dump(activities, f, indent=4)
-
     @cancellable
     def activities_menu(self):
-        while True:
-            console.print(Panel("""
-[bold]Activity Management[/bold]
-1. Add Activities to Camp
-2. View Camp Activities
-3. Add New Activity to Library
-4. Search Activity Library
-""", style="blue"))
-
-            choice = get_input("Choose an option: ")
-
-            if choice == "1":
-                self.add_activities_to_camp()
-            elif choice == "2":
-                self.view_camp_activities()
-            elif choice == "3":
-                self.add_activity_to_library()
-            elif choice == "4":
-                self.search_activity()
-            elif choice.lower() == "b":
-                break
-            else:
-                console_manager.print_error("Invalid choice.")
+        self.activity_handler.activities_menu()
 
     @cancellable
-    def search_activity(self):
-        """Search for an activity in the library."""
-        activity_library = self._load_activity_library()
-        
-        if not activity_library:
-            console_manager.print_error("Activity library is empty.")
-            return
-            
-        query = get_input("Enter activity name (or part of name): ").lower()
-        
-        matches = [a for a in activity_library if query in a.lower()]
-        
-        if not matches:
-            console_manager.print_info(f"No activities found matching '{query}'.")
-            wait_for_enter()
-            return
-            
-        console.print(Panel(f"Found {len(matches)} activities:", style="blue"))
-        for a in matches:
-            console.print(f"• {a}")
-            
-        wait_for_enter()
-
-    @cancellable
-    def add_activities_to_camp(self):
-        camps = self.context.camp_manager.read_all()
-        my_camps = [c for c in camps if c.camp_leader == self.user.username]
-
-        if not my_camps:
-            console_manager.print_error("You don't supervise any camps.")
-            return
-
-        camp = self._select_camp(my_camps)
-        if not camp:
-            return
-
-        if not camp.campers:
-            console_manager.print_error("This camp has no campers yet. Add campers first.")
-            return
-
-        activity_library = self._load_activity_library()
-
-        if not activity_library:
-            console_manager.print_error("No activities in library. Add some first.")
-            return
-        
-
-        activity_index = get_index_from_options("Available Activities", activity_library)
-
-        activity_name = activity_library[activity_index]
-
-        # Choose date from dates in camp
-
-        camp_dates = camp.get_date_range()
-
-        date_index = get_index_from_options("Available Dates", camp_dates)
-
-        selected_date = camp_dates[date_index]
-
-        session_names = [s.name for s in Session]
-        session_index = get_index_from_options("Sessions", session_names)
-
-        # If activity already exists on that day and at that session, let the user know and return
-
-        if added:
-            self.context.camp_manager.update(camp)
-            camper_names = ", ".join([c.name for c in camp.campers])
-            console_manager.print_success(
-                f"Added {', '.join(added)} to {camp.name}. "
-                f"All {len(camp.campers)} campers ({camper_names}) assigned."
-            )
-            wait_for_enter()
-
-    @cancellable
-    def view_camp_activities(self):
-        camps = self.context.camp_manager.read_all()
-        my_camps = [c for c in camps if c.camp_leader == self.user.username]
-
-        if not my_camps:
-            console_manager.print_error("You don't supervise any camps.")
-            return
-
-        camp = self._select_camp(my_camps)
-        if not camp:
-            return
-
-        if not camp.activities:
-            console_manager.print_error("No activities assigned to this camp yet.")
-            return
-
-        lines = [f"[bold]{camp.name} Activities[/bold]", "─" * 40]
-
-        for activity in camp.activities:
-            camper_count = len(activity.get("camper_ids", []))
-            lines.append(f"• {activity['name']} ({camper_count} campers)")
-
-        console.print(Panel("\n".join(lines), style="blue"))
-        wait_for_enter()
-
-    @cancellable
-    def add_activity_to_library(self):
-        activity_library = self._load_activity_library()
-
-        console.print(Panel("Current Activity Library", style="blue"))
-        if activity_library:
-            for i, a in enumerate(activity_library, 1):
-                console.print(f"{i}. {a}")
-        else:
-            console.print("[dim]No activities yet.[/dim]")
-
-        new_activity = get_input("Enter new activity name: ").strip()
-
-        if not new_activity:
-            console_manager.print_error("Activity name cannot be empty.")
-            return
-
-        if new_activity in activity_library:
-            console_manager.print_error("Activity already exists.")
-            return
-
-        activity_library.append(new_activity)
-        self._save_activity_library(activity_library)
-        console_manager.print_success(f"Added '{new_activity}' to activity library.")
-        wait_for_enter()
-
+    def view_camp_schedules(self):
+        self.activity_handler.view_weekly_schedule()

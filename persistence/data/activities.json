@@ -1,14 +1,17 @@
-[
-    "Hiking",
-    "Swimming",
-    "Archery",
-    "Campfire songs",
-    "Make smores",
-    "Arts and crafts",
-    "Nature walk",
-    "Canoeing",
-    "Rock climbing",
-    "Stargazing",
-    "Game night",
-    "Roller Skating"
-]
+{
+    "Archery": {
+        "is_indoor": false
+    },
+    "Swimming": {
+        "is_indoor": false
+    },
+    "Arts & Crafts": {
+        "is_indoor": true
+    },
+    "Night Hike": {
+        "is_indoor": false
+    },
+    "Cooking": {
+        "is_indoor": true
+    }
+}

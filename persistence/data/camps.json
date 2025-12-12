@@ -1,178 +1,243 @@
 [
     {
-        "camp_id": "48ee70b4-679f-4379-9ab0-dd9295c38016",
-        "name": "test for leader funtions",
-        "location": "test for leader functions",
-        "camp_type": "leader functions",
-        "start_date": "2025-12-01",
-        "end_date": "2025-12-31",
+        "camp_id": "5bf792dd-bbcb-43a5-b78c-7550b4b13ae7",
+        "name": "Camp Alpha",
+        "location": "Forest",
+        "camp_type": "Adventure",
+        "start_date": "2026-01-11",
+        "end_date": "2026-01-13",
         "camp_leader": "leader1",
         "campers": [
             {
-                "camper_id": "cf556079-2f00-4347-bff8-9b92de4179e5",
-                "name": "Alice",
-                "age": "12",
-                "contact": "1111",
-                "medical_info": "Peanut allergy"
-            },
-            {
-                "camper_id": "7f194cfb-9ced-40e5-a81b-45f58e55269f",
-                "name": "Bob",
-                "age": "10",
-                "contact": "2222",
+                "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                "name": "Alex",
+                "age": 12,
+                "contact": "Mom: 555-0101",
                 "medical_info": "None"
             },
             {
-                "camper_id": "1ea2f893-5888-4703-8216-f06bef6df626",
-                "name": "Charlie",
-                "age": "11",
-                "contact": "3333",
-                "medical_info": "Asthma"
+                "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                "name": "Sam",
+                "age": 13,
+                "contact": "Dad: 555-0102",
+                "medical_info": "Peanut Allergy"
+            },
+            {
+                "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                "name": "Jordan",
+                "age": 11,
+                "contact": "Guard: 555-0103",
+                "medical_info": "None"
             }
         ],
-        "food_per_camper_per_day": 10,
-        "initial_food_stock": 0,
-        "current_food_stock": 0,
+        "food_per_camper_per_day": 3,
+        "initial_food_stock": 100,
+        "current_food_stock": 100,
         "food_usage": {},
         "activities": [
             {
-                "name": "Make smores",
-                "camper_ids": [
-                    "cf556079-2f00-4347-bff8-9b92de4179e5",
-                    "7f194cfb-9ced-40e5-a81b-45f58e55269f",
-                    "1ea2f893-5888-4703-8216-f06bef6df626"
-                ]
+                "name": "Arts & Crafts",
+                "date": "2026-01-11",
+                "session": "Afternoon",
+                "camper_ids": []
+            },
+            {
+                "name": "Night Hike",
+                "date": "2026-01-11",
+                "session": "Evening",
+                "camper_ids": []
+            },
+            {
+                "name": "Archery",
+                "date": "2026-01-11",
+                "session": "Morning",
+                "camper_ids": []
             }
         ]
     },
     {
-        "camp_id": "4e44c1cf-d9d1-423b-8690-6b31a5925aa5",
-        "name": "tester",
-        "location": "test",
-        "camp_type": "test",
-        "start_date": "2026-01-01",
-        "end_date": "2026-01-03",
+        "camp_id": "d67c74a9-8712-42b4-b456-1fbae659f681",
+        "name": "Camp Beta",
+        "location": "Lakeside",
+        "camp_type": "Relax",
+        "start_date": "2026-01-16",
+        "end_date": "2026-01-19",
         "camp_leader": "leader1",
         "campers": [
             {
-                "camper_id": "6d518aca-d2e2-4276-bb5c-b875706834ea",
+                "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                "name": "Alex",
+                "age": 12,
+                "contact": "Mom: 555-0101",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                "name": "Sam",
+                "age": 13,
+                "contact": "Dad: 555-0102",
+                "medical_info": "Peanut Allergy"
+            },
+            {
+                "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                "name": "Jordan",
+                "age": 11,
+                "contact": "Guard: 555-0103",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                "name": "Alex",
+                "age": 12,
+                "contact": "Mom: 555-0101",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                "name": "Sam",
+                "age": 13,
+                "contact": "Dad: 555-0102",
+                "medical_info": "Peanut Allergy"
+            },
+            {
+                "camper_id": "f63cd6ac-d6b6-494b-9f5f-39ba02fe9465",
                 "name": "Alice",
                 "age": 12,
                 "contact": "1111",
                 "medical_info": "Peanut allergy"
             },
             {
-                "camper_id": "d3be19b6-9071-4acf-ace0-04fecc074ad6",
+                "camper_id": "2d8bdf9a-1ccc-4603-ae0b-03debf1d81c5",
                 "name": "Bob",
                 "age": 10,
                 "contact": "2222",
                 "medical_info": "None"
             },
             {
-                "camper_id": "757fa5c7-0924-4571-907f-670283fb5999",
+                "camper_id": "ce6a3145-68da-4587-ab67-cc585ae03c3e",
                 "name": "Charlie",
+                "age": 11,
+                "contact": "3333",
+                "medical_info": "Asthma"
+            },
+            {
+                "camper_id": "0a03c22a-d569-4f16-8d48-697e7c86b87d",
+                "name": "Daniel",
+                "age": 12,
+                "contact": "1111",
+                "medical_info": "Peanut allergy"
+            },
+            {
+                "camper_id": "25103034-8c70-45c5-97a3-a83e8415ac26",
+                "name": "Ella",
+                "age": 10,
+                "contact": "2222",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "297d206f-e62e-47e8-b26a-9e0e9832080f",
+                "name": "Fiona",
                 "age": 11,
                 "contact": "3333",
                 "medical_info": "Asthma"
             }
         ],
-        "food_per_camper_per_day": 2,
-        "initial_food_stock": 50,
-        "current_food_stock": 50,
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 0,
+        "current_food_stock": 0,
         "food_usage": {},
         "activities": [
             {
                 "name": "Swimming",
+                "date": "2026-01-16",
+                "session": "Morning",
+                "camper_ids": []
+            },
+            {
+                "name": "Cooking",
+                "date": "2026-01-18",
+                "session": "Evening",
                 "camper_ids": [
-                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
-                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
-                    "757fa5c7-0924-4571-907f-670283fb5999"
+                    "Alex"
                 ]
             },
             {
                 "name": "Archery",
-                "camper_ids": [
-                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
-                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
-                    "757fa5c7-0924-4571-907f-670283fb5999"
-                ]
-            },
-            {
-                "name": "Campfire songs",
-                "camper_ids": [
-                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
-                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
-                    "757fa5c7-0924-4571-907f-670283fb5999"
-                ]
-            },
-            {
-                "name": "Make smores",
-                "camper_ids": [
-                    "6d518aca-d2e2-4276-bb5c-b875706834ea",
-                    "d3be19b6-9071-4acf-ace0-04fecc074ad6",
-                    "757fa5c7-0924-4571-907f-670283fb5999"
-                ]
+                "date": "2026-01-17",
+                "session": "Morning",
+                "camper_ids": []
             }
         ]
     },
     {
-        "camp_id": "6ed36cc7-5f8b-4c56-81ab-0c710bff1132",
-        "name": "test22",
-        "location": "test22",
-        "camp_type": "test22",
-        "start_date": "2026-01-02",
-        "end_date": "2026-01-04",
-        "camp_leader": "leader2",
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 50,
-        "current_food_stock": 50,
-        "food_usage": {},
-        "activities": []
-    },
-    {
-        "camp_id": "b060e273-4096-437e-9475-06923f738b8c",
-        "name": "hello",
-        "location": "hi",
-        "camp_type": "bye",
-        "start_date": "2025-12-16",
-        "end_date": "2025-12-17",
-        "camp_leader": null,
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 60,
-        "current_food_stock": 60,
-        "food_usage": {},
-        "activities": []
-    },
-    {
-        "camp_id": "3e616f3c-8974-4d44-9bec-6254192f8526",
-        "name": "bonfire night",
-        "location": "the woods",
-        "camp_type": "sleepaway",
-        "start_date": "2025-12-16",
-        "end_date": "2025-12-17",
+        "camp_id": "25076af9-1071-46cb-8662-e3cc3ddc0ff0",
+        "name": "Camp Gamma",
+        "location": "Mountain",
+        "camp_type": "Hiking",
+        "start_date": "2026-01-21",
+        "end_date": "2026-01-22",
         "camp_leader": "leader1",
-        "campers": [],
+        "campers": [
+            {
+                "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                "name": "Alex",
+                "age": 12,
+                "contact": "Mom: 555-0101",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                "name": "Sam",
+                "age": 13,
+                "contact": "Dad: 555-0102",
+                "medical_info": "Peanut Allergy"
+            },
+            {
+                "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                "name": "Jordan",
+                "age": 11,
+                "contact": "Guard: 555-0103",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                "name": "Alex",
+                "age": 12,
+                "contact": "Mom: 555-0101",
+                "medical_info": "None"
+            },
+            {
+                "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                "name": "Sam",
+                "age": 13,
+                "contact": "Dad: 555-0102",
+                "medical_info": "Peanut Allergy"
+            },
+            {
+                "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                "name": "Jordan",
+                "age": 11,
+                "contact": "Guard: 555-0103",
+                "medical_info": "None"
+            }
+        ],
         "food_per_camper_per_day": 1,
-        "initial_food_stock": 80,
-        "current_food_stock": 80,
+        "initial_food_stock": 0,
+        "current_food_stock": 0,
         "food_usage": {},
-        "activities": []
-    },
-    {
-        "camp_id": "c683262e-ecfd-4ed1-8265-e0bfe7890cef",
-        "name": "whfiwrf",
-        "location": "wfwrf",
-        "camp_type": "eefwehf",
-        "start_date": "2025-12-16",
-        "end_date": "2025-12-17",
-        "camp_leader": null,
-        "campers": [],
-        "food_per_camper_per_day": 1,
-        "initial_food_stock": 50,
-        "current_food_stock": 50,
-        "food_usage": {},
-        "activities": []
+        "activities": [
+            {
+                "name": "Archery",
+                "date": "2026-01-21",
+                "session": "Morning",
+                "camper_ids": []
+            },
+            {
+                "name": "Swimming",
+                "date": "2026-01-22",
+                "session": "Afternoon",
+                "camper_ids": []
+            }
+        ]
     }
 ]
