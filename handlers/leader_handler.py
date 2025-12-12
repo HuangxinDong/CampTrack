@@ -57,7 +57,6 @@ class LeaderHandler(BaseHandler):
             {"name": "Daily Reports", "command": self.daily_reports_menu},
             {"name": "View My Statistics", "command": self.show_statistics},
             {"name": "View Equipment", "command": self.view_equipment},
-            {"name": "View Camp Schedules", "command": self.view_camp_schedules},
             {"name": "View Weather Forecast", "command": self.view_weather_forecast},
         ]
 
