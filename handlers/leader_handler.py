@@ -5,10 +5,12 @@ import uuid
 import json
 
 from handlers.base_handler import BaseHandler
+from cli.prompts import get_index_from_options, get_positive_int
 from cli.input_utils import get_input, cancellable, wait_for_enter
 from cli.prompts import get_positive_int
 from cli.console_manager import console_manager
 
+from models.activity import Activity, Session
 from persistence.dao.daily_report_manager import DailyReportManager
 from models.camper import Camper
 from handlers.statistics_handler import StatisticsHandler
@@ -219,7 +221,6 @@ class LeaderHandler(BaseHandler):
 1. Create New Report
 2. View Reports
 3. Delete Report
-b. Back
 """, style="blue"))
 
             choice = get_input("Choose an option: ")
@@ -509,39 +510,24 @@ b. Back
         if not activity_library:
             console_manager.print_error("No activities in library. Add some first.")
             return
+        
 
-        console.print(Panel("Available Activities", style="blue"))
-        for i, activity in enumerate(activity_library, 1):
-            already_added = activity in [a["name"] for a in camp.activities]
-            status = " [dim](already added)[/dim]" if already_added else ""
-            console.print(f"{i}. {activity}{status}")
+        activity_index = get_index_from_options("Available Activities", activity_library)
 
-        choice = get_input("Enter activity numbers (comma-separated): ")
+        activity_name = activity_library[activity_index]
 
-        try:
-            picks = [int(x.strip()) - 1 for x in choice.split(",")]
-        except:
-            console_manager.print_error("Invalid input.")
-            return
+        # Choose date from dates in camp
 
-        added = []
-        camper_ids = [c.camper_id for c in camp.campers]
+        camp_dates = camp.get_date_range()
 
-        for index in picks:
-            if not (0 <= index < len(activity_library)):
-                continue
+        date_index = get_index_from_options("Available Dates", camp_dates)
 
-            activity_name = activity_library[index]
+        selected_date = camp_dates[date_index]
 
-            if activity_name in [a["name"] for a in camp.activities]:
-                console.print(f"[yellow]{activity_name} already added.[/yellow]")
-                continue
+        session_names = [s.name for s in Session]
+        session_index = get_index_from_options("Sessions", session_names)
 
-            camp.activities.append({
-                "name": activity_name,
-                "camper_ids": camper_ids
-            })
-            added.append(activity_name)
+        # If activity already exists on that day and at that session, let the user know and return
 
         if added:
             self.context.camp_manager.update(camp)

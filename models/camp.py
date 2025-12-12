@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from models.camper import Camper
 
 class Camp:
@@ -64,6 +64,10 @@ class Camp:
     def has_camp_finished(self):
         now = datetime.now().date()
         return now > self.end_date
+    
+    def get_date_range(self):
+        delta = self.end_date - self.start_date
+        return [(self.start_date + timedelta(days=i)).isoformat() for i in range(delta.days + 1)]
     
 
     def can_edit_dates(self) -> tuple[bool, str]:

@@ -1,6 +1,8 @@
+from .console_manager import console_manager
+from cli.input_utils import get_input, cancellable
+
+
 def get_positive_int(prompt: str) -> int:
-    from .input_utils import get_input
-    from .console_manager import console_manager
     while True:
         value_str = get_input(prompt)
         try:
@@ -56,3 +58,27 @@ def get_valid_date_range(
 
         except ValueError:
             console_manager.print_error("Invalid date format. Please use yyyy-mm-dd.")
+
+@cancellable
+def get_index_from_options(title, items):
+    listed_items = []
+    for i, activity in enumerate(items, 1):
+            listed_items.append(f"{i}. {activity}")
+
+    invalid_selection_error_message = "Please select a number from the list"
+    
+    while(True):
+            console_manager.print_menu(title, listed_items)
+            selection = get_input("Enter number: ")
+            if not selection.isdigit():
+                print(invalid_selection_error_message)
+                continue
+            selected_number = int(selection)
+            if not (1 <= selected_number <= len(listed_items)):
+                print(invalid_selection_error_message)
+                continue
+            break
+    
+    selected_index = selected_number - 1
+    
+    return selected_index
