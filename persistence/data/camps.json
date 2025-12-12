@@ -62,7 +62,7 @@
         "camp_type": "Relax",
         "start_date": "2026-01-21",
         "end_date": "2026-01-22",
-        "camp_leader": null,
+        "camp_leader": "leader2",
         "campers": [
             {
                 "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
@@ -277,11 +277,26 @@
         "camp_type": "Sci-Fi Adventure",
         "start_date": "2026-01-07",
         "end_date": "2026-01-10",
-        "camp_leader": null,
+        "camp_leader": "leader2",
         "campers": [],
         "food_per_camper_per_day": 1,
         "initial_food_stock": 50,
         "current_food_stock": 50,
+        "food_usage": {},
+        "activities": []
+    },
+    {
+        "camp_id": "b10ca840-c96b-4a4c-9605-ac25a6b8c2fd",
+        "name": "Skills in the Wild",
+        "location": "Yosemite National Park",
+        "camp_type": "Wilderness",
+        "start_date": "2026-01-07",
+        "end_date": "2026-01-09",
+        "camp_leader": null,
+        "campers": [],
+        "food_per_camper_per_day": 1,
+        "initial_food_stock": 80,
+        "current_food_stock": 80,
         "food_usage": {},
         "activities": []
     }

@@ -82,5 +82,29 @@
         "username": "coordinator1",
         "action": "Create Camp",
         "details": "Created camp Camp Nova"
+    },
+    {
+        "timestamp": "2025-12-12 12:48:28",
+        "username": "coordinator1",
+        "action": "Create Camp",
+        "details": "Created camp Skills in the Wild"
+    },
+    {
+        "timestamp": "2025-12-12 12:49:07",
+        "username": "leader2",
+        "action": "Supervise Camp",
+        "details": "Started supervising Skills in the Wild"
+    },
+    {
+        "timestamp": "2025-12-12 12:49:58",
+        "username": "leader2",
+        "action": "Supervise Camp",
+        "details": "Started supervising Camp Beta"
+    },
+    {
+        "timestamp": "2025-12-12 12:50:06",
+        "username": "leader2",
+        "action": "Supervise Camp",
+        "details": "Started supervising Camp Nova"
     }
 ]
