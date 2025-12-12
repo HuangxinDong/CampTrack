@@ -260,7 +260,7 @@ class BaseHandler:
 
         # 2. NEW MESSAGE CONTEXT (Recipient is None) - Loop until valid
         while recipient_username is None:
-            username_input = self.get_username_with_search('Enter the username for recipient', exclude_self=True)
+            username_input = self.get_username_with_search("Enter the username for recipient or 'b' to go back ", exclude_self=True)
             
             # Validate: can't message yourself
             if username_input == self.user.username:

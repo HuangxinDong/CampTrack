@@ -16,7 +16,7 @@ class ActivityHandler(BaseHandler):
         while True:
             self.display.display_activities_menu()
 
-            choice = get_input("Choose an option: ")
+            choice = get_input("Choose an option or 'b' to go back: ")
 
             if choice == "1":
                 self.add_activities_to_camp()

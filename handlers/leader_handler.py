@@ -72,7 +72,7 @@ class LeaderHandler(BaseHandler):
         self.display.display_camp_selection(camps, self.user.username)
 
         while True:
-            choice = get_input("Enter camp number to supervise: ")
+            choice = get_input("Enter camp number to supervise or 'b' to go back: ")
 
             try:
                 index = int(choice) - 1
@@ -237,7 +237,7 @@ class LeaderHandler(BaseHandler):
         while True:
             self.display.display_daily_reports_menu()
 
-            choice = get_input("Choose an option: ")
+            choice = get_input("Choose an option or 'b' to go back: ")
 
             if choice == "1":
                 self.create_daily_report()

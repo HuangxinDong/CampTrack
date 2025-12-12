@@ -54,7 +54,7 @@ class AdminHandler(BaseHandler):
     @cancellable 
     def handle_create_user(self):
         while True:
-            username = get_input("Enter username (letters and numbers only): ")
+            username = get_input("Enter username (letters and numbers only) or 'b' to go back: ")
             if not username.strip():
                 console_manager.print_error("Username cannot be empty.")
                 continue
@@ -103,7 +103,7 @@ class AdminHandler(BaseHandler):
     @cancellable 
     def handle_delete_user(self):
         while True:
-            username = self.get_username_with_search("Enter username to delete")
+            username = self.get_username_with_search("Enter username to delete / 'b' to go back ")
             user = self.context.user_manager.find_user(username)
             if user:
                 break
@@ -126,7 +126,7 @@ class AdminHandler(BaseHandler):
     @cancellable
     def handle_toggle_status(self):
         while True:
-            username = self.get_username_with_search("Enter username")
+            username = self.get_username_with_search("Enter username or 'b' to go back")
             user = self.context.user_manager.find_user(username)
             if user:
                 break
@@ -167,7 +167,7 @@ class AdminHandler(BaseHandler):
         ]
         console_manager.print_menu("Options", options)
         
-        choice = get_input("Select option: ")
+        choice = get_input("Select option or 'b' to go back: ")
         
         if choice == '1':
             while True:
@@ -251,7 +251,7 @@ class AdminHandler(BaseHandler):
     def post_announcement(self):
         """Post a new global announcement."""
         console_manager.print_info("Posting new announcement (visible to all users).")
-        content = get_input("Enter content: ")
+        content = get_input("Enter content or 'b' to go back: ")
         
         announcement = Announcement(
             announcement_id=str(uuid.uuid4()),
@@ -532,7 +532,7 @@ class AdminHandler(BaseHandler):
         for i, f in enumerate(files, 1):
             print(f"{i}. {f}")
             
-        choice = get_input("Select backup to restore (number): ")
+        choice = get_input("Select backup to restore (number) or 'b' to go back: ")
         try:
             idx = int(choice) - 1
             if idx < 0 or idx >= len(files):
