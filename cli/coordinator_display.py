@@ -7,6 +7,7 @@ from rich.align import Align
 from rich.text import Text
 from rich.console import Group
 
+
 class CoordinatorDisplay:
     """
     Handles all UI display logic for Coordinator actions.
@@ -88,6 +89,17 @@ class CoordinatorDisplay:
             f"[bold medium_purple1]New Rate: £{new_rate}[/bold medium_purple1]"
         )
         console_manager.print_panel(content, title="Payment Update", style="blue")
+
+    def display_payment_update_success(self, leader_name, old_rate, new_rate):
+        """
+        Displays success message for payment rate update.
+        """
+        content = (
+            f"Successfully updated payment rate for [bold white]{leader_name}[/bold white].\n"
+            f"Old Rate: £{old_rate}\n"
+            f"[bold medium_purple1]New Rate: £{new_rate}[/bold medium_purple1]"
+        )
+        console_manager.print_panel(content, title="Payment Update Success", style="green")
 
     def display_full_dashboard(self, overview_data, engagement_metrics=None):
         """

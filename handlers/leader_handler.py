@@ -2,9 +2,6 @@ from datetime import datetime
 import uuid
 import json
 
-
-
-
 from handlers.base_handler import BaseHandler
 from cli.prompts import get_index_from_options, get_positive_int
 from cli.input_utils import get_input, cancellable, wait_for_enter
@@ -23,6 +20,7 @@ from cli.leader_display import leader_display
 from services.weather_service import WeatherService
 from rich.table import Table
 from rich.console import Console
+from rich import box
 import pandas as pd
 
 class LeaderHandler(BaseHandler):
@@ -55,9 +53,9 @@ class LeaderHandler(BaseHandler):
             {"name": "View Campers", "command": self.view_campers},
             {"name": "Search Campers for Emergency Details", "command": self.search_camper},
             {"name": "Manage Activities", "command": self.activities_menu},
+            {"name": "View Camp Schedules", "command": self.view_camp_schedules},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
             {"name": "View My Statistics", "command": self.show_statistics},
-            {"name": "View Camp Schedules", "command": self.view_camp_schedules},
             {"name": "View Weather Forecast", "command": self.view_weather_forecast},
         ]
 
@@ -267,6 +265,19 @@ class LeaderHandler(BaseHandler):
         if not camp:
             return
 
+        # Validation: Cannot create report for future camps
+        today = datetime.now().date()
+        try:
+            camp_start = datetime.strptime(str(camp.start_date), "%Y-%m-%d").date()
+        except ValueError:
+             # Fallback if date format is different or already a date object
+             camp_start = camp.start_date if isinstance(camp.start_date, datetime) else datetime.now().date()
+
+        if camp_start > today:
+            console_manager.print_error(f"Cannot create a report for '{camp.name}' because it has not started yet (Starts: {camp.start_date}).")
+            wait_for_enter()
+            return
+
         text = get_input("Enter report text(please include any achievements or key activities): ")
         daily_participation = get_positive_int("How many campers participated today? ")
 
@@ -463,6 +474,11 @@ class LeaderHandler(BaseHandler):
             wait_for_enter()
             return
         
+        if df_forecast is None:
+            console_manager.print_error("No weather data returned.")
+            wait_for_enter()
+            return
+
         table = Table(title=f"7-Day Forecast for {camp.location}")
         table.add_column("date")
         table.add_column("Condition")

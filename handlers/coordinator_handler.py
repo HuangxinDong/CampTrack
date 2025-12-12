@@ -1,5 +1,6 @@
 # handlers/coordinator_handler.py
 from datetime import datetime, date
+import uuid
 from cli.console_manager import console_manager
 from models.camp import Camp
 from handlers.base_handler import BaseHandler
@@ -113,7 +114,7 @@ class CoordinatorHandler(BaseHandler):
         food = get_positive_int("Enter camp food stock: ")
 
         camp = Camp(
-            camp_id=None,
+            camp_id=str(uuid.uuid4()),
             name=name,
             location=location,
             camp_type=camp_type,

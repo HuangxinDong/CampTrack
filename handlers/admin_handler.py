@@ -11,6 +11,7 @@ from cli.view_admin import display_user_table
 from services.weather_service import WeatherService
 from rich.table import Table
 from rich.console import Console
+from cli.coordinator_display import coordinator_display
 
 
 
@@ -19,6 +20,7 @@ class AdminHandler(BaseHandler):
     def __init__(self, user, context):
 
         super().__init__(user, context)
+        self.display = coordinator_display
 
         self.commands = self.parent_commands + [
             {"name": "Create User", "command": self.handle_create_user},
@@ -77,18 +79,28 @@ class AdminHandler(BaseHandler):
                 continue
             break
         
-        # Role is restricted to Leader only
-        role = "Leader"
+        while True:
+            role_choice = get_input("Select role (1: Leader, 2: Coordinator): ")
+            if role_choice == '1':
+                role = "Leader"
+                break
+            elif role_choice == '2':
+                role = "Coordinator"
+                break
+            else:
+                console_manager.print_error("Invalid choice. Please enter 1 or 2.")
+
         console_manager.print_info(f"Creating user with role: {role}")
         
         kwargs = {}
-        try:
-            rate_str = get_input("Enter daily payment rate: ")
-            rate = float(rate_str)
-            kwargs['daily_payment_rate'] = rate
-        except ValueError:
-            console_manager.print_warning("Invalid rate, defaulting to 0.0")
-            kwargs['daily_payment_rate'] = 0.0
+        if role == "Leader":
+            try:
+                rate_str = get_input("Enter daily payment rate: ")
+                rate = float(rate_str)
+                kwargs['daily_payment_rate'] = rate
+            except ValueError:
+                console_manager.print_warning("Invalid rate, defaulting to 0.0")
+                kwargs['daily_payment_rate'] = 0.0
 
         success, message = self.context.user_manager.create_user(username, password, role=role, **kwargs)
         if success:
