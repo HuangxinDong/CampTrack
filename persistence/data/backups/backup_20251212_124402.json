@@ -1,0 +1,464 @@
+{
+    "timestamp": "20251212_124402",
+    "users": [
+        {
+            "username": "admin1",
+            "password": "",
+            "role": "Admin",
+            "enabled": true
+        },
+        {
+            "username": "leader1",
+            "password": "",
+            "role": "Leader",
+            "enabled": true,
+            "daily_payment_rate": 40
+        },
+        {
+            "username": "leader2",
+            "password": "",
+            "role": "Leader",
+            "enabled": true,
+            "daily_payment_rate": 100
+        },
+        {
+            "username": "coordinator1",
+            "password": "",
+            "role": "Coordinator",
+            "enabled": true
+        }
+    ],
+    "camps": [
+        {
+            "camp_id": "5bf792dd-bbcb-43a5-b78c-7550b4b13ae7",
+            "name": "Camp Alpha",
+            "location": "Forest",
+            "camp_type": "Adventure",
+            "start_date": "2026-01-11",
+            "end_date": "2026-01-13",
+            "camp_leader": "leader1",
+            "campers": [
+                {
+                    "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                    "name": "Alex",
+                    "age": 12,
+                    "contact": "Mom: 555-0101",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                    "name": "Sam",
+                    "age": 13,
+                    "contact": "Dad: 555-0102",
+                    "medical_info": "Peanut Allergy"
+                },
+                {
+                    "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                    "name": "Jordan",
+                    "age": 11,
+                    "contact": "Guard: 555-0103",
+                    "medical_info": "None"
+                }
+            ],
+            "food_per_camper_per_day": 3,
+            "initial_food_stock": 100,
+            "current_food_stock": 100,
+            "food_usage": {},
+            "equipment": [],
+            "activities": [
+                {
+                    "name": "Arts & Crafts",
+                    "date": "2026-01-11",
+                    "session": "Afternoon",
+                    "camper_ids": []
+                },
+                {
+                    "name": "Night Hike",
+                    "date": "2026-01-11",
+                    "session": "Evening",
+                    "camper_ids": []
+                },
+                {
+                    "name": "Archery",
+                    "date": "2026-01-11",
+                    "session": "Morning",
+                    "camper_ids": []
+                }
+            ]
+        },
+        {
+            "camp_id": "d67c74a9-8712-42b4-b456-1fbae659f681",
+            "name": "Camp Beta",
+            "location": "Lakeside",
+            "camp_type": "Relax",
+            "start_date": "2026-01-16",
+            "end_date": "2026-01-19",
+            "camp_leader": "leader1",
+            "campers": [
+                {
+                    "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                    "name": "Alex",
+                    "age": 12,
+                    "contact": "Mom: 555-0101",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                    "name": "Sam",
+                    "age": 13,
+                    "contact": "Dad: 555-0102",
+                    "medical_info": "Peanut Allergy"
+                },
+                {
+                    "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                    "name": "Jordan",
+                    "age": 11,
+                    "contact": "Guard: 555-0103",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                    "name": "Alex",
+                    "age": 12,
+                    "contact": "Mom: 555-0101",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                    "name": "Sam",
+                    "age": 13,
+                    "contact": "Dad: 555-0102",
+                    "medical_info": "Peanut Allergy"
+                },
+                {
+                    "camper_id": "f63cd6ac-d6b6-494b-9f5f-39ba02fe9465",
+                    "name": "Alice",
+                    "age": 12,
+                    "contact": "1111",
+                    "medical_info": "Peanut allergy"
+                },
+                {
+                    "camper_id": "2d8bdf9a-1ccc-4603-ae0b-03debf1d81c5",
+                    "name": "Bob",
+                    "age": 10,
+                    "contact": "2222",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "ce6a3145-68da-4587-ab67-cc585ae03c3e",
+                    "name": "Charlie",
+                    "age": 11,
+                    "contact": "3333",
+                    "medical_info": "Asthma"
+                },
+                {
+                    "camper_id": "0a03c22a-d569-4f16-8d48-697e7c86b87d",
+                    "name": "Daniel",
+                    "age": 12,
+                    "contact": "1111",
+                    "medical_info": "Peanut allergy"
+                },
+                {
+                    "camper_id": "25103034-8c70-45c5-97a3-a83e8415ac26",
+                    "name": "Ella",
+                    "age": 10,
+                    "contact": "2222",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "297d206f-e62e-47e8-b26a-9e0e9832080f",
+                    "name": "Fiona",
+                    "age": 11,
+                    "contact": "3333",
+                    "medical_info": "Asthma"
+                }
+            ],
+            "food_per_camper_per_day": 1,
+            "initial_food_stock": 0,
+            "current_food_stock": 0,
+            "food_usage": {},
+            "equipment": [],
+            "activities": [
+                {
+                    "name": "Swimming",
+                    "date": "2026-01-16",
+                    "session": "Morning",
+                    "camper_ids": []
+                },
+                {
+                    "name": "Cooking",
+                    "date": "2026-01-18",
+                    "session": "Evening",
+                    "camper_ids": [
+                        "Alex"
+                    ]
+                },
+                {
+                    "name": "Archery",
+                    "date": "2026-01-17",
+                    "session": "Morning",
+                    "camper_ids": []
+                }
+            ]
+        },
+        {
+            "camp_id": "25076af9-1071-46cb-8662-e3cc3ddc0ff0",
+            "name": "Camp Gamma",
+            "location": "Mountain",
+            "camp_type": "Hiking",
+            "start_date": "2026-01-21",
+            "end_date": "2026-01-22",
+            "camp_leader": "leader1",
+            "campers": [
+                {
+                    "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                    "name": "Alex",
+                    "age": 12,
+                    "contact": "Mom: 555-0101",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                    "name": "Sam",
+                    "age": 13,
+                    "contact": "Dad: 555-0102",
+                    "medical_info": "Peanut Allergy"
+                },
+                {
+                    "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                    "name": "Jordan",
+                    "age": 11,
+                    "contact": "Guard: 555-0103",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "5abc2399-f221-4d11-b0e4-99e039f1462a",
+                    "name": "Alex",
+                    "age": 12,
+                    "contact": "Mom: 555-0101",
+                    "medical_info": "None"
+                },
+                {
+                    "camper_id": "70c7355b-4610-4247-b09a-6ddbebefcd51",
+                    "name": "Sam",
+                    "age": 13,
+                    "contact": "Dad: 555-0102",
+                    "medical_info": "Peanut Allergy"
+                },
+                {
+                    "camper_id": "109e3fd3-cb94-4788-b223-f78f462d60c7",
+                    "name": "Jordan",
+                    "age": 11,
+                    "contact": "Guard: 555-0103",
+                    "medical_info": "None"
+                }
+            ],
+            "food_per_camper_per_day": 1,
+            "initial_food_stock": 0,
+            "current_food_stock": 0,
+            "food_usage": {},
+            "equipment": [],
+            "activities": [
+                {
+                    "name": "Archery",
+                    "date": "2026-01-21",
+                    "session": "Morning",
+                    "camper_ids": []
+                },
+                {
+                    "name": "Swimming",
+                    "date": "2026-01-22",
+                    "session": "Afternoon",
+                    "camper_ids": []
+                }
+            ]
+        },
+        {
+            "camp_id": "c68c5e5c-ef55-4029-b927-2226dabc70d4",
+            "name": "Urban Explorers",
+            "location": "London",
+            "camp_type": "Urban",
+            "start_date": "2025-12-12",
+            "end_date": "2025-12-19",
+            "camp_leader": null,
+            "campers": [],
+            "food_per_camper_per_day": 1,
+            "initial_food_stock": 10,
+            "current_food_stock": 10,
+            "food_usage": {},
+            "equipment": [],
+            "activities": []
+        },
+        {
+            "camp_id": "83de200f-1aa2-46e5-a70c-a2ea0a24b90c",
+            "name": "Wilderness Quest",
+            "location": "Yosemite National Park",
+            "camp_type": "Wilderness",
+            "start_date": "2025-12-12",
+            "end_date": "2025-12-19",
+            "camp_leader": "leader1",
+            "campers": [],
+            "food_per_camper_per_day": 1,
+            "initial_food_stock": 10,
+            "current_food_stock": 10,
+            "food_usage": {},
+            "equipment": [],
+            "activities": []
+        }
+    ],
+    "messages": [
+        {
+            "message_id": "33b7382f-fb18-4459-93db-7a7e10a3219d",
+            "from_user": "admin1",
+            "to_user": "leader1",
+            "content": "hey leader1",
+            "sent_at": "2025-12-10T13:41:03.345945",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "0cc9045f-1b97-4cb3-b5d4-ae0c3ca7f322",
+            "from_user": "admin1",
+            "to_user": "leader1",
+            "content": "hello",
+            "sent_at": "2025-12-10T14:35:35.676656",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "d3373a7c-9c39-49f5-93d8-6125bfe7b2d3",
+            "from_user": "admin1",
+            "to_user": "leader1",
+            "content": "hi leaderrrrr",
+            "sent_at": "2025-12-10T14:36:34.707024",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "fc42bf8c-a4ea-41e4-ab34-f7507c71dd8c",
+            "from_user": "admin1",
+            "to_user": "leader1",
+            "content": "hey q and b",
+            "sent_at": "2025-12-10T15:09:10.837098",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "fc99dc70-ee60-4c7f-ae41-9d46a952452d",
+            "from_user": "leader1",
+            "to_user": "admin1",
+            "content": "hey admin!",
+            "sent_at": "2025-12-11T01:19:24.935705",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "d86d55eb-84c5-4287-88a2-9215624cb4ef",
+            "from_user": "admin1",
+            "to_user": "coordinator1",
+            "content": "hello coordinator!",
+            "sent_at": "2025-12-11T01:29:51.040893",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "d3565969-f054-4b04-ad67-54ac07c1fcd0",
+            "from_user": "admin1",
+            "to_user": "leader1",
+            "content": "test date!",
+            "sent_at": "2025-12-11T02:25:00.514225+00:00",
+            "mark_as_read": true
+        },
+        {
+            "message_id": "efbfdfe5-a751-4b01-b729-6f9c13399e16",
+            "from_user": "coordinator1",
+            "to_user": "admin1",
+            "content": "hi admin!",
+            "sent_at": "2025-12-11T05:40:15.010614+00:00",
+            "mark_as_read": false
+        }
+    ],
+    "announcements": [
+        {
+            "announcement_id": "eb812222-06c5-44aa-a537-4d198759e981",
+            "author": "admin1",
+            "content": "test announcement",
+            "created_at": "2025-12-11 02:07:20"
+        }
+    ],
+    "notifications": [],
+    "audit_logs": [
+        {
+            "timestamp": "2025-12-11 18:01:09",
+            "username": "leader1",
+            "action": "Edit Camp",
+            "details": "Updated food settings for test for leader funtions"
+        },
+        {
+            "timestamp": "2025-12-11 18:04:20",
+            "username": "admin1",
+            "action": "Create User",
+            "details": "Created user test1 as Leader"
+        },
+        {
+            "timestamp": "2025-12-11 18:10:07",
+            "username": "admin1",
+            "action": "Create User",
+            "details": "Created user hahai as Leader"
+        },
+        {
+            "timestamp": "2025-12-11 18:10:18",
+            "username": "admin1",
+            "action": "Delete User",
+            "details": "Deleted user hahai"
+        },
+        {
+            "timestamp": "2025-12-11 18:11:42",
+            "username": "admin1",
+            "action": "Update Username",
+            "details": "Changed hahaha to hihi"
+        },
+        {
+            "timestamp": "2025-12-11 18:12:13",
+            "username": "admin1",
+            "action": "Update Password",
+            "details": "Updated password for hihi"
+        },
+        {
+            "timestamp": "2025-12-11 18:12:26",
+            "username": "admin1",
+            "action": "Delete User",
+            "details": "Deleted user hihi"
+        },
+        {
+            "timestamp": "2025-12-11 15:14:43",
+            "username": "leader1",
+            "action": "Edit Camp",
+            "details": "Updated food settings for test for leader funtions"
+        },
+        {
+            "timestamp": "2025-12-12 00:52:43",
+            "username": "leader1",
+            "action": "Edit Camp",
+            "details": "Updated food settings for test for leader funtions"
+        },
+        {
+            "timestamp": "2025-12-12 12:59:41",
+            "username": "coordinator1",
+            "action": "Create Camp",
+            "details": "Created camp Urban Explorers"
+        },
+        {
+            "timestamp": "2025-12-12 13:00:07",
+            "username": "coordinator1",
+            "action": "Create Camp",
+            "details": "Created camp Wilderness Quest"
+        },
+        {
+            "timestamp": "2025-12-12 13:01:27",
+            "username": "leader1",
+            "action": "Supervise Camp",
+            "details": "Started supervising Wilderness Quest"
+        },
+        {
+            "timestamp": "2025-12-12 09:18:12",
+            "username": "admin1",
+            "action": "System Backup",
+            "details": "Created backup backup_20251212_091812.json"
+        }
+    ]
+}

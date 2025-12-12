@@ -500,7 +500,7 @@ class AdminHandler(BaseHandler):
     @cancellable
     def handle_backup_data(self):
         """Backs up all system data to a JSON file."""
-        backup_dir = "backups"
+        backup_dir = "persistence/data/backups"
         os.makedirs(backup_dir, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -538,7 +538,7 @@ class AdminHandler(BaseHandler):
     @cancellable
     def handle_restore_data(self):
         """Restores system data from a backup file."""
-        backup_dir = "backups"
+        backup_dir = "persistence/data/backups"
         if not os.path.exists(backup_dir):
             console_manager.print_error("No backups directory found.")
             wait_for_enter()

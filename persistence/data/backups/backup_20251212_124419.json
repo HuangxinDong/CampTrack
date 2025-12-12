@@ -1,5 +1,5 @@
 {
-    "timestamp": "20251212_091812",
+    "timestamp": "20251212_124419",
     "users": [
         {
             "username": "admin1",
@@ -64,6 +64,7 @@
             "initial_food_stock": 100,
             "current_food_stock": 100,
             "food_usage": {},
+            "equipment": [],
             "activities": [
                 {
                     "name": "Arts & Crafts",
@@ -176,6 +177,7 @@
             "initial_food_stock": 0,
             "current_food_stock": 0,
             "food_usage": {},
+            "equipment": [],
             "activities": [
                 {
                     "name": "Swimming",
@@ -255,6 +257,7 @@
             "initial_food_stock": 0,
             "current_food_stock": 0,
             "food_usage": {},
+            "equipment": [],
             "activities": [
                 {
                     "name": "Archery",
@@ -269,6 +272,38 @@
                     "camper_ids": []
                 }
             ]
+        },
+        {
+            "camp_id": "c68c5e5c-ef55-4029-b927-2226dabc70d4",
+            "name": "Urban Explorers",
+            "location": "London",
+            "camp_type": "Urban",
+            "start_date": "2025-12-12",
+            "end_date": "2025-12-19",
+            "camp_leader": null,
+            "campers": [],
+            "food_per_camper_per_day": 1,
+            "initial_food_stock": 10,
+            "current_food_stock": 10,
+            "food_usage": {},
+            "equipment": [],
+            "activities": []
+        },
+        {
+            "camp_id": "83de200f-1aa2-46e5-a70c-a2ea0a24b90c",
+            "name": "Wilderness Quest",
+            "location": "Yosemite National Park",
+            "camp_type": "Wilderness",
+            "start_date": "2025-12-12",
+            "end_date": "2025-12-19",
+            "camp_leader": "leader1",
+            "campers": [],
+            "food_per_camper_per_day": 1,
+            "initial_food_stock": 10,
+            "current_food_stock": 10,
+            "food_usage": {},
+            "equipment": [],
+            "activities": []
         }
     ],
     "messages": [
@@ -334,7 +369,7 @@
             "to_user": "admin1",
             "content": "hi admin!",
             "sent_at": "2025-12-11T05:40:15.010614+00:00",
-            "mark_as_read": true
+            "mark_as_read": false
         }
     ],
     "announcements": [
@@ -400,6 +435,36 @@
             "username": "leader1",
             "action": "Edit Camp",
             "details": "Updated food settings for test for leader funtions"
+        },
+        {
+            "timestamp": "2025-12-12 12:59:41",
+            "username": "coordinator1",
+            "action": "Create Camp",
+            "details": "Created camp Urban Explorers"
+        },
+        {
+            "timestamp": "2025-12-12 13:00:07",
+            "username": "coordinator1",
+            "action": "Create Camp",
+            "details": "Created camp Wilderness Quest"
+        },
+        {
+            "timestamp": "2025-12-12 13:01:27",
+            "username": "leader1",
+            "action": "Supervise Camp",
+            "details": "Started supervising Wilderness Quest"
+        },
+        {
+            "timestamp": "2025-12-12 09:18:12",
+            "username": "admin1",
+            "action": "System Backup",
+            "details": "Created backup backup_20251212_091812.json"
+        },
+        {
+            "timestamp": "2025-12-12 12:44:02",
+            "username": "admin1",
+            "action": "System Backup",
+            "details": "Created backup backup_20251212_124402.json"
         }
     ]
 }
