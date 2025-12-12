@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, date, timedelta
 from models.camper import Camper
+from models.resource import Equipment
 
 class Camp:
     def __init__(
@@ -15,6 +16,9 @@ class Camp:
         campers: list = [],
         food_per_camper_per_day: int = 1,
         initial_food_stock: int = 0,
+        current_food_stock: int=0,
+        food_usage: dict = None,
+        equipment: list = []
         activities: list = None
     ):
         self.camp_id = camp_id if camp_id else str(uuid.uuid4())
@@ -29,6 +33,7 @@ class Camp:
         self.initial_food_stock = initial_food_stock
         self.current_food_stock = initial_food_stock
         self.food_usage = {}
+        self.equipment = equipment
         self.activities = activities if activities is not None else []
 
     def add_food(self, amount: int):
@@ -146,6 +151,7 @@ class Camp:
             "initial_food_stock": self.initial_food_stock,
             "current_food_stock": self.current_food_stock,
             "food_usage": self.food_usage,
+            "equipment": [e.to_dict() for e in self.equipment]
             "activities": self.activities
         }
 
@@ -164,6 +170,7 @@ class Camp:
             campers=[Camper.from_dict(c) for c in data.get("campers", [])],
             food_per_camper_per_day=data.get("food_per_camper_per_day", 1),
             initial_food_stock=data.get("initial_food_stock", 0),
+            equipment=equipment_list
             activities=data.get("activities", [])
         )
         camp.current_food_stock = data.get("current_food_stock", camp.initial_food_stock)

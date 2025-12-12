@@ -56,6 +56,8 @@ class LeaderHandler(BaseHandler):
             {"name": "View Camp Schedules", "command": self.view_camp_schedules},
             {"name": "Daily Reports", "command": self.daily_reports_menu},
             {"name": "View My Statistics", "command": self.show_statistics},
+            {"name": "View Equipment", "command": self.view_equipment},
+            {"name": "View Camp Schedules", "command": self.view_camp_schedules},
             {"name": "View Weather Forecast", "command": self.view_weather_forecast},
         ]
 
@@ -442,6 +444,41 @@ class LeaderHandler(BaseHandler):
             except ValueError:
                 console_manager.print_error("Invalid input. Please enter a number.")
 
+        try:
+            return camps[int(choice) - 1]
+        except:
+            console_manager.print_error("Invalid selection.")
+            return None
+        
+    @cancellable
+    def view_equipment(self):
+        camps = self.context.camp_manager.read_all()
+        my_camps = [c for c in camps if c.camp_leader == self.user.username]
+
+        if not my_camps:
+            console_manager.print_error("You are not supervising any camps.")
+            return
+        
+        for camp in my_camps:
+            console_manager.print_header(f"Equipment Checklist: {camp.name}")
+
+        if not camp.equipment:
+            print(" No equipment listed")
+            continue
+
+        print(f" {'Item':<20} | {'Qty':<10} | {'Status':<10}")
+        print(" " + "-"*45)
+
+        for eq in camp.equipment:
+            qty_str = f"{eq.current_quantity}/{eq.target_quantity}"
+            if eq.current_quantity < eq.target_quantity:
+                qty_str = f"[bold red]{qty_str}[/bold red]"
+
+            print(f" {eq.name:<20} | {qty_str:<25} | {eq.condition:<10}")
+            print(" "+ "-"*45)
+
+
+    
     @cancellable
     def activities_menu(self):
         self.activity_handler.activities_menu()

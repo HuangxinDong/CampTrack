@@ -9,6 +9,9 @@ from cli.prompts import get_positive_int
 from cli.coordinator_display import coordinator_display
 import cli.visualisations as visualisations
 from cli.console_manager import console_manager
+import uuid
+from models.resource import Equipment
+from cli.console_manager import console_manager
 from services.weather_service import WeatherService
 from rich.table import Table
 from rich.console import Console
@@ -30,6 +33,7 @@ class CoordinatorHandler(BaseHandler):
             },
             {"name": "See Visualizations", "command": self.visualization_menu},
             {"name": "View Dashboard", "command": self.view_dashboard},
+            {"name": "Manage Equipment", "command": self.manage_equipment},
             {"name": "View Weather Forecast", "command": self.view_weather_forecast},
         ]
 
@@ -517,4 +521,55 @@ class CoordinatorHandler(BaseHandler):
 
         wait_for_enter()
 
+
+        print(f"\nTotal Camps: {len(df)}")
+
+    @cancellable
+    def manage_equipment(self):
+        camps = self.context.camp_manager.read_all()
+
+        if not camps:
+            console_manager.print_error("No camps available.")
+            return
+        
+        console_manager.print_menu("\nSelect a Camp to manage equipment:", [f"{i+1}. {c.name}" for i, c in enumerate(camps)])
+
+        try:
+            choice = int(get_input("Enter number: ")) - 1
+            camp = camps[choice]
+        except (ValueError, IndexError):
+            console_manager.print_error("Invalid selection")
+            return
+        
+
+        if camp.equipment:
+            console_manager.print_header(f"Equipment for {camp.name}")
+            for eq in camp.equipment:
+                status = "Okay" if eq.condition == "Good" else f"[red]{eq.condition}[/red]"
+                console_manager.print_message(f"-{eq.name}: {eq.current_quantity}/{eq.target_quantity} (Cond: {status})")
+        else:
+            console_manager.print_info(f"No equipment assigned to {camp.name} yet.")
+
+            if get_input("Add new equipment? (y/n): ").lower() != 'y':
+                return
+            
+            name = get_input("Equipment Name: ")
+            target = get_positive_int("Target Quantity (Total needed): ")
+            current = get_positive_int("Current Quantity (Available now): ")
+            condition = get_input("Condition (Good, Fair, Poor): ")
+
+            new_eq = Equipment(
+                resource_id=str(uuid.uuid4()),
+                name = name,
+                camp_id=camp.camp_id,
+                target_quantity=target,
+                current_quantity=current,
+                condition=condition
+
+            )
+
+            camp.equipment.append(new_eq)
+            self.context.camp_manager.update(camp)
+            console_manager.print_success(f"Added {name} to {camp.name}.")
+            
 
