@@ -51,9 +51,21 @@ class AdminHandler(BaseHandler):
             if not username.isalnum():
                 console_manager.print_error("Username must contain only letters and numbers.")
                 continue
+            
+            if self.context.user_manager.find_user(username):
+                console_manager.print_error(f"User '{username}' already exists. Please choose a different username.")
+                continue
+                
             break
 
-        password = get_input("Enter password: ")
+        while True:
+            password = get_input("Enter password: ")
+            confirm_password = get_input("Confirm password: ")
+            
+            if password != confirm_password:
+                console_manager.print_error("Passwords do not match. Please try again.")
+                continue
+            break
         
         # Role is restricted to Leader only
         role = "Leader"
@@ -81,7 +93,7 @@ class AdminHandler(BaseHandler):
     @cancellable 
     def handle_delete_user(self):
         while True:
-            username = get_input("Enter username to delete: ")
+            username = self.get_username_with_search("Enter username to delete")
             user = self.context.user_manager.find_user(username)
             if user:
                 break
@@ -104,7 +116,7 @@ class AdminHandler(BaseHandler):
     @cancellable
     def handle_toggle_status(self):
         while True:
-            username = get_input("Enter username: ")
+            username = self.get_username_with_search("Enter username")
             user = self.context.user_manager.find_user(username)
             if user:
                 break
@@ -149,7 +161,7 @@ class AdminHandler(BaseHandler):
         
         if choice == '1':
             while True:
-                username = get_input("Enter username: ")
+                username = self.get_username_with_search("Enter username")
                 if self.context.user_manager.find_user(username):
                     break
                 console_manager.print_error(f"User '{username}' not found. Please try again.")
@@ -163,7 +175,7 @@ class AdminHandler(BaseHandler):
             wait_for_enter()
         elif choice == '2':
             while True:
-                username = get_input("Enter username: ")
+                username = self.get_username_with_search("Enter username", role_filter="Leader")
                 user = self.context.user_manager.find_user(username)
                 if user:
                     break
@@ -186,7 +198,7 @@ class AdminHandler(BaseHandler):
             wait_for_enter()
         elif choice == '3':
             while True:
-                old_username = get_input("Enter current username: ")
+                old_username = self.get_username_with_search("Enter current username")
                 if self.context.user_manager.find_user(old_username):
                     break
                 console_manager.print_error(f"User '{old_username}' not found. Please try again.")
@@ -209,7 +221,7 @@ class AdminHandler(BaseHandler):
             wait_for_enter()
         elif choice == '4':
             while True:
-                username = get_input("Enter username: ")
+                username = self.get_username_with_search("Enter username")
                 if self.context.user_manager.find_user(username):
                     break
                 console_manager.print_error(f"User '{username}' not found. Please try again.")

@@ -315,15 +315,19 @@ class CoordinatorHandler(BaseHandler):
 
     @cancellable
     def set_daily_payment_limit(self):
-        scout_leader_name = get_input("Enter the name of the scout leader: ")
+        while True:
+            scout_leader_name = self.get_username_with_search("Enter the name of the scout leader", role_filter="Leader")
+            scout_leader = self.context.user_manager.find_user(scout_leader_name)
+            
+            if not scout_leader:
+                console_manager.print_error(f"User '{scout_leader_name}' not found. Please try again.")
+                continue
 
-        scout_leader = self.context.user_manager.find_user(scout_leader_name)
-        if scout_leader is None:
-            print("Cannot find user")
-            return
-        if scout_leader["role"] != "Leader":
-            print("User is not a leader")
-            return
+            if scout_leader["role"] != "Leader":
+                console_manager.print_error(f"User '{scout_leader_name}' is not a Leader.")
+                continue
+            
+            break
 
         old_rate = scout_leader.get(
             "daily_restock_limit", 0

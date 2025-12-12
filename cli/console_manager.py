@@ -25,6 +25,7 @@ class ConsoleManager:
     Singleton class to manage all CLI output using Rich.
     """
     _instance = None
+    console: Console
 
     def __new__(cls):
         if cls._instance is None:
