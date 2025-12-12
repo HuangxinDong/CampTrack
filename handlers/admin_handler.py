@@ -9,6 +9,7 @@ from models.announcement import Announcement
 from persistence.dao.system_notification_manager import SystemNotificationManager
 from cli.view_admin import display_user_table
 from services.weather_service import WeatherService
+from services.user_service import UserService
 from rich.table import Table
 from rich.console import Console
 from cli.coordinator_display import coordinator_display
@@ -21,6 +22,7 @@ class AdminHandler(BaseHandler):
 
         super().__init__(user, context)
         self.display = coordinator_display
+        self.user_service = UserService(self.context.user_manager, self.context.camp_manager)
 
         self.commands = self.parent_commands + [
             {"name": "Create User", "command": self.handle_create_user},
@@ -46,7 +48,7 @@ class AdminHandler(BaseHandler):
         """Fetches all users from the user manager and displays them in a table."""
         console_manager.console.print("[bold medium_purple1]Fetching user data...[/bold medium_purple1]")
         
-        user_list = self.context.user_manager.read_all()
+        user_list = self.user_service.get_all_users()
         
         display_user_table(user_list)
 
@@ -64,7 +66,7 @@ class AdminHandler(BaseHandler):
                 console_manager.print_error("Username must contain only letters and numbers.")
                 continue
             
-            if self.context.user_manager.find_user(username):
+            if self.user_service.get_user(username):
                 console_manager.print_error(f"User '{username}' already exists. Please choose a different username.")
                 continue
                 
@@ -102,7 +104,7 @@ class AdminHandler(BaseHandler):
                 console_manager.print_warning("Invalid rate, defaulting to 0.0")
                 kwargs['daily_payment_rate'] = 0.0
 
-        success, message = self.context.user_manager.create_user(username, password, role=role, **kwargs)
+        success, message = self.user_service.create_user(username, password, role=role, **kwargs)
         if success:
             console_manager.print_success(message)
             self.context.audit_log_manager.log_event(self.user.username, "Create User", f"Created user {username} as {role}")
@@ -116,29 +118,17 @@ class AdminHandler(BaseHandler):
     def handle_delete_user(self):
         while True:
             username = self.get_username_with_search("Enter username to delete / 'b' to go back ")
-            user = self.context.user_manager.find_user(username)
+            user = self.user_service.get_user(username)
             if user:
                 break
             console_manager.print_error(f"User '{username}' not found. Please try again.")
-
-        camps = self.context.camp_manager.read_all()
-        active_leadership = []
-        for camp in camps:
-            if camp.camp_leader == username and not camp.has_camp_finished():
-                active_leadership.append(camp.name)
-        
-        if active_leadership:
-            console_manager.print_error(f"Cannot delete user '{username}'. They are currently assigned as leader for active camps: {', '.join(active_leadership)}.")
-            console_manager.print_info("Please reassign these camps before deleting the user.")
-            wait_for_enter()
-            return
 
         confirm = get_input(f"Are you sure you want to delete user '{username}'? (y/n): ")
         if confirm.lower() != 'y':
             console_manager.print_info("Deletion cancelled.")
             return
 
-        success, message = self.context.user_manager.delete_user(username)
+        success, message = self.user_service.delete_user(username)
         if success:
             console_manager.print_success(message)
             self.context.audit_log_manager.log_event(self.user.username, "Delete User", f"Deleted user {username}")
@@ -151,7 +141,7 @@ class AdminHandler(BaseHandler):
     def handle_toggle_status(self):
         while True:
             username = self.get_username_with_search("Enter username or 'b' to go back")
-            user = self.context.user_manager.find_user(username)
+            user = self.user_service.get_user(username)
             if user:
                 break
             console_manager.print_error(f"User '{username}' not found. Please try again.")
@@ -172,9 +162,12 @@ class AdminHandler(BaseHandler):
             new_status = True if confirm.lower() == 'y' else False
             
         if new_status != current_status:
-            success, message = self.context.user_manager.toggle_user_status(username, new_status)
-            console_manager.print_success(message)
-            self.context.audit_log_manager.log_event(self.user.username, "Toggle Status", f"Set {username} to {'Enabled' if new_status else 'Disabled'}")
+            success, message = self.user_service.toggle_status(username, self.user.username, new_status)
+            if success:
+                console_manager.print_success(message)
+                self.context.audit_log_manager.log_event(self.user.username, "Toggle Status", f"Set {username} to {'Enabled' if new_status else 'Disabled'}")
+            else:
+                console_manager.print_error(message)
         else:
             console_manager.print_info("No changes made.")
         
@@ -196,12 +189,12 @@ class AdminHandler(BaseHandler):
         if choice == '1':
             while True:
                 username = self.get_username_with_search("Enter username")
-                if self.context.user_manager.find_user(username):
+                if self.user_service.get_user(username):
                     break
                 console_manager.print_error(f"User '{username}' not found. Please try again.")
 
             new_password = get_input("Enter new password: ")
-            success, msg = self.context.user_manager.update_password(username, new_password)
+            success, msg = self.user_service.update_password(username, new_password)
             if success: 
                 console_manager.print_success(msg)
                 self.context.audit_log_manager.log_event(self.user.username, "Update Password", f"Updated password for {username}")
@@ -210,7 +203,7 @@ class AdminHandler(BaseHandler):
         elif choice == '2':
             while True:
                 username = self.get_username_with_search("Enter username", role_filter="Leader")
-                user = self.context.user_manager.find_user(username)
+                user = self.user_service.get_user(username)
                 if user:
                     break
                 console_manager.print_error(f"User '{username}' not found. Please try again.")
@@ -222,7 +215,7 @@ class AdminHandler(BaseHandler):
                 
             try:
                 rate = float(get_input("Enter new daily rate: "))
-                success, msg = self.context.user_manager.update_daily_payment_rate(username, rate)
+                success, msg = self.user_service.update_daily_payment_rate(username, rate)
                 if success: 
                     console_manager.print_success(msg)
                     self.context.audit_log_manager.log_event(self.user.username, "Update Rate", f"Updated rate for {username} to {rate}")
@@ -233,7 +226,7 @@ class AdminHandler(BaseHandler):
         elif choice == '3':
             while True:
                 old_username = self.get_username_with_search("Enter current username")
-                if self.context.user_manager.find_user(old_username):
+                if self.user_service.get_user(old_username):
                     break
                 console_manager.print_error(f"User '{old_username}' not found. Please try again.")
 
@@ -247,7 +240,7 @@ class AdminHandler(BaseHandler):
                     continue
                 break
 
-            success, msg = self.context.user_manager.update_username(old_username, new_username)
+            success, msg = self.user_service.update_username(old_username, new_username)
             if success: 
                 console_manager.print_success(msg)
                 self.context.audit_log_manager.log_event(self.user.username, "Update Username", f"Changed {old_username} to {new_username}")
@@ -256,12 +249,12 @@ class AdminHandler(BaseHandler):
         elif choice == '4':
             while True:
                 username = self.get_username_with_search("Enter username")
-                if self.context.user_manager.find_user(username):
+                if self.user_service.get_user(username):
                     break
                 console_manager.print_error(f"User '{username}' not found. Please try again.")
 
             new_role = get_input("Enter new role (Leader/Coordinator): ")
-            success, msg = self.context.user_manager.update_role(username, new_role)
+            success, msg = self.user_service.update_role(username, new_role)
             if success: 
                 console_manager.print_success(msg)
                 self.context.audit_log_manager.log_event(self.user.username, "Update Role", f"Changed {username} role to {new_role}")

@@ -10,11 +10,11 @@ from cli.coordinator_display import coordinator_display
 import cli.visualisations as visualisations
 from cli.console_manager import console_manager
 import uuid
-from models.resource import Equipment
-from cli.console_manager import console_manager
 from services.weather_service import WeatherService
 from rich.table import Table
 from rich.console import Console
+from services.camp_service import CampService
+from services.user_service import UserService
 
 class CoordinatorHandler(BaseHandler):
     """Handles Coordinator-specific actions."""
@@ -23,6 +23,8 @@ class CoordinatorHandler(BaseHandler):
         super().__init__(user, context)
 
         self.display = coordinator_display
+        self.camp_service = CampService(self.context.camp_manager)
+        self.user_service = UserService(self.context.user_manager, self.context.camp_manager)
 
         self.commands = self.parent_commands + [
             {"name": "Create Camp", "command": self.create_camp},
@@ -64,17 +66,14 @@ class CoordinatorHandler(BaseHandler):
 
     @cancellable
     def create_camp(self):
-        camps = self.context.camp_manager.read_all()
-        camps.sort(key=lambda c: c.start_date) # Sort by date for better UX
-
-        
         # 1. Name Validation
         while True:
             name = get_input("Enter camp name: ")
             if not name.strip():
                 console_manager.print_error("Camp name cannot be empty.")
                 continue
-            if any(camp.name == name for camp in camps):
+            
+            if not self.camp_service.is_name_unique(name):
                 console_manager.print_error("Camp name already exists. Please enter a different name.")
             else:
                 break
@@ -110,30 +109,73 @@ class CoordinatorHandler(BaseHandler):
             end_date_str = get_input("Enter camp end date (yyyy-mm-dd): ")
             try:
                 end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-                if end_date < start_date:
-                    console_manager.print_error(f"End date must be on or after start date ({start_date}).")
-                    continue
+                # Use service to validate date logic
+                self.camp_service.validate_dates(start_date, end_date)
                 break
-            except ValueError:
-                console_manager.print_error("Invalid date format. Please use yyyy-mm-dd.")
+            except ValueError as e:
+                console_manager.print_error(str(e))
 
         food = get_positive_int("Enter camp food stock: ")
 
-        camp = Camp(
-            camp_id=str(uuid.uuid4()),
-            name=name,
-            location=location,
-            camp_type=camp_type,
-            start_date=start_date,
-            end_date=end_date,
-            initial_food_stock=food,
-        )
-        self.context.camp_manager.add(camp)
-        # Use new display class for success message
-        coordinator_display.display_camp_creation_success(camp)
-        self.context.audit_log_manager.log_event(self.user.username, "Create Camp", f"Created camp {camp.name}")
+        try:
+            camp = self.camp_service.create_camp(
+                name=name,
+                location=location,
+                camp_type=camp_type,
+                start_date=start_date,
+                end_date=end_date,
+                initial_food_stock=food
+            )
+            # Use new display class for success message
+            coordinator_display.display_camp_creation_success(camp)
+            self.context.audit_log_manager.log_event(self.user.username, "Create Camp", f"Created camp {camp.name}")
+            
+            if get_input("Do you want to assign a leader now? (y/n): ").lower() == 'y':
+                self._assign_leader_to_camp(camp)
+                
+        except ValueError as e:
+            console_manager.print_error(f"Failed to create camp: {e}")
         
         wait_for_enter()
+
+    def _assign_leader_to_camp(self, camp):
+        """Helper to assign a leader to a camp."""
+        # Get all leaders
+        users = self.user_service.get_all_users()
+        leaders = [u for u in users if u['role'] == 'Leader']
+        
+        if not leaders:
+            console_manager.print_error("No leaders found in the system.")
+            return
+
+        # Filter available leaders
+        available_leaders = []
+        for leader in leaders:
+            conflicts = self.camp_service.get_conflicting_camps(leader['username'], camp.start_date, camp.end_date, camp.camp_id)
+            if not conflicts:
+                available_leaders.append(leader)
+        
+        if not available_leaders:
+            console_manager.print_error("No available leaders for these dates.")
+            return
+
+        console_manager.print_menu("Available Leaders", [l['username'] for l in available_leaders])
+        
+        while True:
+            choice = get_input("Select leader number: ")
+            if not choice.isdigit(): continue
+            idx = int(choice) - 1
+            if 0 <= idx < len(available_leaders):
+                selected_leader = available_leaders[idx]
+                break
+        
+        # Assign
+        success, message = self.camp_service.assign_leader(camp.name, selected_leader['username'])
+        if success:
+            console_manager.print_success(message)
+            self.context.audit_log_manager.log_event(self.user.username, "Assign Leader", f"Assigned {selected_leader['username']} to {camp.name}")
+        else:
+            console_manager.print_error(message)
 
     def edit_camp_resources(self):
         """Switch to camp editing submenu."""
@@ -173,21 +215,14 @@ class CoordinatorHandler(BaseHandler):
             print("Camp not found")
             return
         additional_food = get_positive_int("Enter the amount of food to add: ")
-        try:
-            selected_camp.add_food(additional_food)
-            self.context.camp_manager.update(selected_camp)
-
-            from cli.console_manager import console_manager
-
-            console_manager.print_success(
-                f"Food stock for camp '{selected_camp.name}' has been topped up by {additional_food}."
-            )
+        
+        success, message = self.camp_service.top_up_food(selected_camp.name, additional_food)
+        if success:
+            console_manager.print_success(message)
             self.context.audit_log_manager.log_event(self.user.username, "Top Up Food", f"Added {additional_food} to {selected_camp.name}")
             wait_for_enter()
-        except ValueError as e:
-            from cli.console_manager import console_manager
-
-            console_manager.print_error(f"Error: {e}")
+        else:
+            console_manager.print_error(f"Error: {message}")
 
         self.commands = self.main_commands
 
@@ -222,16 +257,14 @@ class CoordinatorHandler(BaseHandler):
 
         # Get new location
         new_location = get_input("Enter new location: ")
-        if not new_location.strip():
-            console_manager.print_error("Location cannot be empty.")
-            return
-
-        # Update and save
-        selected_camp.location = new_location.strip()
-        self.context.camp_manager.update(selected_camp)
-
-        console_manager.print_success(f"Location for '{selected_camp.name}' updated to '{new_location}'.")
-        self.context.audit_log_manager.log_event(self.user.username, "Edit Camp Location", f"Changed {selected_camp.name} location to {new_location}")
+        
+        success, message = self.camp_service.update_location(selected_camp.name, new_location)
+        if success:
+            console_manager.print_success(message)
+            self.context.audit_log_manager.log_event(self.user.username, "Edit Camp Location", f"Changed {selected_camp.name} location to {new_location}")
+        else:
+            console_manager.print_error(message)
+            
         self.commands = self.main_commands
 
     @cancellable
@@ -288,13 +321,11 @@ class CoordinatorHandler(BaseHandler):
             end_prompt="Enter new end date (yyyy-mm-dd): "
         )
 
-        # Check for leader conflicts
-        if selected_camp.camp_leader:
-            conflicting_camps = self._get_conflicting_camps(selected_camp, new_start, new_end)
-
-            if conflicting_camps:
-                # Display conflict warning
-                conflict_names = ", ".join(c.name for c in conflicting_camps)
+        success, message, conflicts = self.camp_service.update_dates(selected_camp.name, new_start, new_end)
+        
+        if not success:
+            if conflicts:
+                conflict_names = ", ".join(c.name for c in conflicts)
                 console_manager.print_error(
                     f"Schedule conflict detected! Leader '{selected_camp.camp_leader}' "
                     f"is also assigned to: {conflict_names}"
@@ -308,59 +339,28 @@ class CoordinatorHandler(BaseHandler):
                 choice = get_input("Enter choice (1 or 2): ")
 
                 if choice == "1":
-                    selected_camp.camp_leader = None
-                    console_manager.print_success(
-                        f"Leader unassigned from '{selected_camp.name}'."
-                    )
+                    success, message, _ = self.camp_service.update_dates(selected_camp.name, new_start, new_end, force_unassign_leader=True)
+                    if success:
+                        console_manager.print_success(message)
+                        console_manager.print_success(f"Leader unassigned from '{selected_camp.name}'.")
+                    else:
+                        console_manager.print_error(message)
                 else:
                     console_manager.print_error("Date change cancelled.")
-                    self.commands = self.main_commands
-                    return
+            else:
+                console_manager.print_error(message)
+        else:
+            console_manager.print_success(message)
 
-        # Apply date changes
-        selected_camp.start_date = new_start
-        selected_camp.end_date = new_end
-        self.context.camp_manager.update(selected_camp)
-
-        console_manager.print_success(
-            f"Dates for '{selected_camp.name}' updated to {new_start} - {new_end}."
-        )
         self.commands = self.main_commands
 
-    def _get_conflicting_camps(self, camp: Camp, new_start: date, new_end: date) -> list:
-        """
-        Find camps that would conflict with new dates for this camp's leader.
 
-        Args:
-            camp: The camp being edited
-            new_start: Proposed new start date
-            new_end: Proposed new end date
-
-        Returns:
-            list[Camp]: Camps with overlapping dates (excluding the camp being edited)
-        """
-        if not camp.camp_leader:
-            return []
-
-        leader_camps = self.context.camp_manager.get_camps_by_leader(camp.camp_leader)
-        conflicts = []
-
-        for other_camp in leader_camps:
-            # Skip the camp being edited
-            if other_camp.camp_id == camp.camp_id:
-                continue
-
-            # Use model's static method for overlap check
-            if Camp.dates_overlap(new_start, new_end, other_camp.start_date, other_camp.end_date):
-                conflicts.append(other_camp)
-
-        return conflicts
 
     @cancellable
     def set_daily_payment_limit(self):
         while True:
             scout_leader_name = self.get_username_with_search("Enter the name of the scout leader", role_filter="Leader")
-            scout_leader = self.context.user_manager.find_user(scout_leader_name)
+            scout_leader = self.user_service.get_user(scout_leader_name)
             
             if not scout_leader:
                 console_manager.print_error(f"User '{scout_leader_name}' not found. Please try again.")
@@ -372,18 +372,17 @@ class CoordinatorHandler(BaseHandler):
             
             break
 
-        old_rate = scout_leader.get(
-            "daily_restock_limit", 0
-        )  # Assumed key, checking user model would be safer, but relying on context logic often used.
-        # Actually daily_payment_rate for Leader... checking user_manager usage.
-        # user_manager.update_daily_payment_rate updates 'daily_payment_rate'
         old_rate = scout_leader.get("daily_payment_rate", "N/A")
 
         daily_payment_rate = get_positive_int("Enter the new daily payment rate: ")
-        self.context.user_manager.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
-
-        coordinator_display.display_payment_update_success(scout_leader_name, old_rate, daily_payment_rate)
-        self.context.audit_log_manager.log_event(self.user.username, "Set Payment Limit", f"Set {scout_leader_name} rate to {daily_payment_rate}")
+        
+        success, message = self.user_service.update_daily_payment_rate(scout_leader["username"], daily_payment_rate)
+        
+        if success:
+            coordinator_display.display_payment_update_success(scout_leader_name, old_rate, daily_payment_rate)
+            self.context.audit_log_manager.log_event(self.user.username, "Set Payment Limit", f"Set {scout_leader_name} rate to {daily_payment_rate}")
+        else:
+            console_manager.print_error(message)
 
     def restore_main_commands(self):
         self.commands = self.main_commands
@@ -498,19 +497,12 @@ class CoordinatorHandler(BaseHandler):
             current = get_positive_int("Current Quantity (Available now): ")
             condition = get_input("Condition (Good, Fair, Poor): ")
 
-            new_eq = Equipment(
-                resource_id=str(uuid.uuid4()),
-                name = name,
-                camp_id=camp.camp_id,
-                target_quantity=target,
-                current_quantity=current,
-                condition=condition
-
-            )
-
-            camp.equipment.append(new_eq)
-            self.context.camp_manager.update(camp)
-            console_manager.print_success(f"Added {name} to {camp.name}.")
+            success, message = self.camp_service.add_equipment(camp.name, name, target, current, condition)
+            
+            if success:
+                console_manager.print_success(message)
+            else:
+                console_manager.print_error(message)
             wait_for_enter()
             
 
