@@ -1,12 +1,31 @@
 import sqlite3
 import logging
 import os
+import sys
+import shutil
 
 class DBContext:
-    def __init__(self, db_path="persistence/data/camptrack.db"):
-        self.db_path = db_path
+    def __init__(self, db_path=None):
+        # Resolve DB path; when frozen (PyInstaller) copy bundled DB to a writable location.
+        self.db_path = db_path or self._resolve_db_path()
         self._ensure_db_dir()
         self.initialize_db()
+
+    def _resolve_db_path(self):
+        default_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "camptrack.db"))
+
+        if getattr(sys, "frozen", False):
+            bundle_dir = getattr(sys, "_MEIPASS", os.getcwd())
+            bundled_db = os.path.join(bundle_dir, "persistence", "data", "camptrack.db")
+            user_db = os.path.abspath(os.path.join(os.getcwd(), "persistence", "data", "camptrack.db"))
+
+            # If bundled DB exists and user DB missing, copy so we have writable storage.
+            if os.path.exists(bundled_db) and not os.path.exists(user_db):
+                os.makedirs(os.path.dirname(user_db), exist_ok=True)
+                shutil.copy2(bundled_db, user_db)
+            return user_db
+
+        return default_path
 
     def _ensure_db_dir(self):
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
