@@ -342,7 +342,8 @@ class LeaderHandler(BaseHandler):
             console_manager.print_error("Invalid selection.")
             return
 
-        success, message = self.report_service.delete_report(r["id"])
+        report_id = r.get("report_id") or r.get("id")
+        success, message = self.report_service.delete_report(report_id)
         if success:
             console_manager.print_success(message)
         else:

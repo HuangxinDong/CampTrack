@@ -8,6 +8,10 @@ class LeaderDisplay:
     Separates view concerns from LeaderHandler.
     """
 
+    def _activity_snapshot(self, activity):
+        """Return dict view for Activity objects or pass-through for dicts."""
+        return activity.to_dict() if hasattr(activity, "to_dict") else activity
+
     def display_error(self, message):
         console_manager.print_error(message)
 
@@ -132,15 +136,16 @@ class LeaderDisplay:
         table.add_column("Date", width=12)
         table.add_column("Summary", width=40)
         table.add_column("Activities")
-        table.add_column("Incidents")
+        table.add_column("Injuries")
         table.add_column("Achievements")
 
         for r in reports:
+            injuries = str(r.get("injured_count", 0)) if r.get("injury") else "0"
             table.add_row(
                 r["date"],
                 r["text"][:40] + "",
                 ", ".join(r.get("activities", [])),
-                ", ".join(r.get("incidents", [])),
+                injuries,
                 ", ".join(r.get("achievements", [])),
             )
 
@@ -227,7 +232,8 @@ class LeaderDisplay:
         """
         lines = [f"[bold]{camp.name} Activities[/bold]", "─" * 40]
 
-        sorted_activities = sorted(camp.activities, key=lambda x: (x.get("date",""), x.get("session","")))
+        snapshots = [self._activity_snapshot(a) for a in camp.activities]
+        sorted_activities = sorted(snapshots, key=lambda x: (x.get("date",""), x.get("session","")))
 
         for activity in sorted_activities:
             name = activity.get("name", "Unknown")
@@ -312,8 +318,9 @@ class LeaderDisplay:
         """
         Displays a conflict resolution screen comparing existing and new activities.
         """
-        existing_name = existing.get("name", "Unknown")
-        existing_count = len(existing.get("camper_ids", []))
+        snap = self._activity_snapshot(existing)
+        existing_name = snap.get("name", "Unknown")
+        existing_count = len(snap.get("camper_ids", []))
         
         console_manager.print_panel(f"""
 [bold red]Time Slot Conflict Detected[/bold red]
@@ -338,10 +345,11 @@ class LeaderDisplay:
         # Organize activities by date and session
         schedule = {d: {s: None for s in sessions} for d in dates}
         for act in camp.activities:
-            d = act.get("date")
-            s = act.get("session")
+            snap = self._activity_snapshot(act)
+            d = snap.get("date")
+            s = snap.get("session")
             if d in schedule and s in sessions:
-                schedule[d][s] = act
+                schedule[d][s] = snap
 
         table = Table.grid(padding=(0, 1))
         table.add_column("Marker", justify="center", width=4)
@@ -374,8 +382,9 @@ class LeaderDisplay:
         """
         Displays confirmation for activity removal.
         """
-        name = activity.get("name")
-        count = len(activity.get("camper_ids", []))
+        snap = self._activity_snapshot(activity)
+        name = snap.get("name")
+        count = len(snap.get("camper_ids", []))
         console_manager.print_warning(f"Are you sure you want to remove '{name}'? ({count} campers assigned)")
 
 # Default instance

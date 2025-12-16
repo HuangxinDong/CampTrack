@@ -1,4 +1,3 @@
-# Program entry point
 import sys
 
 try:
@@ -7,6 +6,8 @@ try:
 
     from persistence.dao.user_manager import UserManager
     from persistence.dao.camp_manager import CampManager
+    from persistence.dao.activity_manager import ActivityManager
+    from persistence.dao.daily_report_manager import DailyReportManager
     from persistence.dao.message_manager import MessageManager
     from persistence.dao.announcement_manager import AnnouncementManager
     from persistence.dao.system_notification_manager import SystemNotificationManager
@@ -20,6 +21,7 @@ try:
     from models.users import register_user_types
     from handlers.base_handler import BaseHandler
     from app_context import AppContext
+
 except ImportError as e:
     print("\n[ERROR] Missing dependencies detected.")
     print(f"Details: {e}")
@@ -45,6 +47,8 @@ def main():
     # Create managers ONCE (dependency injection)
     user_manager = UserManager()
     camp_manager = CampManager()
+    activity_manager = ActivityManager()
+    daily_report_manager = DailyReportManager()
     message_manager = MessageManager()
     announcement_manager = AnnouncementManager()
     system_notification_manager = SystemNotificationManager()
@@ -64,13 +68,15 @@ def main():
 
     # Create Context
     context = AppContext(
-        user_manager, 
-        camp_manager, 
-        message_manager, 
-        announcement_manager, 
+        user_manager,
+        camp_manager,
+        activity_manager,
+        daily_report_manager,
+        message_manager,
+        announcement_manager,
         system_notification_manager,
         audit_log_manager,
-        camper_manager
+        camper_manager,
     )
 
     # Create handler for this user's role

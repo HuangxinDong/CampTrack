@@ -1,155 +1,198 @@
-import json
 import logging
-import os
+from collections import defaultdict
+from persistence.db_context import DBContext
+
 
 class MessageManager:
-    def __init__(self, filepath="persistence/data/messages.json"):
-        self.filepath = filepath
-        self._ensure_file()
+    """SQLite-backed message persistence."""
 
-    def _ensure_file(self):
-        if not os.path.exists(self.filepath):
-            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-            with open(self.filepath, "w") as f:
-                f.write("[]")
+    def __init__(self, db_context=None):
+        self.db = db_context or DBContext()
 
     def read_all(self):
-        with open(self.filepath, "r") as f:
-            try:
-                data = json.load(f)
-            except Exception as e:
-                logging.error(f"Error reading messages.json: {e}")
-                raise
-
-        if not isinstance(data, list):
-            raise ValueError("messages.json must contain a JSON array.")
-
-        return data
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT message_id, from_user, to_user, content, sent_at, mark_as_read FROM messages"
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    "message_id": row[0],
+                    "from_user": row[1],
+                    "to_user": row[2],
+                    "content": row[3],
+                    "sent_at": row[4],
+                    "mark_as_read": bool(row[5]),
+                }
+                for row in rows
+            ]
+        except Exception as exc:
+            logging.error(f"Error reading messages: {exc}")
+            return []
+        finally:
+            conn.close()
 
     def add(self, message):
-        messages = self.read_all()
-        messages.append(message)
-
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         try:
-            with open(self.filepath, "w") as f:
-                json.dump(messages, f, indent=4)
-        except Exception as e:
-            logging.error(f"Error writing messages.json: {e}")
+            cursor.execute(
+                """
+                INSERT INTO messages (message_id, from_user, to_user, content, sent_at, mark_as_read)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    message.get("message_id"),
+                    message.get("from_user"),
+                    message.get("to_user"),
+                    message.get("content"),
+                    message.get("sent_at"),
+                    1 if message.get("mark_as_read") else 0,
+                ),
+            )
+            conn.commit()
+        except Exception as exc:
+            logging.error(f"Error adding message: {exc}")
             raise
-        
-    def update(self, updatedMessage):
-        """
-        Read messages from json, find the message to update and insert message into data 
-        """
-        messages = self.read_all()
+        finally:
+            conn.close()
 
-        message_was_found = False
-        for i, message in enumerate(messages):
-            if message["message_id"] == updatedMessage["message_id"]:
-                messages[i] = updatedMessage
-                message_was_found = True
-                break
-        if not message_was_found:
-            messages.append(updatedMessage)
+    def update(self, updated_message):
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         try:
-            with open(self.filepath, "w") as f:
-                json.dump(messages, f, indent=4)
-        except Exception as e:
-            logging.error(f"Error writing messages.json: {e}")
-            raise  
+            cursor.execute(
+                """
+                UPDATE messages
+                SET from_user=?, to_user=?, content=?, sent_at=?, mark_as_read=?
+                WHERE message_id=?
+                """,
+                (
+                    updated_message.get("from_user"),
+                    updated_message.get("to_user"),
+                    updated_message.get("content"),
+                    updated_message.get("sent_at"),
+                    1 if updated_message.get("mark_as_read") else 0,
+                    updated_message.get("message_id"),
+                ),
+            )
+            if cursor.rowcount == 0:
+                self.add(updated_message)
+            else:
+                conn.commit()
+        except Exception as exc:
+            logging.error(f"Error updating message: {exc}")
+            raise
+        finally:
+            conn.close()
 
     def mark_as_read_batch(self, message_ids: list):
-        """
-        Mark multiple messages as read in a single batch operation.
-        Efficiency: O(N) read + O(N) scan + O(1) write.
-        """
         if not message_ids:
             return
 
-        messages = self.read_all()
-        ids_set = set(message_ids)
-        updated = False
-
-        for message in messages:
-            if message["message_id"] in ids_set:
-                message["mark_as_read"] = True
-                updated = True
-        
-        if updated:
-            try:
-                with open(self.filepath, "w") as f:
-                    json.dump(messages, f, indent=4)
-            except Exception as e:
-                logging.error(f"Error updating messages batch: {e}")
-                raise  
-
-    # -------------------------------------------------------------------------
-    # DATA PROCESSING METHODS (Moved from message_handler.py)
-    # -------------------------------------------------------------------------
+        placeholders = ",".join(["?"] * len(message_ids))
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                f"UPDATE messages SET mark_as_read = 1 WHERE message_id IN ({placeholders})",
+                message_ids,
+            )
+            conn.commit()
+        except Exception as exc:
+            logging.error(f"Error marking messages as read: {exc}")
+            raise
+        finally:
+            conn.close()
 
     def get_unread_message_count(self, username: str) -> int:
-        """
-        Count messages where user is recipient and mark_as_read is False.
-        """
-        messages = self.read_all()
-        count = 0
-        for message in messages:
-            if message['to_user'] == username and not message.get('mark_as_read', False):
-                count += 1
-        return count
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT COUNT(*) FROM messages WHERE to_user = ? AND mark_as_read = 0",
+                (username,),
+            )
+            row = cursor.fetchone()
+            return row[0] if row else 0
+        except Exception as exc:
+            logging.error(f"Error counting unread messages: {exc}")
+            return 0
+        finally:
+            conn.close()
 
     def get_conversation_summaries(self, username: str) -> list:
-        """
-        Build summary data for each conversation.
-        Returns list of dicts: {partner, unread_count, last_message, preview}
-        Sorted by most recent message first.
-        """
-        messages = self.read_all()
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """
+                SELECT message_id, from_user, to_user, content, sent_at, mark_as_read
+                FROM messages
+                WHERE from_user = ? OR to_user = ?
+                ORDER BY sent_at ASC
+                """,
+                (username, username),
+            )
+            rows = cursor.fetchall()
+            messages = [
+                {
+                    "message_id": row[0],
+                    "from_user": row[1],
+                    "to_user": row[2],
+                    "content": row[3],
+                    "sent_at": row[4],
+                    "mark_as_read": bool(row[5]),
+                }
+                for row in rows
+            ]
+        except Exception as exc:
+            logging.error(f"Error loading conversations: {exc}")
+            return []
+        finally:
+            conn.close()
+
         conversations = self._get_conversations_from_messages(messages, username)
-        
         summaries = []
         for partner, conv_messages in conversations.items():
             last_message = self._get_last_message(conv_messages)
-            
-            summary = {
-                'partner': partner,
-                'unread_count': self._count_unread_messages_in_list(conv_messages, username),
-                'last_message': last_message,
-                'preview': self._truncate_last_message(last_message['content']) if last_message else ""
-            }
-            summaries.append(summary)
-        
-        # Sort by most recent message first
-        summaries.sort(key=lambda s: s['last_message']['sent_at'] if s['last_message'] else "", reverse=True)
+            summaries.append(
+                {
+                    "partner": partner,
+                    "unread_count": self._count_unread_messages_in_list(conv_messages, username),
+                    "last_message": last_message,
+                    "preview": self._truncate_last_message(last_message["content"]) if last_message else "",
+                }
+            )
+
+        summaries.sort(
+            key=lambda summary: summary["last_message"]["sent_at"] if summary["last_message"] else "",
+            reverse=True,
+        )
         return summaries
 
-    # Internal Helpers
-    
     def _get_conversations_from_messages(self, messages, username):
-        from collections import defaultdict
         conversations = defaultdict(list)
-        for m in messages:
-            if m['from_user'] == username:
-                conversations[m['to_user']].append(m)
-            elif m['to_user'] == username:
-                conversations[m['from_user']].append(m)
+        for msg in messages:
+            if msg["from_user"] == username:
+                conversations[msg["to_user"]].append(msg)
+            elif msg["to_user"] == username:
+                conversations[msg["from_user"]].append(msg)
         return conversations
 
     def _count_unread_messages_in_list(self, messages: list, username: str) -> int:
-        count = 0
-        for message in messages:
-            if message['to_user'] == username and not message.get('mark_as_read', False):
-                count += 1
-        return count
+        return sum(1 for m in messages if m["to_user"] == username and not m.get("mark_as_read", False))
 
     def _get_last_message(self, messages: list):
         if not messages:
             return None
-        return max(messages, key=lambda m: m['sent_at'])
+        return max(messages, key=lambda m: m["sent_at"])
 
     def _truncate_last_message(self, content: str, max_length: int = 30) -> str:
         if len(content) <= max_length:
             return content
-        return content[:max_length] + "..."  
+        return content[:max_length] + "..."
 
 

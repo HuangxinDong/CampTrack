@@ -3,9 +3,11 @@ class AppContext:
     Holds references to all manager instances (DAOs) to be passed around
     the application, avoiding long argument lists and circular dependency issues.
     """
-    def __init__(self, user_manager, camp_manager, message_manager, announcement_manager, system_notification_manager, audit_log_manager, camper_manager):
+    def __init__(self, user_manager, camp_manager, activity_manager, daily_report_manager, message_manager, announcement_manager, system_notification_manager, audit_log_manager, camper_manager):
         self.user_manager = user_manager
         self.camp_manager = camp_manager
+        self.activity_manager = activity_manager
+        self.daily_report_manager = daily_report_manager
         self.message_manager = message_manager
         self.announcement_manager = announcement_manager
         self.system_notification_manager = system_notification_manager

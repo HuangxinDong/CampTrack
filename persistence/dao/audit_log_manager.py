@@ -1,58 +1,71 @@
-import os
-import json
 import logging
 from datetime import datetime
+from persistence.db_context import DBContext
+
 
 class AuditLogManager:
-    """Manages system audit logs."""
+    """SQLite-backed audit logging."""
 
-    def __init__(self, filepath="persistence/data/audit_logs.json"):
-        self.filepath = filepath
-        self._ensure_file()
-
-    def _ensure_file(self):
-        if not os.path.exists(self.filepath):
-            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-            with open(self.filepath, "w") as f:
-                f.write("[]")
-
-    def _read_data(self):
-        try:
-            with open(self.filepath, "r") as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return []
-
-    def _save_data(self, data):
-        try:
-            with open(self.filepath, "w") as f:
-                json.dump(data, f, indent=4)
-        except Exception as e:
-            logging.error(f"Error saving audit logs: {e}")
+    def __init__(self, db_context=None):
+        self.db = db_context or DBContext()
 
     def log_event(self, username, action, details=""):
-        """
-        Logs a system event.
-        
-        Args:
-            username (str): The user performing the action.
-            action (str): Short description of the action (e.g., "Create User").
-            details (str): Additional info.
-        """
-        entry = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "username": username,
-            "action": action,
-            "details": details
-        }
-        
-        logs = self._read_data()
-        logs.append(entry)
-        self._save_data(logs)
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO audit_logs (timestamp, username, action, details) VALUES (?, ?, ?, ?)",
+                (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), username, action, details),
+            )
+            conn.commit()
+        except Exception as exc:
+            logging.error(f"Error logging event: {exc}")
+        finally:
+            conn.close()
 
     def read_all(self):
-        return self._read_data()
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT log_id, timestamp, username, action, details FROM audit_logs ORDER BY log_id DESC")
+            rows = cursor.fetchall()
+            return [
+                {
+                    "log_id": row[0],
+                    "timestamp": row[1],
+                    "username": row[2],
+                    "action": row[3],
+                    "details": row[4],
+                }
+                for row in rows
+            ]
+        except Exception as exc:
+            logging.error(f"Error reading audit logs: {exc}")
+            return []
+        finally:
+            conn.close()
 
     def get_logs_by_user(self, username):
-        logs = self._read_data()
-        return [log for log in logs if log['username'] == username]
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT log_id, timestamp, username, action, details FROM audit_logs WHERE username = ? ORDER BY log_id DESC",
+                (username,),
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    "log_id": row[0],
+                    "timestamp": row[1],
+                    "username": row[2],
+                    "action": row[3],
+                    "details": row[4],
+                }
+                for row in rows
+            ]
+        except Exception as exc:
+            logging.error(f"Error reading audit logs for {username}: {exc}")
+            return []
+        finally:
+            conn.close()

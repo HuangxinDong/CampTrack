@@ -3,7 +3,7 @@
 
 # Scout Camp Management System
 
-A CLI-based management system for Scout Camps. Developed for COMP0066 Course Project.
+A CLI-based management system for Scout Camps. Originally developed for COMP0066 Course Project.
 
 In addition to meeting all the requirements of the coursework brief, we also implemented:
 
@@ -30,7 +30,7 @@ In addition to meeting all the requirements of the coursework brief, we also imp
 
 *   **Search Helper**: Type `s` at any selection prompt to search.
 *   **Internal Messaging**: Internal messaging system and global announcements.
-*   **Persistence**: JSON-based storage with automated backup capabilities.
+*   **Persistence**: SQLite-backed storage (persistence/data/camptrack.db) with automated JSON backup capabilities and seed-from-JSON utility.
 *   **Authentication**: Role-based login with password confirmation and uniqueness checks.
 *   **Weather Integration**: Real-time forecasting via Open-Meteo API for safe activity planning.
 
@@ -48,14 +48,14 @@ In addition to meeting all the requirements of the coursework brief, we also imp
 handlers/       # Presentation Layer: CLI interaction and menu logic
 services/       # Business Logic Layer: Core rules, validation, and calculations
 models/         # Domain Layer: Data entities
-persistence/    # Data Access Layer: JSON storage and repositories
+persistence/    # Data Access Layer: SQLite-backed DAO + schema/seed scripts
 cli/            # UI Components: Display helpers and input utilities
-persistence/data/backups/ # Generated system snapshots
+persistence/data/          # SQLite db (camptrack.db), JSON seeds, backups/
 ```
 
 ## Architecture
 
-The system follows a **Service-Repository Pattern** (Layered Architecture) to ensure separation of concerns and testability:
+The system follows a **Service-Repository Pattern** (Layered Architecture) backed by SQLite to ensure separation of concerns and testability:
 
 1.  **Presentation Layer (`handlers/`)**: Handles user input and displays output. It delegates all business logic to Services.
 2.  **Business Logic Layer (`services/`)**: Contains the core business rules (e.g., schedule conflict detection, validation, activity limits).
@@ -63,7 +63,7 @@ The system follows a **Service-Repository Pattern** (Layered Architecture) to en
     *   `CampService`: Camp creation, logistics, and resource management.
     *   `ActivityService`: Activity scheduling and library management.
     *   `ReportService`: Daily reporting, statistics, and NLP summary extraction.
-3.  **Data Access Layer (`persistence/`)**: Manages data storage and retrieval (JSON).
+3.  **Data Access Layer (`persistence/`)**: Manages data storage and retrieval (SQLite via `persistence/dao` using `persistence/db_context.py`).
 
 ## Setup
 
@@ -74,7 +74,17 @@ Requires Python 3.8+.
     pip install -r requirements.txt
     ```
 
-2.  Launch application:
+2.  (Optional) Seed SQLite DB from existing JSON (creates persistence/data/camptrack.db):
+    ```bash
+    python -m persistence.seed_from_json
+    ```
+
+3.  Launch application:
     ```bash
     python main.py
+    ```
+
+4.  Run tests (fast regression):
+    ```bash
+    pytest -q
     ```

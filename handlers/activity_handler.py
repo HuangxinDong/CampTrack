@@ -11,6 +11,18 @@ class ActivityHandler(BaseHandler):
         self.activity_service = ActivityService(self.context.activity_manager, self.context.camp_manager)
         self.display = leader_display
 
+    def _activity_snapshot(self, activity):
+        """Return a dict-like view of an activity regardless of storage type."""
+        return activity.to_dict() if isinstance(activity, Activity) else activity
+
+    def _get_camper_ids(self, activity):
+        if isinstance(activity, Activity):
+            return list(activity.campers)
+        return activity.get('camper_ids', [])
+
+    def _camper_name_map(self, camp):
+        return {c.camper_id: c.name for c in camp.campers}
+
     @cancellable
     def activities_menu(self):
         while True:
@@ -69,10 +81,8 @@ class ActivityHandler(BaseHandler):
         # Simple selection list
         options = []
         for act in camp.activities:
-             name = act.get('name')
-             date = act.get('date')
-             sess = act.get('session')
-             options.append(f"{name} ({date} - {sess})")
+             snap = self._activity_snapshot(act)
+             options.append(f"{snap.get('name')} ({snap.get('date')} - {snap.get('session')})")
         
         idx = get_index_from_options("Select Activity to Remove", options)
         if idx is None: return
@@ -183,10 +193,8 @@ class ActivityHandler(BaseHandler):
         # Create a temporary list of (index, activity_dict) to map selection back
         activity_options = []
         for act in camp.activities:
-             name = act.get('name')
-             date = act.get('date')
-             sess = act.get('session')
-             activity_options.append(f"{name} ({date} - {sess})")
+             snap = self._activity_snapshot(act)
+             activity_options.append(f"{snap.get('name')} ({snap.get('date')} - {snap.get('session')})")
 
         act_idx = get_index_from_options("Select Activity to Manage", activity_options)
         if act_idx is None: return
@@ -194,12 +202,12 @@ class ActivityHandler(BaseHandler):
         
         while True:
             # Display current roster status
-            current_ids = selected_activity.get('camper_ids', [])
-            roster_names = []
-            for cid in current_ids:
-                roster_names.append(cid)
+            current_ids = self._get_camper_ids(selected_activity)
+            id_to_name = self._camper_name_map(camp)
+            roster_names = [id_to_name.get(cid, cid) for cid in current_ids]
 
-            self.display.display_info(f"\nActivity: {selected_activity['name']} ({selected_activity['date']} - {selected_activity['session']})")
+            snap = self._activity_snapshot(selected_activity)
+            self.display.display_info(f"\nActivity: {snap['name']} ({snap['date']} - {snap['session']})")
             self.display.display_info(f"Current Roster ({len(current_ids)}): {', '.join(roster_names) if roster_names else 'Empty'}")
             
             menu = ["Add Camper", "Remove Camper", "Add All Campers", "Back"]
@@ -223,9 +231,9 @@ class ActivityHandler(BaseHandler):
             wait_for_enter()
 
     def add_camper_to_activity(self, activity_data, camp, activity_index):
-        current_ids = activity_data.get('camper_ids', [])
+        current_ids = self._get_camper_ids(activity_data)
         
-        available_campers = [c for c in camp.campers if c.name not in current_ids]
+        available_campers = [c for c in camp.campers if c.camper_id not in current_ids]
         
         if not available_campers:
             self.display.display_error("No available campers to add (all are already assigned).")
@@ -236,23 +244,26 @@ class ActivityHandler(BaseHandler):
         if idx is None: return
         camper_to_add = available_campers[idx]
 
-        success, message = self.activity_service.add_camper_to_activity(camp.name, activity_index, camper_to_add.name)
+        success, message = self.activity_service.add_camper_to_activity(camp.name, activity_index, camper_to_add.camper_id)
         if success:
             self.display.display_success(message)
         else:
             self.display.display_error(message)
 
     def remove_camper_from_activity(self, activity_data, camp, activity_index):
-        current_ids = activity_data.get('camper_ids', [])
+        current_ids = self._get_camper_ids(activity_data)
         if not current_ids:
             self.display.display_error("Roster is empty.")
             return
 
-        idx = get_index_from_options("Select Camper to Remove", current_ids)
+        id_to_name = self._camper_name_map(camp)
+        options = [id_to_name.get(cid, cid) for cid in current_ids]
+
+        idx = get_index_from_options("Select Camper to Remove", options)
         if idx is None: return
-        removed_name = current_ids[idx]
+        removed_id = current_ids[idx]
         
-        success, message = self.activity_service.remove_camper_from_activity(camp.name, activity_index, removed_name)
+        success, message = self.activity_service.remove_camper_from_activity(camp.name, activity_index, removed_id)
         if success:
             self.display.display_success(message)
         else:

@@ -1,6 +1,6 @@
 import uuid
 from models.message import Message
-from cli.input_utils import get_input, cancellable, wait_for_enter
+from cli.input_utils import get_input, cancellable, wait_for_enter, BackException
 from cli.chat_display import conversation_display
 from cli.console_manager import console_manager
 
@@ -93,38 +93,88 @@ class BaseHandler:
     def get_username_with_search(self, prompt, role_filter=None, exclude_self=False):
         """
         Helper to get a username with an option to search/list users.
+        Supports:
+        - 's' to list all filtered users with numeric selection
+        - partial match input to show suggestions
+        - exact match pass-through
         """
         while True:
-            user_input = get_input(f"{prompt} (enter 's' to search): ")
-            
+            try:
+                user_input = get_input(f"{prompt} (enter 's' to search): ")
+            except BackException:
+                raise
+
+            # Base filters
+            users = self.context.user_manager.read_all()
+            if role_filter:
+                users = [u for u in users if u.get('role') == role_filter]
+            if exclude_self:
+                users = [u for u in users if u['username'] != self.user.username]
+
             if user_input.lower() == 's':
-                users = self.context.user_manager.read_all()
-                
-                # Filter
-                if role_filter:
-                    users = [u for u in users if u.get('role') == role_filter]
-                
-                if exclude_self:
-                    users = [u for u in users if u['username'] != self.user.username]
-                
+                # List all filtered users
                 if not users:
                     console_manager.print_info("No matching users found.")
                     continue
-                
-                # Display
                 console_manager.print_header("Available Users")
                 from rich.table import Table
                 table = Table(show_header=True, header_style="bold magenta")
+                table.add_column("#", style="dim", width=4)
                 table.add_column("Username")
                 table.add_column("Role")
-                
-                for u in users:
-                    table.add_row(u['username'], u.get('role', 'Unknown'))
-                
+                for idx, u in enumerate(users, start=1):
+                    table.add_row(str(idx), u['username'], u.get('role', 'Unknown'))
                 console_manager.console.print(table)
+
+                try:
+                    selection = get_input("Select number or type username (enter 'b' to go back): ")
+                except BackException:
+                    continue
+
+                if selection.isdigit():
+                    sel_idx = int(selection) - 1
+                    if 0 <= sel_idx < len(users):
+                        return users[sel_idx]['username']
+                    console_manager.print_error("Invalid selection. Please try again.")
+                    continue
+
+                # fall through to validation below
+                user_input = selection
+
+            # Exact match first
+            if any(u['username'] == user_input for u in users):
+                return user_input
+
+            # Partial suggestions
+            matches = [u for u in users if user_input.lower() in u['username'].lower()]
+            if not matches:
+                console_manager.print_error(f"User '{user_input}' not found. Please try again.")
                 continue
-            
-            return user_input
+
+            console_manager.print_header("Did you mean?")
+            from rich.table import Table
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("#", style="dim", width=4)
+            table.add_column("Username")
+            table.add_column("Role")
+            for idx, u in enumerate(matches, start=1):
+                table.add_row(str(idx), u['username'], u.get('role', 'Unknown'))
+            console_manager.console.print(table)
+
+            try:
+                selection = get_input("Select number or type username (enter 'b' to go back): ")
+            except BackException:
+                continue
+
+            if selection.isdigit():
+                sel_idx = int(selection) - 1
+                if 0 <= sel_idx < len(matches):
+                    return matches[sel_idx]['username']
+                console_manager.print_error("Invalid selection. Please try again.")
+                continue
+
+            # If typed a username, re-validate in next loop iteration
+            user_input = selection
 
     def get_notifications(self):
         notifications = [self.get_unread_message_alert()]
