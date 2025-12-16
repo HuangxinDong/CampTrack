@@ -8,6 +8,15 @@ class ActivityService:
         self.activity_manager = activity_manager
         self.camp_manager = camp_manager
 
+    def _normalize_activity(self, act: Any) -> Activity:
+        """Ensure an Activity instance (tolerates legacy dict entries)."""
+        if isinstance(act, Activity):
+            return act
+        return Activity.from_dict(act)
+
+    def _normalize_activity_list(self, activities: List[Any]) -> List[Activity]:
+        return [self._normalize_activity(a) for a in activities]
+
     def get_library(self) -> Dict[str, Dict[str, Any]]:
         return self.activity_manager.load_library()
 
@@ -25,7 +34,9 @@ class ActivityService:
         if name in library:
             return False, f"Activity '{name}' already exists in library."
 
-        self.activity_manager.add_activity_type(name, is_indoor)
+        created = self.activity_manager.add_activity(name, is_indoor)
+        if not created:
+            return False, f"Activity '{name}' already exists in library."
         return True, f"Activity '{name}' added to library."
 
     def schedule_activity(self, camp_name: str, activity_name: str, date_str: str, session_name: str, force_replace: bool = False) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
@@ -44,118 +55,122 @@ class ActivityService:
 
         is_indoor = library[activity_name].get("is_indoor", False)
 
-        # Validation: Max occurrences per day
+        camp.activities = self._normalize_activity_list(camp.activities)
+
+        # Validation: Max occurrences per day (limit 2 per activity name per date)
         daily_count = 0
         for act in camp.activities:
-            a_date = act.get("date")
-            a_name = act.get("name")
-            if a_date == date_str and a_name == activity_name:
+            if str(act.date) == date_str and act.name == activity_name:
                 daily_count += 1
-        
+
         if daily_count >= 2:
-             return False, f"Limit reached: '{activity_name}' is already scheduled {daily_count} times on {date_str}. (Max 2)", None
+            return False, f"Limit reached: '{activity_name}' is already scheduled {daily_count} times on {date_str}. (Max 2)", None
 
-        # Check for conflicts
+        # Check for conflicts in same slot
         conflict_index = -1
-        conflict_activity = None
-        
-        for i, existing_activity in enumerate(camp.activities):
-            ex_date = existing_activity.get("date")
-            ex_session = existing_activity.get("session")
+        conflict_activity: Optional[Activity] = None
 
-            if ex_date == date_str and ex_session == session_name:
+        for i, existing_activity in enumerate(camp.activities):
+            if str(existing_activity.date) == date_str and existing_activity.session.name == session_name:
                 conflict_activity = existing_activity
                 conflict_index = i
                 break
 
         if conflict_activity:
             if not force_replace:
-                return False, "Time slot conflict detected.", conflict_activity
-            else:
-                # Remove existing
-                camp.activities.pop(conflict_index)
+                return False, "Time slot conflict detected.", conflict_activity.to_dict()
+            camp.activities.pop(conflict_index)
 
         # Create and Add
         try:
             session_enum = Session[session_name]
-            activity = Activity(activity_name, date_str, session_enum, is_indoor=is_indoor)
-            camp.activities.append(activity.to_dict())
-            self.camp_manager.update(camp)
-            return True, f"Successfully scheduled '{activity_name}' for {date_str} ({session_name}).", None
         except KeyError:
             return False, f"Invalid session name: {session_name}", None
+
+        activity = Activity(activity_name, date_str, session_enum, is_indoor=is_indoor)
+        camp.activities.append(activity)
+        self.camp_manager.update(camp)
+        return True, f"Successfully scheduled '{activity_name}' for {date_str} ({session_name}).", None
 
     def remove_activity(self, camp_name: str, activity_index: int) -> Tuple[bool, str]:
         camp = self.camp_manager.find_camp(camp_name)
         if not camp:
             return False, f"Camp '{camp_name}' not found."
 
+        camp.activities = self._normalize_activity_list(camp.activities)
+
         if not (0 <= activity_index < len(camp.activities)):
             return False, "Invalid activity index."
 
         removed = camp.activities.pop(activity_index)
         self.camp_manager.update(camp)
-        return True, f"Activity '{removed.get('name')}' removed."
+        return True, f"Activity '{removed.name}' removed."
 
-    def add_camper_to_activity(self, camp_name: str, activity_index: int, camper_name: str) -> Tuple[bool, str]:
+    def add_camper_to_activity(self, camp_name: str, activity_index: int, camper_identifier: str) -> Tuple[bool, str]:
         camp = self.camp_manager.find_camp(camp_name)
         if not camp:
             return False, f"Camp '{camp_name}' not found."
+
+        camp.activities = self._normalize_activity_list(camp.activities)
 
         if not (0 <= activity_index < len(camp.activities)):
             return False, "Invalid activity index."
 
         activity = camp.activities[activity_index]
-        current_ids = activity.get('camper_ids', [])
-        
-        if camper_name in current_ids:
-            return False, f"Camper '{camper_name}' is already in this activity."
 
-        # Verify camper belongs to camp
-        if not any(c.name == camper_name for c in camp.campers):
-             return False, f"Camper '{camper_name}' is not in this camp."
+        camper = next((c for c in camp.campers if c.camper_id == camper_identifier or c.name == camper_identifier), None)
+        if not camper:
+            return False, f"Camper '{camper_identifier}' is not in this camp."
 
-        activity['camper_ids'].append(camper_name)
+        if camper.camper_id in activity.campers:
+            return False, f"Camper '{camper.name}' is already in this activity."
+
+        activity.campers.append(camper.camper_id)
         self.camp_manager.update(camp)
-        return True, f"Added {camper_name} to activity."
+        return True, f"Added {camper.name} to activity."
 
-    def remove_camper_from_activity(self, camp_name: str, activity_index: int, camper_name: str) -> Tuple[bool, str]:
+    def remove_camper_from_activity(self, camp_name: str, activity_index: int, camper_identifier: str) -> Tuple[bool, str]:
         camp = self.camp_manager.find_camp(camp_name)
         if not camp:
             return False, f"Camp '{camp_name}' not found."
+
+        camp.activities = self._normalize_activity_list(camp.activities)
 
         if not (0 <= activity_index < len(camp.activities)):
             return False, "Invalid activity index."
 
         activity = camp.activities[activity_index]
-        current_ids = activity.get('camper_ids', [])
-        
-        if camper_name not in current_ids:
-            return False, f"Camper '{camper_name}' is not in this activity."
+        camper = next((c for c in camp.campers if c.camper_id == camper_identifier or c.name == camper_identifier), None)
+        if not camper:
+            return False, f"Camper '{camper_identifier}' is not in this camp."
 
-        current_ids.remove(camper_name)
+        if camper.camper_id not in activity.campers:
+            return False, f"Camper '{camper.name}' is not in this activity."
+
+        activity.campers = [cid for cid in activity.campers if cid != camper.camper_id]
         self.camp_manager.update(camp)
-        return True, f"Removed {camper_name} from activity."
+        return True, f"Removed {camper.name} from activity."
 
     def add_all_campers_to_activity(self, camp_name: str, activity_index: int) -> Tuple[bool, str]:
         camp = self.camp_manager.find_camp(camp_name)
         if not camp:
             return False, f"Camp '{camp_name}' not found."
 
+        camp.activities = self._normalize_activity_list(camp.activities)
+
         if not (0 <= activity_index < len(camp.activities)):
             return False, "Invalid activity index."
 
         activity = camp.activities[activity_index]
-        current_ids = set(activity.get('camper_ids', []))
+        current_ids = set(activity.campers)
         added_count = 0
-        
+
         for camper in camp.campers:
-            if camper.name not in current_ids:
-                activity['camper_ids'].append(camper.name)
+            if camper.camper_id not in current_ids:
+                activity.campers.append(camper.camper_id)
                 added_count += 1
-        
+
         if added_count > 0:
             self.camp_manager.update(camp)
-            return True, f"Added {added_count} campers to '{activity['name']}'."
-        else:
-            return False, "All campers are already in this activity."
+            return True, f"Added {added_count} campers to '{activity.name}'."
+        return False, "All campers are already in this activity."

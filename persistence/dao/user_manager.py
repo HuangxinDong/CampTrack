@@ -1,57 +1,59 @@
-import os
-import json
 import logging
+from persistence.db_context import DBContext
+
 
 class UserManager:
-    """All functions related to users data."""
+    """SQLite-backed user persistence."""
 
-    def __init__(self, filepath="persistence/data/users.json"):
-        self.filepath = filepath
-        self._ensure_file()
-        self.users = self.read_all()
-
-    def _ensure_file(self):
-        if not os.path.exists(self.filepath):
-            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-            with open(self.filepath, "w") as f:
-                f.write("[]")
-
-    def _parse_users(self, json_str):
-        try:
-            raw_data = json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logging.error(f"Failed to decode JSON: {e}")
-            return []
-
-        if not isinstance(raw_data, list):
-            logging.error("JSON root is not a list")
-            return []
-
-        return raw_data
+    def __init__(self, db_context=None):
+        self.db = db_context or DBContext()
 
     def read_all(self):
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
         try:
-            with open(self.filepath, "r") as f:
-                content = f.read()
-        except FileNotFoundError:
-            logging.critical(f"File not found: {self.filepath}")
+            cursor.execute("SELECT username, password, role, enabled, daily_payment_rate FROM users")
+            rows = cursor.fetchall()
+            users = []
+            for row in rows:
+                user = {
+                    "username": row[0],
+                    "password": row[1],
+                    "role": row[2],
+                    "enabled": bool(row[3])
+                }
+                if row[4] is not None:
+                    user["daily_payment_rate"] = row[4]
+                users.append(user)
+            return users
+        except Exception as exc:
+            logging.error(f"Error reading users: {exc}")
             return []
-
-        return self._parse_users(content)
-
-    def save_data(self):
-        users_list = self.users
-        try:
-            with open(self.filepath, "w") as f:
-                json.dump(users_list, f, indent=4)
-        except Exception as e:
-            logging.error(f"Error saving users: {e}")
+        finally:
+            conn.close()
 
     def find_user(self, username):
-        for u in self.users:
-            if u.get("username") == username:
-                return u
-        return None
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT username, password, role, enabled, daily_payment_rate FROM users WHERE username = ?", (username,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            user = {
+                "username": row[0],
+                "password": row[1],
+                "role": row[2],
+                "enabled": bool(row[3])
+            }
+            if row[4] is not None:
+                user["daily_payment_rate"] = row[4]
+            return user
+        except Exception as exc:
+            logging.error(f"Error finding user: {exc}")
+            return None
+        finally:
+            conn.close()
 
     def create_user(self, username, password, role, **kwargs):
         if not username or not username.strip():
@@ -62,79 +64,134 @@ class UserManager:
         if self.find_user(username):
             return False, "Username already exists."
 
-        user = {
-            "username": username,
-            "password": password,
-            "role": role,
-            "enabled": True
-        }
-        user.update(kwargs)
+        daily_payment_rate = kwargs.get("daily_payment_rate")
 
-        self.users.append(user)
-        self.save_data()
-        return True, f"User {username} created successfully."
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO users (username, password, role, enabled, daily_payment_rate) VALUES (?, ?, ?, ?, ?)",
+                (username, password, role, 1, daily_payment_rate)
+            )
+            conn.commit()
+            return True, f"User {username} created successfully."
+        except Exception as exc:
+            logging.error(f"Error creating user: {exc}")
+            return False, f"Error creating user: {exc}"
+        finally:
+            conn.close()
 
     def delete_user(self, username):
-        user = self.find_user(username)
-        if user is None:
+        if not self.find_user(username):
             return False, "User not found."
-        self.users.remove(user)
-        self.save_data()
-        return True, f"User {username} deleted."
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM users WHERE username = ?", (username,))
+            conn.commit()
+            return True, f"User {username} deleted."
+        except Exception as exc:
+            logging.error(f"Error deleting user: {exc}")
+            return False, f"Error deleting user: {exc}"
+        finally:
+            conn.close()
 
     def toggle_user_status(self, username, enabled):
-        user = self.find_user(username)
-        if user is None:
+        if not self.find_user(username):
             return False, "User not found."
-        user["enabled"] = enabled
-        self.save_data()
-        return True, f"User {username} status set to {'enabled' if enabled else 'disabled'}."
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE users SET enabled = ? WHERE username = ?", (1 if enabled else 0, username))
+            conn.commit()
+            state = "enabled" if enabled else "disabled"
+            return True, f"User {username} status set to {state}."
+        except Exception as exc:
+            logging.error(f"Error updating user status: {exc}")
+            return False, f"Error updating user status: {exc}"
+        finally:
+            conn.close()
 
     def update_password(self, username, new_password):
-        user = self.find_user(username)
-        if user is None:
+        if not self.find_user(username):
             return False, "User not found."
-        user["password"] = new_password
-        self.save_data()
-        return True, f"Password updated for {username}."
-        
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
+            conn.commit()
+            return True, f"Password updated for {username}."
+        except Exception as exc:
+            logging.error(f"Error updating password: {exc}")
+            return False, f"Error updating password: {exc}"
+        finally:
+            conn.close()
 
     def update_daily_payment_rate(self, username, new_daily_payment_rate):
         user = self.find_user(username)
         if user is None:
             return False, "User not found."
-        if user['role'] != 'Leader':
+        if user["role"] != "Leader":
             return False, "User is not a leader"
-        user["daily_payment_rate"] = new_daily_payment_rate
-        self.save_data()
-        return True, f"Payment rate updated for {username}."
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE users SET daily_payment_rate = ? WHERE username = ?", (new_daily_payment_rate, username))
+            conn.commit()
+            return True, f"Payment rate updated for {username}."
+        except Exception as exc:
+            logging.error(f"Error updating payment rate: {exc}")
+            return False, f"Error updating payment rate: {exc}"
+        finally:
+            conn.close()
 
     def update_username(self, old_username, new_username):
         if self.find_user(new_username):
             return False, "Username already exists."
-        
-        user = self.find_user(old_username)
-        if user is None:
+
+        if not self.find_user(old_username):
             return False, "User not found."
-            
-        user["username"] = new_username
-        self.save_data()
-        return True, f"Username updated to {new_username}."
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("PRAGMA foreign_keys = ON")
+            cursor.execute("UPDATE users SET username = ? WHERE username = ?", (new_username, old_username))
+            conn.commit()
+            return True, f"Username updated to {new_username}."
+        except Exception as exc:
+            logging.error(f"Error updating username: {exc}")
+            return False, f"Error updating username: {exc}"
+        finally:
+            conn.close()
 
     def update_role(self, username, new_role):
         user = self.find_user(username)
         if user is None:
             return False, "User not found."
-            
+
         match new_role.lower():
             case "leader" | "l":
-                user["role"] = "Leader"
-                if "daily_payment_rate" not in user:
-                    user["daily_payment_rate"] = 0.0
+                role_str = "Leader"
             case "coordinator" | "c":
-                user["role"] = "Coordinator"
+                role_str = "Coordinator"
             case _:
                 return False, "Invalid role."
 
-        self.save_data()
-        return True, f"Role updated to {user["role"]} for {username}."
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE users SET role = ? WHERE username = ?", (role_str, username))
+            if role_str == "Leader" and "daily_payment_rate" not in user:
+                cursor.execute("UPDATE users SET daily_payment_rate = 0.0 WHERE username = ?", (username,))
+            conn.commit()
+            return True, f"Role updated to {role_str} for {username}."
+        except Exception as exc:
+            logging.error(f"Error updating role: {exc}")
+            return False, f"Error updating role: {exc}"
+        finally:
+            conn.close()

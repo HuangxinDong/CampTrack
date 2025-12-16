@@ -34,12 +34,16 @@ class ReportService:
         today_str = datetime.now().date().isoformat()
         todays_activities = []
         for act in camp.activities:
-            act_date = act.get("date")
-            if act_date == today_str:
-                todays_activities.append(act.get("name"))
+            if hasattr(act, "date"):
+                if str(act.date) == today_str:
+                    todays_activities.append(getattr(act, "name", ""))
+            else:
+                act_date = act.get("date")
+                if act_date == today_str:
+                    todays_activities.append(act.get("name"))
 
         report = {
-            "id": str(uuid.uuid4()),
+            "report_id": str(uuid.uuid4()),
             "camp_id": camp.camp_id,
             "leader_username": leader_username,
             "date": today_str,
@@ -50,6 +54,7 @@ class ReportService:
             "incident_details": details,
             "activities": todays_activities,
             "achievements": summary["achievements"],
+            "created_at": datetime.now().isoformat(),
         }
 
         self.daily_report_manager.add_report(report)
@@ -60,12 +65,12 @@ class ReportService:
             r for r in self.daily_report_manager.read_all()
             if r["camp_id"] == camp_id
         ]
-        reports.sort(key=lambda r: r["date"], reverse=True)
+        reports.sort(key=lambda r: (r.get("date", ""), r.get("created_at", "")), reverse=True)
         return reports
 
     def delete_report(self, report_id: str) -> Tuple[bool, str]:
         all_reports = self.daily_report_manager.read_all()
-        new_reports = [x for x in all_reports if x["id"] != report_id]
+        new_reports = [x for x in all_reports if x.get("report_id") != report_id]
         
         if len(all_reports) == len(new_reports):
             return False, "Report not found."
